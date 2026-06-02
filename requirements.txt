@@ -2,4 +2,6 @@ duckdb
 azure-storage-blob
 pandas
 openpyxl
-pyyamlstreamlit
+pyyaml
+streamlit
+python-dotenv

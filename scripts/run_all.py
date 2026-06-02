@@ -1,4 +1,35 @@
+r"""
+Netzentgelt MVP - täglicher Neuaufbau der DuckDB-Datenbasis
+===========================================================
+
+Zweck
+-----
+Dieses Skript importiert die CSV-Dateien aus data/00_raw, berechnet alle
+Staging-, Core-, Finding- und Exporttabellen vollständig neu und ersetzt erst
+nach einem erfolgreichen Gesamtlauf die produktive DuckDB-Datei.
+
+Wichtige Ordner
+---------------
+data/00_raw      : Eingangsdaten als CSV
+data/01_mapping  : fachliche Mapping-Dateien
+data/02_duckdb   : produktive und temporäre DuckDB-Datei
+data/03_exports  : neu erzeugte CSV-Ausgaben
+data/04_logs     : Laufprotokolle
+
+Sicherheitsprinzip
+-----------------
+netzentgelt.duckdb bleibt während der Berechnung unangetastet.
+Der Neuaufbau erfolgt in netzentgelt_build.duckdb.
+Nur ein vollständig erfolgreicher Lauf ersetzt den produktiven Tagesstand.
+
+Normaler Start
+--------------
+Im Projektstamm ausführen:
+    .venv\Scripts\python.exe scripts\run_all.py
+"""
+
 from pathlib import Path
+import os
 import duckdb
 import hashlib
 import re
@@ -10,7 +41,20 @@ MAP_DIR = ROOT / "data" / "01_mapping"
 DB_DIR = ROOT / "data" / "02_duckdb"
 EXP_DIR = ROOT / "data" / "03_exports"
 LOG_DIR = ROOT / "data" / "04_logs"
+# Produktive DuckDB-Datei:
+# Diese Datei enthält immer den letzten erfolgreich berechneten Tagesstand.
 DB_PATH = DB_DIR / "netzentgelt.duckdb"
+
+# Temporäre DuckDB-Datei:
+# Jeder neue Lauf wird zuerst vollständig in dieser Datei aufgebaut.
+# Erst wenn der gesamte Lauf erfolgreich war, ersetzt sie DB_PATH.
+# Dadurch bleibt bei einem Fehler die letzte funktionierende Datenbank erhalten.
+DB_BUILD_PATH = DB_DIR / "netzentgelt_build.duckdb"
+
+# Fachliche Konfiguration:
+# - Es werden nur Loks berücksichtigt, die innerhalb des Lookback-Zeitraums
+#   mindestens einmal einen DE-Bezug haben.
+# - GAP-Zeilen werden erst bei einer Lücke von mehr als 15 Minuten erzeugt.
 LOOKBACK_MONTHS = 6
 HOME_COUNTRY_ISO = "DE"
 GAP_THRESHOLD_MINUTES = 15
@@ -19,9 +63,23 @@ for d in [RAW_DIR, MAP_DIR, DB_DIR, EXP_DIR, LOG_DIR]:
     d.mkdir(parents=True, exist_ok=True)
 
 def ts():
+    """Aktuellen UTC-Zeitstempel für Logs und Importprotokolle erzeugen."""
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
+
+def remove_if_exists(path: Path):
+    """
+    Datei nur dann löschen, wenn sie tatsächlich existiert.
+
+    Diese Hilfsfunktion wird ausschließlich für temporäre Build-Dateien verwendet.
+    Die produktive DB_PATH wird niemals vor Beginn des Neuaufbaus gelöscht.
+    """
+    if path.exists():
+        path.unlink()
+
+
 def sha256(path):
+    """SHA-256-Prüfsumme einer Quelldatei für das Import-Audit berechnen."""
     h = hashlib.sha256()
     with open(path, "rb") as f:
         for chunk in iter(lambda: f.read(1024 * 1024), b""):
@@ -29,24 +87,32 @@ def sha256(path):
     return h.hexdigest()
 
 def safe_name(name):
+    """Aus einem CSV-Dateinamen einen sicheren DuckDB-Tabellennamen bilden."""
     n = Path(name).stem.lower()
     n = re.sub(r"[^a-z0-9_]+", "_", n)
     return "raw_" + n.strip("_")
 
 def qident(name):
+    """SQL-Identifier sicher quoten, z. B. Tabellen- oder Spaltennamen."""
     return '"' + name.replace('"', '""') + '"'
 
 def table_exists(con, table):
+    """Prüfen, ob eine DuckDB-Tabelle bereits existiert."""
     return con.execute(
         "select count(*) from information_schema.tables where table_name = ?",
         [table.lower()]
     ).fetchone()[0] > 0
 
 def columns(con, table):
+    """Alle Spaltennamen einer DuckDB-Tabelle auslesen."""
     rows = con.execute(f"describe {qident(table)}").fetchall()
     return [r[0] for r in rows]
 
 def pick(cols, candidates, fallback="NULL"):
+    """
+    Erste vorhandene Spalte aus einer Kandidatenliste auswählen.
+    Der Vergleich erfolgt unabhängig von Groß-/Kleinschreibung.
+    """
     by_lower = {c.lower(): c for c in cols}
     for cand in candidates:
         if cand.lower() in by_lower:
@@ -54,15 +120,26 @@ def pick(cols, candidates, fallback="NULL"):
     return fallback
 
 def pick_text(cols, candidates, fallback="NULL"):
+    """Wie pick(), aber zusätzlich als bereinigten Textwert zurückgeben."""
     expr = pick(cols, candidates, fallback)
     return expr if expr == "NULL" else f"NULLIF(TRIM(CAST({expr} AS VARCHAR)), '')"
 
 def coalesce(cols, candidates):
+    """
+    Mehrere mögliche Quellspalten priorisiert zusammenführen.
+    Der erste nicht-leere Wert wird verwendet.
+    """
     exprs = [pick_text(cols, [c]) for c in candidates]
     exprs = [e for e in exprs if e != "NULL"]
     return "COALESCE(" + ", ".join(exprs) + ")" if exprs else "NULL"
 
 def import_csvs(con):
+    """
+    Alle CSV-Dateien aus data/00_raw frisch nach DuckDB importieren.
+
+    Da der gesamte Tageslauf in DB_BUILD_PATH neu aufgebaut wird,
+    enthält die temporäre Datenbank ausschließlich den aktuellen Importstand.
+    """
     con.execute("""
         create table if not exists raw_import_run (
             run_id varchar,
@@ -100,6 +177,12 @@ def import_csvs(con):
     return run_id, imported
 
 def import_mapping(con):
+    """
+    Lok-Mapping laden.
+
+    Existiert keine Mapping-Datei, wird eine leere Tabelle mit dem erwarteten
+    Schema angelegt. Dadurch kann die Pipeline weiterlaufen und Findings erzeugen.
+    """
     mapping = MAP_DIR / "loco_mapping.csv"
     if mapping.exists():
         con.execute("""
@@ -116,6 +199,16 @@ def import_mapping(con):
         """)
 
 def build_loco_events(con):
+    """
+    Bewegungsdaten der Loks aufbereiten.
+
+    Diese Funktion:
+    - identifiziert die Bewegungsquelle,
+    - bildet die vollständige Lok-Zeitachse,
+    - leitet Clean-/Faulty-Richtung und Sequence-Zeitanker ab,
+    - kennzeichnet IN_REPORT und NOT_IN_REPORT,
+    - protokolliert nicht aufgenommene Zeilen.
+    """
     candidates = [t[0] for t in con.execute(
         "select table_name from information_schema.tables where table_name like 'raw_%'"
     ).fetchall()]
@@ -593,9 +686,13 @@ def build_loco_events(con):
     )
 
 def sql_lit(value):
+    """SQL-Textliteral sicher quoten."""
     return "'" + str(value).replace("'", "''") + "'"
 
 def build_transport_routes(con, home_country=HOME_COUNTRY_ISO):
+    """
+    TransportDetail-Segmente auswerten und die DE-Routenklassifikation bilden.
+    """
     candidates = [
         t[0]
         for t in con.execute(
@@ -864,6 +961,13 @@ def build_transport_routes(con, home_country=HOME_COUNTRY_ISO):
     )
 
 def build_core(con, run_id):
+    """
+    Finale Lok-Zeitachse bilden.
+
+    Zusätzlich zu den Bewegungszeilen werden künstliche GAP-Zeilen erzeugt,
+    wenn die Ortskette unterbrochen ist und die Lücke größer als
+    GAP_THRESHOLD_MINUTES ist.
+    """
     con.execute(f"""
         create or replace table core_loco_timeline as
         with mapped as (
@@ -1328,6 +1432,7 @@ def build_core(con, run_id):
     """)
 
 def build_findings(con, run_id):
+    """Fehler, Warnungen und manuelle Prüffälle regelbasiert erzeugen."""
     con.execute(f"""
         create or replace table dq_findings as
         with movement_base as (
@@ -1449,6 +1554,7 @@ def build_findings(con, run_id):
     """)
 
 def build_exports(con):
+    """Fachliche CSV-Exporttabellen für fehlerfreie IN_REPORT-Bewegungen bilden."""
     con.execute("""
         create or replace table export_zuordnungen as
         select
@@ -1479,47 +1585,149 @@ def build_exports(con):
     """)
 
 def export_table(con, table, file_name):
+    """Eine DuckDB-Tabelle als CSV-Datei nach data/03_exports schreiben."""
     path = EXP_DIR / file_name
     con.execute(f"copy {qident(table)} to ? (header true, delimiter ';')", [str(path)])
     print(f"Export: {path}")
 
 def main():
-    con = duckdb.connect(str(DB_PATH))
-    run_id, imported = import_csvs(con)
-    import_mapping(con)
-    build_loco_events(con)
-    build_transport_routes(con)
-    build_core(con, run_id)
-    build_findings(con, run_id)
-    build_exports(con)
-    for table, name in [
-        ("raw_import_run", "raw_import_run.csv"),
-        ("stg_loco_events", "stg_loco_events.csv"),
-        ("core_loco_timeline", "core_loco_timeline.csv"),
-        ("dq_findings", "dq_findings.csv"),
-        ("export_zuordnungen", "export_zuordnungen.csv"),
-        ("export_nutzungsmeldung", "export_nutzungsmeldung.csv"),
-        ("stg_loco_events_skipped", "stg_loco_events_skipped.csv"),
-        ("stg_transport_details_enriched", "stg_transport_details_enriched.csv"),
-        ("core_transport_route", "core_transport_route.csv"),
-    ]:
-        export_table(con, table, name)
-    summary = con.execute("""
-    select
-        (select count(*) from stg_loco_events) as stg_events,
-        (select count(*) from core_loco_timeline) as core_rows,
-        (select count(*) from dq_findings where severity='ERROR') as errors,
-        (select count(*) from dq_findings where severity='WARNING') as warnings,
-        (select count(*) from dq_findings where severity='MANUAL_REVIEW') as manual_reviews,
-        (select count(*) from export_zuordnungen) as exportable_rows
-""").fetchone()
-    print("")
-    print("MVP-Lauf abgeschlossen:", run_id)
-    print(f"Events: {summary[0]} | Core: {summary[1]} | Errors: {summary[2]} | Warnings: {summary[3]} | Manual Reviews: {summary[4]} | Exportfähig: {summary[5]}")
-    (LOG_DIR / f"{run_id}_summary.txt").write_text(
-        f"run_id={run_id}\nevents={summary[0]}\ncore_rows={summary[1]}\nerrors={summary[2]}\nwarnings={summary[3]}\nmanual_reviews={summary[4]}\nexportable_rows={summary[5 ]}\n",
-        encoding="utf-8"
-    )
+    """
+    Vollständigen Tageslauf ausführen.
+
+    WICHTIG:
+    Die produktive Datei data/02_duckdb/netzentgelt.duckdb wird nicht direkt
+    beschrieben. Stattdessen wird zuerst eine komplett neue temporäre Datenbank
+    aufgebaut. Nur wenn ALLE Schritte erfolgreich waren, ersetzt diese temporäre
+    Datei den letzten produktiven Stand.
+
+    Vorteil:
+    Scheitert ein Import, eine Berechnung oder ein Export, bleibt die letzte
+    funktionierende Tages-Datenbank unverändert erhalten.
+    """
+
+    # Eventuell übrig gebliebene Build-Dateien eines abgebrochenen älteren Laufs
+    # entfernen. Die produktive DB_PATH wird hier bewusst NICHT gelöscht.
+    remove_if_exists(DB_BUILD_PATH)
+    remove_if_exists(Path(str(DB_BUILD_PATH) + ".wal"))
+
+    con = None
+
+    try:
+        print("")
+        print("=" * 80)
+        print("Starte vollständigen Neuaufbau der Tages-Datenbank")
+        print(f"Temporäre Build-Datenbank: {DB_BUILD_PATH}")
+        print(f"Produktive Tages-Datenbank: {DB_PATH}")
+        print("=" * 80)
+
+        # Neue leere DuckDB-Datei öffnen.
+        # DuckDB erstellt DB_BUILD_PATH automatisch neu.
+        con = duckdb.connect(str(DB_BUILD_PATH))
+
+        # 1. Rohdaten frisch importieren.
+        run_id, imported = import_csvs(con)
+
+        # 2. Lok-Mapping einlesen.
+        import_mapping(con)
+
+        # 3. Bewegungsdaten und Transport-Routen neu berechnen.
+        # Die Reihenfolge ist relevant:
+        # build_core() benötigt core_transport_route bereits für seinen Join.
+        build_loco_events(con)
+        build_transport_routes(con)
+        build_core(con, run_id)
+
+        # 4. Findings und fachliche Exporttabellen neu berechnen.
+        build_findings(con, run_id)
+        build_exports(con)
+
+        # 5. Sämtliche CSV-Ausgaben neu schreiben.
+        # Bestehende Dateien gleichen Namens werden dabei überschrieben.
+        for table, name in [
+            ("raw_import_run", "raw_import_run.csv"),
+            ("stg_loco_events", "stg_loco_events.csv"),
+            ("core_loco_timeline", "core_loco_timeline.csv"),
+            ("dq_findings", "dq_findings.csv"),
+            ("export_zuordnungen", "export_zuordnungen.csv"),
+            ("export_nutzungsmeldung", "export_nutzungsmeldung.csv"),
+            ("stg_loco_events_skipped", "stg_loco_events_skipped.csv"),
+            ("stg_transport_details_enriched", "stg_transport_details_enriched.csv"),
+            ("core_transport_route", "core_transport_route.csv"),
+        ]:
+            export_table(con, table, name)
+
+        # 6. Kennzahlen des erfolgreich berechneten Laufs ermitteln.
+        summary = con.execute("""
+            select
+                (select count(*) from stg_loco_events) as stg_events,
+                (select count(*) from core_loco_timeline) as core_rows,
+                (select count(*) from dq_findings where severity='ERROR') as errors,
+                (select count(*) from dq_findings where severity='WARNING') as warnings,
+                (select count(*) from dq_findings where severity='MANUAL_REVIEW') as manual_reviews,
+                (select count(*) from export_zuordnungen) as exportable_rows
+        """).fetchone()
+
+        print("")
+        print("MVP-Lauf abgeschlossen:", run_id)
+        print(
+            f"Events: {summary[0]} | "
+            f"Core: {summary[1]} | "
+            f"Errors: {summary[2]} | "
+            f"Warnings: {summary[3]} | "
+            f"Manual Reviews: {summary[4]} | "
+            f"Exportfähig: {summary[5]}"
+        )
+
+        # 7. Tageslauf zusätzlich als einfache Textdatei protokollieren.
+        # Die Logdateien werden historisch behalten.
+        (LOG_DIR / f"{run_id}_summary.txt").write_text(
+            (
+                f"run_id={run_id}\n"
+                f"events={summary[0]}\n"
+                f"core_rows={summary[1]}\n"
+                f"errors={summary[2]}\n"
+                f"warnings={summary[3]}\n"
+                f"manual_reviews={summary[4]}\n"
+                f"exportable_rows={summary[5]}\n"
+            ),
+            encoding="utf-8"
+        )
+
+        # 8. Verbindung sauber schließen, damit DuckDB alle Daten vollständig
+        # auf die Build-Datei schreibt und keine Dateisperre bestehen bleibt.
+        con.close()
+        con = None
+
+        # 9. Erst jetzt den letzten produktiven Stand ersetzen.
+        # os.replace() überschreibt DB_PATH atomar, soweit dies vom Dateisystem
+        # unterstützt wird. Falls das Ersetzen fehlschlägt, bleibt DB_PATH
+        # unverändert bestehen und die Exception wird unten sichtbar ausgegeben.
+        os.replace(DB_BUILD_PATH, DB_PATH)
+
+        # DuckDB kann in Sonderfällen eine WAL-Datei hinterlassen.
+        # Nach erfolgreichem Close sollte sie nicht mehr benötigt werden.
+        remove_if_exists(Path(str(DB_BUILD_PATH) + ".wal"))
+
+        print("")
+        print(f"Tages-Datenbank erfolgreich ersetzt: {DB_PATH}")
+
+    except Exception:
+        # Bei einem Fehler:
+        # - offene Verbindung schließen,
+        # - temporäre Build-Dateien entfernen,
+        # - produktive Tages-Datenbank unverändert behalten,
+        # - ursprünglichen Fehler erneut auslösen, damit er im Terminal sichtbar ist.
+        print("")
+        print("FEHLER: Tages-Datenbank konnte nicht vollständig neu aufgebaut werden.")
+        print("Die letzte funktionierende netzentgelt.duckdb bleibt erhalten.")
+
+        if con is not None:
+            con.close()
+
+        remove_if_exists(DB_BUILD_PATH)
+        remove_if_exists(Path(str(DB_BUILD_PATH) + ".wal"))
+
+        raise
 
 if __name__ == "__main__":
     main()

@@ -51,7 +51,6 @@ def file_status_box():
 
     expected_raw = [
         "LocomotiveMovement.csv",
-        "LocomotiveUsage.csv",
         "TransportDetail.csv",
         "Locomotive.csv",
     ]
