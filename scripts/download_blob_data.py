@@ -1,14 +1,13 @@
+import os
 from pathlib import Path
+
+from dotenv import load_dotenv
 from azure.storage.blob import BlobServiceClient
 
 # ======================================================
 # Azure Blob Download für Netzentgelt MVP
 # Lädt nur die relevanten MVP-Dateien
-# ======================================================
-
-import os
-
-from dotenv import load_dotenv
+# ====================================================== 
 
 load_dotenv()
 
