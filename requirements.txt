@@ -1,0 +1,5 @@
+duckdb
+azure-storage-blob
+pandas
+openpyxl
+pyyamlstreamlit

@@ -216,3 +216,70 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# =========================================================
+# Netzentgelt Tool - project specific exclusions
+# =========================================================
+
+# ---------------------------------------------------------
+# Environment files and local configuration
+# ---------------------------------------------------------
+.env.*
+!.env.example
+
+*.local
+config.local.*
+settings.local.*
+
+# ---------------------------------------------------------
+# Additional secret and credential files
+# ---------------------------------------------------------
+credentials.json
+credentials*.json
+secrets.json
+secrets*.json
+secrets*.toml
+
+*.pem
+*.key
+*.pfx
+*.p12
+*.crt
+
+# ---------------------------------------------------------
+# Local project data
+# Never upload real Datalake data or generated results
+# ---------------------------------------------------------
+data/00_raw/**
+data/01_staging/**
+data/02_processed/**
+data/03_exports/**
+
+# Keep empty folder structure in Git if required
+!data/00_raw/.gitkeep
+!data/01_staging/.gitkeep
+!data/02_processed/.gitkeep
+!data/03_exports/.gitkeep
+
+# ---------------------------------------------------------
+# Logs and temporary files
+# ---------------------------------------------------------
+logs/**
+tmp/**
+temp/**
+*.tmp
+*.bak
+
+# ---------------------------------------------------------
+# Local database files, if DuckDB or SQLite is used
+# ---------------------------------------------------------
+*.duckdb
+*.duckdb.wal
+*.db
+*.db-journal
+
+# ---------------------------------------------------------
+# Local editor configuration
+# ---------------------------------------------------------
+.vscode/
+.idea/
