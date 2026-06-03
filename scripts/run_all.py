@@ -29,11 +29,14 @@ Im Projektstamm ausführen:
 """
 
 from pathlib import Path
+import csv
 import os
 import duckdb
 import hashlib
 import re
+import unicodedata
 from datetime import datetime, timezone
+from error_rules import build_findings
 
 ROOT = Path(__file__).resolve().parents[1]
 RAW_DIR = ROOT / "data" / "00_raw"
@@ -197,6 +200,588 @@ def import_mapping(con):
                 source varchar, comment varchar, active_flag varchar
             )
         """)
+
+
+def normalize_company_name_py(value):
+    """
+    Firmennamen für eine konservative technische Gleichheitsprüfung normalisieren.
+
+    Die Normalisierung entfernt ausschließlich Schreibvarianten wie:
+    - Groß-/Kleinschreibung
+    - Umlaute / Akzente
+    - Leerzeichen
+    - Satzzeichen und Bindestriche
+
+    Sie führt KEINE unscharfe Zuordnung durch.
+    """
+    if value is None:
+        return ""
+
+    text = str(value).strip().lower()
+
+    replacements = {
+        "ä": "ae",
+        "ö": "oe",
+        "ü": "ue",
+        "ß": "ss",
+    }
+
+    for old, new in replacements.items():
+        text = text.replace(old, new)
+
+    text = unicodedata.normalize("NFKD", text)
+    text = "".join(
+        char
+        for char in text
+        if not unicodedata.combining(char)
+    )
+
+    return re.sub(r"[^a-z0-9]+", "", text)
+
+
+def create_company_normalization_macro(con):
+    """
+    SQL-Makro analog zu normalize_company_name_py() bereitstellen.
+
+    Dadurch verwenden Python-Import und DuckDB-Joins dieselbe konservative
+    Normalisierung.
+    """
+    con.execute("""
+        create or replace macro normalize_company_name(value) as
+            regexp_replace(
+                lower(
+                    replace(
+                        replace(
+                            replace(
+                                replace(
+                                    coalesce(cast(value as varchar), ''),
+                                    'ä', 'ae'
+                                ),
+                                'ö', 'oe'
+                            ),
+                            'ü', 'ue'
+                        ),
+                        'ß', 'ss'
+                    )
+                ),
+                '[^a-z0-9]+',
+                '',
+                'g'
+            )
+    """)
+
+
+def find_first_existing_file(directory: Path, candidates):
+    """Erste vorhandene Datei aus einer Kandidatenliste zurückgeben."""
+    for candidate in candidates:
+        path = directory / candidate
+
+        if path.exists():
+            return path
+
+    return None
+
+
+def import_market_partner_reference(con):
+    """
+    Offizielle Marktpartnerliste der DB Energie einlesen.
+
+    Erwartete Ablage:
+        data/01_mapping/vens liste.csv
+
+    Alternativ werden auch vens_liste.csv und vens-liste.csv unterstützt.
+
+    Die Quelldatei enthält mehrere fachliche Bereiche. Jeder Datensatz wird
+    rollenbezogen gespeichert, damit ANu-vEns und ANe-tEns nicht vermischt
+    werden.
+    """
+    create_company_normalization_macro(con)
+
+    con.execute("""
+        create or replace table cfg_market_partner_role (
+            role_code varchar,
+            role_label varchar,
+            company_name_official varchar,
+            company_name_normalized varchar,
+            market_partner_id varchar,
+            source_file varchar,
+            source_line_no bigint
+        )
+    """)
+
+    reference_path = find_first_existing_file(
+        MAP_DIR,
+        [
+            "vens liste.csv",
+            "vens_liste.csv",
+            "vens-liste.csv",
+        ],
+    )
+
+    if reference_path is None:
+        print(
+            "WARNUNG: Keine offizielle Marktpartnerliste gefunden. "
+            "Erwartet: data/01_mapping/vens liste.csv"
+        )
+
+    else:
+        role_map = {
+            "ANu-vEns (Nutzer) im Bahnstromnetz": "ANU_VENS",
+            "ANe-tEns (Halter) im Bahnstromnetz": "ANE_TENS",
+            "Dienstleister im Bahnstromnetz": "DIENSTLEISTER",
+            "Netzbetreiber im Bahnstromnetz": "NETZBETREIBER",
+            "Stromlieferanten im Bahnstromnetz": "STROMLIEFERANT",
+            "Bilankreisverantwortliche im Bahnstromnetz": "BILANZKREISVERANTWORTLICHER",
+            "Übertragungsnetzbetreiber im Bahnstromnetz": "UEBERTRAGUNGSNETZBETREIBER",
+            "Einsatzverantwortliche im Bahnstromnetz": "EINSATZVERANTWORTLICHER",
+            "Betreiber einer technischen Ressource im Bahnstromnetz": "BETREIBER_TECHNISCHE_RESSOURCE",
+            "Messdienstleister im Bahnstromnetz": "MESSDIENSTLEISTER",
+        }
+
+        current_role_code = None
+        current_role_label = None
+        insert_rows = []
+
+        with open(
+            reference_path,
+            "r",
+            encoding="utf-8-sig",
+            newline="",
+        ) as csv_file:
+            reader = csv.reader(
+                csv_file,
+                delimiter=";",
+            )
+
+            for line_no, row in enumerate(reader, start=1):
+                if not row:
+                    continue
+
+                first_value = row[0].strip() if len(row) >= 1 else ""
+                second_value = row[1].strip() if len(row) >= 2 else ""
+
+                if first_value in role_map:
+                    current_role_code = role_map[first_value]
+                    current_role_label = first_value
+                    continue
+
+                if (
+                    current_role_code is None
+                    or not first_value
+                    or first_value == "Unternehmensname"
+                    or not second_value
+                ):
+                    continue
+
+                insert_rows.append(
+                    (
+                        current_role_code,
+                        current_role_label,
+                        first_value,
+                        normalize_company_name_py(first_value),
+                        second_value,
+                        reference_path.name,
+                        line_no,
+                    )
+                )
+
+        if insert_rows:
+            con.executemany(
+                """
+                insert into cfg_market_partner_role values (
+                    ?, ?, ?, ?, ?, ?, ?
+                )
+                """,
+                insert_rows,
+            )
+
+        print(
+            f"Marktpartnerliste importiert: {reference_path.name} "
+            f"({len(insert_rows)} rollenbezogene Einträge)"
+        )
+
+    # Nur eindeutige offizielle Namen dürfen automatisch verwendet werden.
+    con.execute("""
+        create or replace table cfg_market_partner_role_effective as
+        select
+            role_code,
+            company_name_normalized,
+            max(company_name_official) as company_name_official,
+            max(market_partner_id) as market_partner_id
+        from cfg_market_partner_role
+        where nullif(trim(market_partner_id), '') is not null
+        group by
+            role_code,
+            company_name_normalized
+        having count(distinct market_partner_id) = 1
+    """)
+
+    con.execute("""
+        create or replace table cfg_market_partner_role_conflicts as
+        select
+            role_code,
+            company_name_normalized,
+            string_agg(
+                distinct company_name_official,
+                ' | '
+                order by company_name_official
+            ) as company_names,
+            string_agg(
+                distinct market_partner_id,
+                ' | '
+                order by market_partner_id
+            ) as market_partner_ids,
+            count(distinct market_partner_id) as distinct_market_partner_ids
+        from cfg_market_partner_role
+        where nullif(trim(market_partner_id), '') is not null
+        group by
+            role_code,
+            company_name_normalized
+        having count(distinct market_partner_id) > 1
+    """)
+
+
+def import_market_partner_mapping(con):
+    """
+    Vollständige, geprüfte Marktpartner-Mappingtabelle einlesen.
+
+    Erwartete Ablage:
+        data/01_mapping/market_partner_mapping_import.csv
+
+    Die Datei wird aus Relations.xlsx und der offiziellen vEns-/MP-ID-Liste
+    aufgebaut. Für den produktiven Join werden ausschließlich Zeilen verwendet,
+    die:
+    - active_flag = Y besitzen,
+    - eine DataLake-Quellbezeichnung enthalten,
+    - eine MP-ID enthalten,
+    - für dieselbe Rolle und normalisierte DataLake-Bezeichnung eindeutig sind,
+    - und deren MP-ID in der offiziellen Marktpartnerliste für diese Rolle
+      tatsächlich vorhanden ist.
+
+    Dadurch bleibt die Zuordnung nachvollziehbar und auditierbar. Unsichere
+    oder widersprüchliche Treffer werden niemals stillschweigend verwendet.
+    """
+    create_company_normalization_macro(con)
+
+    mapping_path = MAP_DIR / "market_partner_mapping_import.csv"
+
+    if mapping_path.exists():
+        con.execute("""
+            create or replace table cfg_market_partner_mapping as
+            select
+                nullif(trim(source_system), '') as source_system,
+                nullif(trim(source_field), '') as source_field,
+                nullif(trim(source_value), '') as source_value,
+                upper(nullif(trim(role_code), '')) as role_code,
+                nullif(trim(official_company_name), '') as official_company_name,
+                nullif(trim(market_partner_id), '') as market_partner_id,
+                upper(coalesce(nullif(trim(active_flag), ''), 'N')) as active_flag,
+                nullif(trim(match_method), '') as match_method,
+                try_cast(nullif(trim(match_score), '') as double) as match_score,
+                upper(coalesce(nullif(trim(manual_review), ''), 'N')) as manual_review,
+                nullif(trim(comment), '') as comment,
+                normalize_company_name(source_value) as source_value_normalized,
+                normalize_company_name(official_company_name) as official_company_name_normalized
+            from read_csv_auto(
+                ?,
+                delim=';',
+                header=true,
+                all_varchar=true,
+                ignore_errors=true
+            )
+        """, [str(mapping_path)])
+
+        imported_count = con.execute(
+            "select count(*) from cfg_market_partner_mapping"
+        ).fetchone()[0]
+
+        print(
+            f"Marktpartner-Mapping importiert: {mapping_path.name} "
+            f"({imported_count} Zeilen)"
+        )
+
+    else:
+        con.execute("""
+            create or replace table cfg_market_partner_mapping (
+                source_system varchar,
+                source_field varchar,
+                source_value varchar,
+                role_code varchar,
+                official_company_name varchar,
+                market_partner_id varchar,
+                active_flag varchar,
+                match_method varchar,
+                match_score double,
+                manual_review varchar,
+                comment varchar,
+                source_value_normalized varchar,
+                official_company_name_normalized varchar
+            )
+        """)
+
+        print(
+            "WARNUNG: Vollständige Mappingdatei fehlt. "
+            "Erwartet: data/01_mapping/market_partner_mapping_import.csv. "
+            "Exakte offizielle Firmennamen werden weiterhin als Fallback erkannt."
+        )
+
+    # Aktive Mappingzeilen, deren MP-ID nicht rollenbezogen in der offiziellen
+    # Marktpartnerliste existiert, dürfen nicht produktiv verwendet werden.
+    con.execute("""
+        create or replace table cfg_market_partner_mapping_invalid as
+        select
+            m.*,
+            'MP-ID ist für die angegebene Rolle nicht in der offiziellen Marktpartnerliste vorhanden.' as validation_error
+        from cfg_market_partner_mapping m
+        left join cfg_market_partner_role r
+          on r.role_code = m.role_code
+         and r.market_partner_id = m.market_partner_id
+        where m.active_flag = 'Y'
+          and nullif(trim(m.market_partner_id), '') is not null
+          and r.market_partner_id is null
+    """)
+
+    # Konflikte: dieselbe normalisierte DataLake-Bezeichnung und Rolle zeigt auf
+    # mehrere aktive MP-IDs. Solche Fälle werden bewusst nicht automatisch aufgelöst.
+    con.execute("""
+        create or replace table cfg_market_partner_mapping_conflicts as
+        select
+            role_code,
+            source_value_normalized,
+            string_agg(
+                distinct source_value,
+                ' | '
+                order by source_value
+            ) as source_values,
+            string_agg(
+                distinct official_company_name,
+                ' | '
+                order by official_company_name
+            ) as official_company_names,
+            string_agg(
+                distinct market_partner_id,
+                ' | '
+                order by market_partner_id
+            ) as market_partner_ids,
+            count(distinct market_partner_id) as distinct_market_partner_ids
+        from cfg_market_partner_mapping
+        where active_flag = 'Y'
+          and nullif(trim(source_value_normalized), '') is not null
+          and nullif(trim(market_partner_id), '') is not null
+        group by
+            role_code,
+            source_value_normalized
+        having count(distinct market_partner_id) > 1
+    """)
+
+    # Produktiv verwendbare Mappings: nur aktiv, offiziell validiert und eindeutig.
+    con.execute("""
+        create or replace table cfg_market_partner_mapping_effective as
+        select
+            m.role_code,
+            m.source_value_normalized,
+            max(m.source_value) as source_value,
+            max(m.official_company_name) as official_company_name,
+            max(m.market_partner_id) as market_partner_id,
+            max(m.match_method) as match_method,
+            max(m.match_score) as match_score
+        from cfg_market_partner_mapping m
+        inner join cfg_market_partner_role r
+          on r.role_code = m.role_code
+         and r.market_partner_id = m.market_partner_id
+        where m.active_flag = 'Y'
+          and nullif(trim(m.source_value_normalized), '') is not null
+          and nullif(trim(m.market_partner_id), '') is not null
+        group by
+            m.role_code,
+            m.source_value_normalized
+        having count(distinct m.market_partner_id) = 1
+    """)
+
+    effective_count = con.execute(
+        "select count(*) from cfg_market_partner_mapping_effective"
+    ).fetchone()[0]
+
+    conflict_count = con.execute(
+        "select count(*) from cfg_market_partner_mapping_conflicts"
+    ).fetchone()[0]
+
+    invalid_count = con.execute(
+        "select count(*) from cfg_market_partner_mapping_invalid"
+    ).fetchone()[0]
+
+    print(
+        "Produktive Marktpartner-Mappings: "
+        f"{effective_count} | Konflikte={conflict_count} | Ungültig={invalid_count}"
+    )
+
+
+def import_vens_tens_exception(con):
+    """
+    Explizite Ausnahmeliste für PerformingRUs einlesen, für die im MVP
+    keine vEns-/tEns-Prüfung erforderlich ist.
+
+    Erwartete Ablage:
+        data/01_mapping/vens_tens_exception.csv
+
+    Die Liste ist bewusst granular:
+    - exempt_vens = Y unterdrückt vEns-bezogene Hinweise.
+    - exempt_tens = Y ist für spätere tEns-Regeln vorbereitet.
+    - active_flag = Y aktiviert die Ausnahme.
+
+    Andere Regeln, insbesondere PerformingRU-MP-ID (R007), fehlende
+    PerformingRU (R009) oder Zeitachsenfehler, bleiben davon unberührt.
+    """
+    create_company_normalization_macro(con)
+
+    exception_path = MAP_DIR / "vens_tens_exception.csv"
+
+    if exception_path.exists():
+        con.execute("""
+            create or replace table cfg_vens_tens_exception as
+            select
+                nullif(trim(source_system), '') as source_system,
+                nullif(trim(source_field), '') as source_field,
+                nullif(trim(source_value), '') as source_value,
+                normalize_company_name(source_value) as source_value_normalized,
+                upper(coalesce(nullif(trim(exempt_vens), ''), 'N')) = 'Y' as exempt_vens,
+                upper(coalesce(nullif(trim(exempt_tens), ''), 'N')) = 'Y' as exempt_tens,
+                upper(coalesce(nullif(trim(active_flag), ''), 'N')) as active_flag,
+                nullif(trim(comment), '') as comment
+            from read_csv_auto(
+                ?,
+                delim=';',
+                header=true,
+                all_varchar=true,
+                ignore_errors=true
+            )
+        """, [str(exception_path)])
+
+        imported_count = con.execute(
+            "select count(*) from cfg_vens_tens_exception"
+        ).fetchone()[0]
+
+        print(
+            f"vEns-/tEns-Ausnahmeliste importiert: {exception_path.name} "
+            f"({imported_count} Zeilen)"
+        )
+
+    else:
+        con.execute("""
+            create or replace table cfg_vens_tens_exception (
+                source_system varchar,
+                source_field varchar,
+                source_value varchar,
+                source_value_normalized varchar,
+                exempt_vens boolean,
+                exempt_tens boolean,
+                active_flag varchar,
+                comment varchar
+            )
+        """)
+
+        print(
+            "HINWEIS: Keine vEns-/tEns-Ausnahmeliste gefunden. "
+            "Erwartet: data/01_mapping/vens_tens_exception.csv"
+        )
+
+    con.execute("""
+        create or replace table cfg_vens_tens_exception_conflicts as
+        select
+            source_value_normalized,
+            string_agg(distinct source_value, ' | ' order by source_value) as source_values,
+            count(*) as row_count,
+            count(distinct exempt_vens) as distinct_exempt_vens,
+            count(distinct exempt_tens) as distinct_exempt_tens
+        from cfg_vens_tens_exception
+        where active_flag = 'Y'
+          and nullif(trim(source_value_normalized), '') is not null
+        group by source_value_normalized
+        having count(distinct exempt_vens) > 1
+            or count(distinct exempt_tens) > 1
+    """)
+
+    con.execute("""
+        create or replace table cfg_vens_tens_exception_effective as
+        select
+            source_value_normalized,
+            max(source_value) as source_value,
+            bool_or(exempt_vens) as exempt_vens,
+            bool_or(exempt_tens) as exempt_tens,
+            max(comment) as comment
+        from cfg_vens_tens_exception
+        where active_flag = 'Y'
+          and nullif(trim(source_value_normalized), '') is not null
+        group by source_value_normalized
+        having count(distinct exempt_vens) = 1
+           and count(distinct exempt_tens) = 1
+    """)
+
+    effective_count = con.execute(
+        "select count(*) from cfg_vens_tens_exception_effective"
+    ).fetchone()[0]
+
+    conflict_count = con.execute(
+        "select count(*) from cfg_vens_tens_exception_conflicts"
+    ).fetchone()[0]
+
+    print(
+        "Produktive vEns-/tEns-Ausnahmen: "
+        f"{effective_count} | Konflikte={conflict_count}"
+    )
+
+
+def build_unresolved_performing_ru_market_partner_alias(con):
+    """
+    Nicht auflösbare PerformingRU-Schreibweisen für die manuelle Pflege aggregieren.
+
+    Die MP-ID für die Nutzungsüberlassung ist die MP-ID der PerformingRU.
+    PerformingRUs auf der expliziten vEns-/tEns-Ausnahmeliste werden bewusst
+    nicht in diese Queue aufgenommen.
+
+    Die Tabelle ist verdichtet: Eine unbekannte PerformingRU-Schreibweise
+    erscheint nur einmal mit Anzahl, erstem und letztem Auftreten.
+    """
+    create_company_normalization_macro(con)
+
+    con.execute("""
+        create or replace table dq_unresolved_performing_ru_market_partner_alias as
+        select
+            'ANU_VENS' as role_code,
+            'PerformingRU' as source_field,
+            performing_ru as source_value,
+            normalize_company_name(performing_ru) as source_value_normalized,
+            count(*) as affected_movement_rows,
+            count(distinct loco_no) as affected_locos,
+            count(distinct transport_number) as affected_transports,
+            min(period_start_utc) as first_seen_utc,
+            max(coalesce(period_end_utc, period_start_utc)) as last_seen_utc,
+            'Kein eindeutiger Treffer in market_partner_mapping_import.csv oder offizieller ANU_VENS-Rollenliste.' as reason,
+            'market_partner_mapping_import.csv prüfen, DataLake-Bezeichnung ergänzen oder Active_Flag nach fachlicher Freigabe auf Y setzen.' as suggested_action
+        from core_loco_timeline
+        where row_type = 'MOVEMENT'
+          and report_scope = 'IN_REPORT'
+          and nullif(trim(performing_ru), '') is not null
+          and nullif(trim(performing_ru_marktpartner_id), '') is null
+          and coalesce(vens_tens_exception_flag, false) = false
+        group by
+            performing_ru,
+            normalize_company_name(performing_ru)
+        order by
+            affected_movement_rows desc,
+            source_value
+    """)
+
+    unresolved_count = con.execute(
+        "select count(*) from dq_unresolved_performing_ru_market_partner_alias"
+    ).fetchone()[0]
+
+    if unresolved_count > 0:
+        print(
+            "WARNUNG: "
+            f"{unresolved_count} ungeklärte PerformingRU-Schreibweisen gefunden. "
+            "Siehe Export dq_unresolved_performing_ru_market_partner_alias.csv"
+        )
 
 def build_loco_events(con):
     """
@@ -996,8 +1581,29 @@ def build_core(con, run_id):
                 r.cal_exit_count_home,
                 r.cal_route_type_home,
 
-                m.halter_marktpartner_id,
+                coalesce(
+                    performing_ru_mapping.market_partner_id,
+                    performing_ru_direct_role.market_partner_id
+                ) as performing_ru_marktpartner_id,
+
+                case
+                    when performing_ru_mapping.market_partner_id is not null
+                        then 'MAPPING_IMPORT'
+                    when performing_ru_direct_role.market_partner_id is not null
+                        then 'OFFICIAL_NAME_EXACT'
+                    else 'UNRESOLVED'
+                end as performing_ru_marktpartner_id_source,
+
                 m.default_vens as user_vens,
+
+                coalesce(vens_tens_exception.exempt_vens, false) as exempt_vens,
+                coalesce(vens_tens_exception.exempt_tens, false) as exempt_tens,
+                case
+                    when vens_tens_exception.source_value_normalized is not null
+                        then true
+                    else false
+                end as vens_tens_exception_flag,
+                vens_tens_exception.comment as vens_tens_exception_comment,
 
                 e.country,
                 e.origin_country_iso,
@@ -1018,15 +1624,19 @@ def build_core(con, run_id):
                 case
                     when m.default_vens is not null
                      and m.default_vens <> ''
-                     and m.halter_marktpartner_id is not null
-                     and m.halter_marktpartner_id <> ''
-                     and m.tfze_or_tens is not null
-                     and m.tfze_or_tens <> ''
+                     and coalesce(
+                            performing_ru_mapping.market_partner_id,
+                            performing_ru_direct_role.market_partner_id
+                         ) is not null
+                     and coalesce(nullif(m.tfze_or_tens, ''), e.loco_no) is not null
                         then 'HIGH'
 
                     when m.default_vens is not null
-                      or m.halter_marktpartner_id is not null
-                      or m.tfze_or_tens is not null
+                      or coalesce(
+                            performing_ru_mapping.market_partner_id,
+                            performing_ru_direct_role.market_partner_id
+                         ) is not null
+                      or coalesce(nullif(m.tfze_or_tens, ''), e.loco_no) is not null
                         then 'MEDIUM'
 
                     else 'LOW'
@@ -1036,13 +1646,23 @@ def build_core(con, run_id):
                     when m.loco_no is null
                         then 'Keine passende Mapping-Zeile für Lok gefunden.'
 
+                    when (m.default_vens is null or m.default_vens = '')
+                     and coalesce(vens_tens_exception.exempt_vens, false) = true
+                        then 'vEns fehlt, aber PerformingRU ist explizit von der vEns-/tEns-Prüfung ausgenommen.'
+
                     when m.default_vens is null or m.default_vens = ''
-                        then 'Mapping vorhanden, aber vEns fehlt. Wird als WARNING behandelt.'
+                        then 'Mapping vorhanden, aber vEns fehlt. Wird als INFO behandelt.'
 
-                    when m.halter_marktpartner_id is null or m.halter_marktpartner_id = ''
-                        then 'Mapping vorhanden, aber Marktpartner-ID fehlt.'
+                    when e.performing_ru is null or e.performing_ru = ''
+                        then 'PerformingRU fehlt. Manuelle Prüfung erforderlich.'
 
-                    else 'Mapping über Loknummer und Gültigkeitszeitraum angewendet.'
+                    when performing_ru_mapping.market_partner_id is not null
+                        then 'PerformingRU-MP-ID über market_partner_mapping_import.csv rollenbezogen und offiziell validiert aufgelöst.'
+
+                    when performing_ru_direct_role.market_partner_id is not null
+                        then 'PerformingRU-MP-ID über exakten offiziellen Firmennamen und ANU_VENS-Rollenliste aufgelöst.'
+
+                    else 'PerformingRU-MP-ID nicht eindeutig auflösbar. Mappingtabelle oder offiziellen Firmennamen prüfen.'
                 end as decision_reason,
 
                 e.source_table,
@@ -1061,6 +1681,23 @@ def build_core(con, run_id):
                  or m.valid_to_utc = ''
                  or e.period_start_utc < try_cast(replace(m.valid_to_utc,'Z','') as timestamp)
              )
+            left join cfg_market_partner_mapping_effective performing_ru_mapping
+              on performing_ru_mapping.role_code = 'ANU_VENS'
+             and performing_ru_mapping.source_value_normalized = normalize_company_name(
+                    e.performing_ru
+             )
+
+            left join cfg_market_partner_role_effective performing_ru_direct_role
+              on performing_ru_direct_role.role_code = 'ANU_VENS'
+             and performing_ru_direct_role.company_name_normalized = normalize_company_name(
+                    e.performing_ru
+             )
+
+            left join cfg_vens_tens_exception_effective vens_tens_exception
+              on vens_tens_exception.source_value_normalized = normalize_company_name(
+                    e.performing_ru
+             )
+
             left join core_transport_route r
               on e.transport_number = r.transport_number
         ),
@@ -1122,8 +1759,13 @@ def build_core(con, run_id):
                 cal_exit_count_home,
                 cal_route_type_home,
 
-                halter_marktpartner_id,
+                performing_ru_marktpartner_id,
+                performing_ru_marktpartner_id_source,
                 user_vens,
+                exempt_vens,
+                exempt_tens,
+                vens_tens_exception_flag,
+                vens_tens_exception_comment,
 
                 country,
                 origin_country_iso,
@@ -1154,6 +1796,12 @@ def build_core(con, run_id):
                 decision_reason,
 
                 case
+                    -- Nur DE-relevante Bewegungen dürfen Prüffälle erzeugen.
+                    -- Auslandszeilen bleiben für die durchgehende Lok-Zeitachse
+                    -- sichtbar, werden aber nicht als Fehler markiert.
+                    when report_scope <> 'IN_REPORT'
+                        then false
+
                     when sequence_ts is null
                       or period_start_utc is null
                       or period_end_utc is null
@@ -1162,8 +1810,7 @@ def build_core(con, run_id):
                       or loco_no = ''
                         then true
 
-                    when report_scope = 'IN_REPORT'
-                     and (performing_ru is null or performing_ru = '')
+                    when performing_ru is null or performing_ru = ''
                         then true
 
                     else false
@@ -1180,13 +1827,18 @@ def build_core(con, run_id):
                      and loco_no <> ''
                      and user_vens is not null
                      and user_vens <> ''
-                     and halter_marktpartner_id is not null
-                     and halter_marktpartner_id <> ''
+                     and performing_ru_marktpartner_id is not null
+                     and performing_ru_marktpartner_id <> ''
                         then true
                     else false
                 end as export_ready,
 
                 case
+                    -- Auslandszeilen zuerst abfangen. Dadurch entstehen
+                    -- außerhalb DE keine Errors oder Manual Reviews.
+                    when report_scope = 'NOT_IN_REPORT'
+                        then 'INFO'
+
                     when sequence_ts is null
                       or period_start_utc is null
                       or period_end_utc is null
@@ -1195,21 +1847,22 @@ def build_core(con, run_id):
                       or loco_no = ''
                         then 'ERROR'
 
-                    when report_scope = 'IN_REPORT'
-                     and (performing_ru is null or performing_ru = '')
+                    when performing_ru is null or performing_ru = ''
                         then 'MANUAL_REVIEW'
 
-                    when report_scope = 'IN_REPORT'
-                     and (user_vens is null or user_vens = '')
+                    when (user_vens is null or user_vens = '')
+                     and coalesce(exempt_vens, false) = false
                         then 'WARNING'
-
-                    when report_scope = 'NOT_IN_REPORT'
-                        then 'INFO'
 
                     else ''
                 end as dq_severity,
 
                 case
+                    -- Auslandszeilen bleiben sichtbar, werden aber nicht
+                    -- als fachliche Prüffälle behandelt.
+                    when report_scope = 'NOT_IN_REPORT'
+                        then 'Außerhalb DE; Not in the Report.'
+
                     when sequence_ts is null
                         then 'Kein gültiger Sequence-Zeitanker ableitbar. CleanDir/FaultyDir sowie ActualDeparture/ActualArrival prüfen.'
 
@@ -1225,16 +1878,15 @@ def build_core(con, run_id):
                     when loco_no is null or loco_no = ''
                         then 'Loknummer fehlt.'
 
-                    when report_scope = 'IN_REPORT'
-                     and (performing_ru is null or performing_ru = '')
+                    when performing_ru is null or performing_ru = ''
                         then 'DE-relevanter Abschnitt ohne PerformingRU; manuelle Prüfung erforderlich.'
 
-                    when report_scope = 'IN_REPORT'
-                     and (user_vens is null or user_vens = '')
-                        then 'vEns/VENS fehlt; wird als Warnung behandelt und blockiert die Zeitachsenlogik nicht.'
+                    when (user_vens is null or user_vens = '')
+                     and coalesce(exempt_vens, false) = true
+                        then 'vEns/VENS fehlt, aber PerformingRU steht auf der freigegebenen vEns-/tEns-Ausnahmeliste.'
 
-                    when report_scope = 'NOT_IN_REPORT'
-                        then 'Außerhalb DE; Not in the Report.'
+                    when user_vens is null or user_vens = ''
+                        then 'vEns/VENS fehlt; wird als Hinweis behandelt und blockiert die Zeitachsenlogik nicht.'
 
                     else ''
                 end as dq_message,
@@ -1331,8 +1983,14 @@ def build_core(con, run_id):
                 cal_exit_count_home,
                 cal_route_type_home,
 
-                halter_marktpartner_id,
+                performing_ru_marktpartner_id,
+                performing_ru_marktpartner_id_source,
                 user_vens,
+
+                false as exempt_vens,
+                false as exempt_tens,
+                false as vens_tens_exception_flag,
+                null::varchar as vens_tens_exception_comment,
 
                 null as country,
                 destination_country_iso as origin_country_iso,
@@ -1378,9 +2036,21 @@ def build_core(con, run_id):
                 null as confidence,
                 'Künstliche GAP-Zeile wegen gebrochener Ortskette zwischen vorheriger Destination und nächstem Origin.' as decision_reason,
 
-                true as needs_manual_review,
+                case
+                    when upper(coalesce(destination_country_iso, '')) = '{HOME_COUNTRY_ISO}'
+                      or upper(coalesce(next_origin_country_iso, '')) = '{HOME_COUNTRY_ISO}'
+                        then true
+                    else false
+                end as needs_manual_review,
+
                 false as export_ready,
-                'WARNING' as dq_severity,
+
+                case
+                    when upper(coalesce(destination_country_iso, '')) = '{HOME_COUNTRY_ISO}'
+                      or upper(coalesce(next_origin_country_iso, '')) = '{HOME_COUNTRY_ISO}'
+                        then 'WARNING'
+                    else 'INFO'
+                end as dq_severity,
 
                case
                     when gap_from is not null
@@ -1431,128 +2101,6 @@ def build_core(con, run_id):
         from all_rows
     """)
 
-def build_findings(con, run_id):
-    """Fehler, Warnungen und manuelle Prüffälle regelbasiert erzeugen."""
-    con.execute(f"""
-        create or replace table dq_findings as
-        with movement_base as (
-            select *
-            from core_loco_timeline
-            where row_type = 'MOVEMENT'
-        ),
-        overlap as (
-            select
-                b.*,
-                lag(period_end_utc) over (
-                    partition by loco_no
-                    order by period_start_utc, period_end_utc
-                ) as prev_end
-            from movement_base b
-        )
-        select '{run_id}' run_id, 'ERROR' severity, 'R001' rule_id, loco_no, period_start_utc, period_end_utc,
-               'Sequence-Zeitanker fehlt.' message,
-               'CleanDir/FaultyDir sowie ActualDeparture/ActualArrival prüfen.' suggested_action,
-               'open' status
-        from core_loco_timeline
-        where row_type = 'MOVEMENT'
-          and sequence_ts is null
-
-        union all
-        select '{run_id}', 'ERROR', 'R002', loco_no, period_start_utc, period_end_utc,
-               'ActualDeparture fehlt oder ist ungültig.',
-               'Quelle prüfen oder ActualDeparture manuell ergänzen.',
-               'open'
-        from core_loco_timeline
-        where row_type = 'MOVEMENT'
-          and period_start_utc is null
-
-        union all
-        select '{run_id}', 'ERROR', 'R003', loco_no, period_start_utc, period_end_utc,
-               'ActualArrival fehlt oder ist ungültig.',
-               'Quelle prüfen oder ActualArrival manuell ergänzen.',
-               'open'
-        from core_loco_timeline
-        where row_type = 'MOVEMENT'
-          and period_end_utc is null
-
-        union all
-        select '{run_id}', 'ERROR', 'R004', loco_no, period_start_utc, period_end_utc,
-               'ActualDeparture liegt nach ActualArrival.',
-               'Zeitintervall fachlich korrigieren.',
-               'open'
-        from core_loco_timeline
-        where row_type = 'MOVEMENT'
-          and period_start_utc is not null
-          and period_end_utc is not null
-          and period_start_utc > period_end_utc
-
-        union all
-        select '{run_id}', 'ERROR', 'R005', loco_no, period_start_utc, period_end_utc,
-               'Loknummer fehlt.',
-               'Quelle prüfen; ohne Loknummer keine Zuordnung möglich.',
-               'open'
-        from core_loco_timeline
-        where row_type = 'MOVEMENT'
-          and (loco_no is null or loco_no = '')
-
-        union all
-        select '{run_id}', 'WARNING', 'R006', loco_no, period_start_utc, period_end_utc,
-               'vEns fehlt.',
-               'vEns im Mapping ergänzen. Für die Zeitachsenlogik ist dies nur eine Warnung.',
-               'open'
-        from core_loco_timeline
-        where row_type = 'MOVEMENT'
-          and report_scope = 'IN_REPORT'
-          and (user_vens is null or user_vens = '')
-
-        union all
-        select '{run_id}', 'ERROR', 'R007', loco_no, period_start_utc, period_end_utc,
-               'Marktpartner-ID fehlt.',
-               'loco_mapping.csv ergänzen.',
-               'open'
-        from core_loco_timeline
-        where row_type = 'MOVEMENT'
-          and report_scope = 'IN_REPORT'
-          and (halter_marktpartner_id is null or halter_marktpartner_id = '')
-
-        union all
-        select '{run_id}', 'ERROR', 'R008', loco_no, period_start_utc, period_end_utc,
-               'TfzE/tEns fehlt oder nur Loknummer als Fallback gesetzt.',
-               'tEns/TfzE im Mapping ergänzen.',
-               'open'
-        from core_loco_timeline
-        where row_type = 'MOVEMENT'
-          and report_scope = 'IN_REPORT'
-          and (tfze_or_tens is null or tfze_or_tens = '' or tfze_or_tens = loco_no)
-
-        union all
-        select '{run_id}', 'MANUAL_REVIEW', 'R009', loco_no, period_start_utc, period_end_utc,
-               'DE-relevanter Abschnitt ohne PerformingRU.',
-               'PerformingRU fachlich prüfen und ergänzen.',
-               'open'
-        from core_loco_timeline
-        where row_type = 'MOVEMENT'
-          and report_scope = 'IN_REPORT'
-          and (performing_ru is null or performing_ru = '')
-
-        union all
-        select '{run_id}', 'WARNING', 'R010', loco_no, period_start_utc, period_end_utc,
-               dq_message,
-               'Ortskette prüfen; fehlende Bewegung oder falsche Location-Zuordnung klären.',
-               'open'
-        from core_loco_timeline
-        where row_type = 'GAP'
-
-        union all
-        select '{run_id}', 'ERROR', 'R011', loco_no, period_start_utc, period_end_utc,
-               'Zeitliche Überschneidung zur vorherigen Bewegung gleicher Lok erkannt.',
-               'Überlappung prüfen; Priorität oder manuelle Entscheidung setzen.',
-               'open'
-        from overlap
-        where prev_end is not null
-          and period_start_utc < prev_end
-    """)
-
 def build_exports(con):
     """Fachliche CSV-Exporttabellen für fehlerfreie IN_REPORT-Bewegungen bilden."""
     con.execute("""
@@ -1562,7 +2110,7 @@ def build_exports(con):
             period_start_utc as "Beginn der Zuordnung*",
             period_end_utc as "Ende der Zuordnung",
             user_vens as "Nutzer-vEns*",
-            halter_marktpartner_id as "Marktpartner ID für Nutzungsüberlassung"
+            performing_ru_marktpartner_id as "Marktpartner ID für Nutzungsüberlassung"
         from core_loco_timeline
         where row_type = 'MOVEMENT'
           and report_scope = 'IN_REPORT'
@@ -1576,7 +2124,7 @@ def build_exports(con):
             period_start_utc as "Beginn der Nutzung*",
             period_end_utc as "Ende der Nutzung",
             user_vens as "Nutzer-vEns*",
-            halter_marktpartner_id as "Marktpartner ID für Nutzungsüberlassung*",
+            performing_ru_marktpartner_id as "Marktpartner ID für Nutzungsüberlassung*",
             'Übergabemeldung' as "Übernahmeanfrage oder Übergabemeldung?"
         from core_loco_timeline
         where row_type = 'MOVEMENT'
@@ -1627,8 +2175,11 @@ def main():
         # 1. Rohdaten frisch importieren.
         run_id, imported = import_csvs(con)
 
-        # 2. Lok-Mapping einlesen.
+        # 2. Fachliche Mappings und offizielle Marktpartner-Referenzdaten einlesen.
         import_mapping(con)
+        import_market_partner_reference(con)
+        import_market_partner_mapping(con)
+        import_vens_tens_exception(con)
 
         # 3. Bewegungsdaten und Transport-Routen neu berechnen.
         # Die Reihenfolge ist relevant:
@@ -1636,9 +2187,10 @@ def main():
         build_loco_events(con)
         build_transport_routes(con)
         build_core(con, run_id)
+        build_unresolved_performing_ru_market_partner_alias(con)
 
         # 4. Findings und fachliche Exporttabellen neu berechnen.
-        build_findings(con, run_id)
+        build_findings(con, run_id, home_country_iso=HOME_COUNTRY_ISO)
         build_exports(con)
 
         # 5. Sämtliche CSV-Ausgaben neu schreiben.
@@ -1648,6 +2200,17 @@ def main():
             ("stg_loco_events", "stg_loco_events.csv"),
             ("core_loco_timeline", "core_loco_timeline.csv"),
             ("dq_findings", "dq_findings.csv"),
+            ("cfg_dq_rule_catalog", "cfg_dq_rule_catalog.csv"),
+            ("cfg_market_partner_role", "cfg_market_partner_role.csv"),
+            ("cfg_market_partner_role_conflicts", "cfg_market_partner_role_conflicts.csv"),
+            ("cfg_market_partner_mapping", "cfg_market_partner_mapping.csv"),
+            ("cfg_market_partner_mapping_effective", "cfg_market_partner_mapping_effective.csv"),
+            ("cfg_market_partner_mapping_conflicts", "cfg_market_partner_mapping_conflicts.csv"),
+            ("cfg_market_partner_mapping_invalid", "cfg_market_partner_mapping_invalid.csv"),
+            ("cfg_vens_tens_exception", "cfg_vens_tens_exception.csv"),
+            ("cfg_vens_tens_exception_effective", "cfg_vens_tens_exception_effective.csv"),
+            ("cfg_vens_tens_exception_conflicts", "cfg_vens_tens_exception_conflicts.csv"),
+            ("dq_unresolved_performing_ru_market_partner_alias", "dq_unresolved_performing_ru_market_partner_alias.csv"),
             ("export_zuordnungen", "export_zuordnungen.csv"),
             ("export_nutzungsmeldung", "export_nutzungsmeldung.csv"),
             ("stg_loco_events_skipped", "stg_loco_events_skipped.csv"),
