@@ -1552,6 +1552,11 @@ def build_core(con, run_id):
     Zusätzlich zu den Bewegungszeilen werden künstliche GAP-Zeilen erzeugt,
     wenn die Ortskette unterbrochen ist und die Lücke größer als
     GAP_THRESHOLD_MINUTES ist.
+
+    GAP-Zeilen bleiben intern für Audit und Exportsegmentierung erhalten.
+    Als DE-relevant gelten sie aber nur bei einer fachlich zulässigen
+    Kombination der angrenzenden DE-Ereignisse. Nur solche GAPs dürfen in
+    Fehlerqueue und farblicher Lok-Detailprüfung erscheinen.
     """
     con.execute(f"""
         create or replace table core_loco_timeline as
@@ -1743,7 +1748,12 @@ left join core_transport_route r
                 lead(origin_country_iso) over (
                     partition by loco_no
                     order by sequence_ts asc nulls last, source_row_id asc
-                ) as next_origin_country_iso
+                ) as next_origin_country_iso,
+
+                lead(de_event_label) over (
+                    partition by loco_no
+                    order by sequence_ts asc nulls last, source_row_id asc
+                ) as next_de_event_label
             from mapped
         ),
         movement_rows as (
@@ -1808,6 +1818,7 @@ left join core_transport_route r
                 null::bigint as gap_duration_minutes,
                 null::varchar as gap_duration_text,
                 null::varchar as gap_message,
+                false as gap_relevant_de,
 
                 confidence,
                 decision_reason,
@@ -1958,7 +1969,27 @@ left join core_transport_route r
                     )
                 )
             else null
-        end as gap_duration_text
+        end as gap_duration_text,
+
+        case
+            when upper(coalesce(de_event_label, '')) = 'IN DE'
+             and upper(coalesce(next_de_event_label, '')) = 'IN DE'
+                then true
+
+            when upper(coalesce(de_event_label, '')) = 'EINFAHRT'
+             and upper(coalesce(next_de_event_label, '')) = 'AUSFAHRT'
+                then true
+
+            when upper(coalesce(de_event_label, '')) = 'EINFAHRT'
+             and upper(coalesce(next_de_event_label, '')) = 'IN DE'
+                then true
+
+            when upper(coalesce(de_event_label, '')) = 'IN DE'
+             and upper(coalesce(next_de_event_label, '')) = 'AUSFAHRT'
+                then true
+
+            else false
+        end as gap_relevant_de
     from gap_pre
 ),
         gap_rows as (
@@ -2040,13 +2071,14 @@ left join core_transport_route r
                     else
                         'Keine Nutzung im Zeitraum von unbekannt bis unbekannt. Dauer nicht berechenbar.'
                 end as gap_message,
+                gap_relevant_de,
 
                 null as confidence,
                 'Künstliche GAP-Zeile wegen gebrochener Ortskette zwischen vorheriger Destination und nächstem Origin.' as decision_reason,
 
                 case
-                    when upper(coalesce(destination_country_iso, '')) = '{HOME_COUNTRY_ISO}'
-                      or upper(coalesce(next_origin_country_iso, '')) = '{HOME_COUNTRY_ISO}'
+                    when gap_relevant_de = true
+                     and coalesce(gap_minutes, 0) > 480
                         then true
                     else false
                 end as needs_manual_review,
@@ -2054,10 +2086,12 @@ left join core_transport_route r
                 false as export_ready,
 
                 case
-                    when upper(coalesce(destination_country_iso, '')) = '{HOME_COUNTRY_ISO}'
-                      or upper(coalesce(next_origin_country_iso, '')) = '{HOME_COUNTRY_ISO}'
-                        then 'WARNING'
-                    else 'INFO'
+                    when gap_relevant_de = true
+                     and coalesce(gap_minutes, 0) > 480
+                        then 'ERROR'
+                    when gap_relevant_de = true
+                        then 'INFO'
+                    else ''
                 end as dq_severity,
 
                case

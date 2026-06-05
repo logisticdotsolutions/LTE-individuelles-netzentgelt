@@ -426,10 +426,10 @@ def build_rule_catalog(con) -> None:
                  'DE-relevanter Abschnitt ohne PerformingRU.',
                  true),
                 ('R010', 'TIMELINE', 'ERROR',
-                 'Ortskette endet oder ist unterbrochen. Unterbrechung über 8 Stunden.',
+                 'DE-relevante Ortskette endet oder ist unterbrochen. Unterbrechung über 8 Stunden.',
                  true),
                 ('R010.5', 'TIMELINE', 'INFO',
-                 'Ortskette endet oder ist unterbrochen. Unterbrechung bis einschließlich 8 Stunden.',
+                 'DE-relevante Ortskette endet oder ist unterbrochen. Unterbrechung bis einschließlich 8 Stunden.',
                  true),
                 ('R011', 'TIMELINE', 'ERROR',
                  'Zeitliche Überschneidung zur vorherigen Bewegung gleicher Lok.',
@@ -554,7 +554,6 @@ def build_findings(
     Die Tabelle enthält atomare Regelverletzungen. Deshalb kann dieselbe
     TransportNumber mehrfach vorkommen, wenn mehrere Regeln greifen.
     """
-    home = sql_lit(home_country_iso.upper())
     run = sql_lit(run_id)
 
     build_rule_catalog(con)
@@ -759,11 +758,8 @@ def build_findings(
             source_row_id
         from core_loco_timeline
         where row_type = 'GAP'
+          and coalesce(gap_relevant_de, false) = true
           and coalesce(gap_duration_minutes, 0) > 480
-          and (
-                upper(coalesce(origin_country_iso, '')) = {home}
-             or upper(coalesce(destination_country_iso, '')) = {home}
-          )
 
         union all
 
@@ -787,11 +783,8 @@ def build_findings(
             source_row_id
         from core_loco_timeline
         where row_type = 'GAP'
+          and coalesce(gap_relevant_de, false) = true
           and coalesce(gap_duration_minutes, 0) <= 480
-          and (
-                upper(coalesce(origin_country_iso, '')) = {home}
-             or upper(coalesce(destination_country_iso, '')) = {home}
-          )
 
         union all
 

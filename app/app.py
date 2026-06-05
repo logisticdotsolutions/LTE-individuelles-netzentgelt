@@ -49,6 +49,7 @@ TIMELINE_HIDDEN_COLUMNS = [
     "sequence_ts_source",
     "gap_from_utc",
     "gap_to_utc",
+    "gap_relevant_de",
     "tfze_or_tens",
 ]
 
@@ -62,6 +63,7 @@ DETAIL_TIMELINE_HIDDEN_COLUMNS = [
     "sequence_ts_source",
     "gap_from_utc",
     "gap_to_utc",
+    "gap_relevant_de",
     "tfze_or_tens",
     "user_vens",
     "performing_ru_marktpartner_id",
@@ -106,6 +108,41 @@ def read_csv_safe(path: Path) -> pd.DataFrame:
         except Exception as e:
             st.error(f"Datei konnte nicht gelesen werden: {path.name} - {e}")
             return pd.DataFrame()
+
+def hide_non_relevant_gap_rows(source_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Nicht DE-relevante GAP-Zeilen aus fachlichen Timeline-Ansichten entfernen.
+
+    Die Zeilen bleiben in core_loco_timeline.csv intern erhalten, damit Audit
+    und Exportsegmentierung weiterhin vollständig funktionieren. Sichtbar und
+    fehlerrelevant sind aber ausschließlich GAPs mit gap_relevant_de = true.
+    """
+    if source_df.empty:
+        return source_df
+
+    if "row_type" not in source_df.columns:
+        return source_df
+
+    if "gap_relevant_de" not in source_df.columns:
+        return source_df
+
+    is_gap = (
+        source_df["row_type"]
+        .fillna("")
+        .astype(str)
+        .str.strip()
+        .str.upper()
+        .eq("GAP")
+    )
+
+    is_relevant_gap = source_df["gap_relevant_de"].apply(
+        normalize_bool
+    )
+
+    return source_df[
+        ~is_gap | is_relevant_gap
+    ].copy()
+
 
 def get_col(df: pd.DataFrame, candidates):
     lower_map = {c.lower(): c for c in df.columns}
@@ -1140,7 +1177,15 @@ zuordnungen_path = EXPORT_DIR / "export_zuordnungen.csv"
 nutzungsmeldung_path = EXPORT_DIR / "export_nutzungsmeldung.csv"
 run_path = EXPORT_DIR / "raw_import_run.csv"
 
-timeline = read_csv_safe(timeline_path)
+timeline_raw = read_csv_safe(timeline_path)
+timeline_gap_relevance_ready = (
+    timeline_raw.empty
+    or "gap_relevant_de" in timeline_raw.columns
+)
+
+timeline = hide_non_relevant_gap_rows(
+    timeline_raw
+)
 findings = read_csv_safe(findings_path)
 rule_catalog = read_csv_safe(rule_catalog_path)
 unresolved_performing_ru_market_partner_alias = read_csv_safe(
@@ -1208,6 +1253,13 @@ tab_overview, tab_no_loco, tab_timeline, tab_findings, tab_exports, tab_run = st
 
 with tab_overview:
     st.subheader("Überblick")
+
+    if not timeline_gap_relevance_ready:
+        st.warning(
+            "Die GAP-Relevanz wurde noch nicht neu berechnet. "
+            "Bitte die Pipeline erneut ausführen. Erst danach sinken die "
+            "R010-/R010.5-Zähler und relevante Lücken werden korrekt markiert."
+        )
 
         # ==================================================
     # Vollständigen Tageslauf starten
@@ -2382,13 +2434,27 @@ with tab_timeline:
     dq_path = EXPORT_DIR / "dq_findings.csv"
     route_detail_path = EXPORT_DIR / "stg_transport_details_enriched.csv"
 
-    core = read_csv_safe(core_path)
+    core_raw = read_csv_safe(core_path)
+    core_gap_relevance_ready = (
+        core_raw.empty
+        or "gap_relevant_de" in core_raw.columns
+    )
+
+    core = hide_non_relevant_gap_rows(
+        core_raw
+    )
     dq = read_csv_safe(dq_path)
     route_details = read_csv_safe(route_detail_path)
 
     if core.empty:
         st.warning("Keine core_loco_timeline.csv gefunden. Bitte zuerst die Pipeline ausführen.")
     else:
+        if not core_gap_relevance_ready:
+            st.warning(
+                "Die Timeline stammt noch aus einem älteren Pipeline-Lauf ohne "
+                "gap_relevant_de. Bitte die Pipeline erneut ausführen."
+            )
+
         # Datumsfelder sauber konvertieren
         for col in [
             "period_start_utc",
@@ -2516,6 +2582,7 @@ with tab_timeline:
                 "sequence_ts_source",
                 "gap_from_utc",
                 "gap_to_utc",
+                "gap_relevant_de",
                 "gap_duration_text",
                 "gap_message",
                 "loco_no",
@@ -2645,10 +2712,23 @@ with tab_timeline:
                     is_problem = True
 
                 if row_type == "GAP":
+                    if normalize_bool(
+                        row.get(
+                            "gap_relevant_de",
+                            False,
+                        )
+                    ):
+                        return [
+                            (
+                                "background-color: #fce5cd; "
+                                "color: #111111"
+                            )
+                        ] * len(row)
+
                     return [
                         (
-                            "background-color: #fce5cd; "
-                            "color: #111111"
+                            "background-color: #161a20; "
+                            "color: #8b949e"
                         )
                     ] * len(row)
 
