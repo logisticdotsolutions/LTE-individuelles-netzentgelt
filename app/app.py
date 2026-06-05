@@ -168,16 +168,12 @@ def has_value(series: pd.Series) -> pd.Series:
 
 def build_de_relevance_mask(source_df: pd.DataFrame):
     """
-    Ermittelt die DE-Relevanz streng anhand der Länder des Abschnitts.
+    Ermittelt die DE-Relevanz strikt über OriginCountryISO oder
+    DestinationCountryISO.
 
-    Fachliche Regel:
-    - OriginCountryISO = "DE"
-      ODER
-    - DestinationCountryISO = "DE"
-
-    Nur wenn die detaillierten Origin-/Destination-Felder in einer Rohdatei
-    technisch nicht vorhanden sind, wird Country als defensiver Fallback
-    verwendet. Reine Auslandsbewegungen werden nicht berücksichtigt.
+    Country wird nur als technischer Fallback verwendet, wenn die Rohdatei
+    weder ein Origin- noch ein Destination-Länderfeld enthält. Reine
+    Auslandsbewegungen bleiben dadurch außerhalb der Fehlerübersicht.
     """
     de_values = {
         "DE",
@@ -204,48 +200,40 @@ def build_de_relevance_mask(source_df: pd.DataFrame):
         ],
     )
 
-    de_mask = pd.Series(
-        False,
-        index=source_df.index,
-        dtype=bool,
-    )
+    detected_columns = [
+        column
+        for column in [origin_col, destination_col]
+        if column
+    ]
 
-    detected_columns = []
+    if detected_columns:
+        de_mask = pd.Series(False, index=source_df.index, dtype=bool)
 
-    for column in [origin_col, destination_col]:
-        if not column or column in detected_columns:
-            continue
-
-        normalized = (
-            source_df[column]
-            .fillna("")
-            .astype(str)
-            .str.strip()
-            .str.upper()
-        )
-
-        de_mask = de_mask | normalized.isin(de_values)
-        detected_columns.append(column)
-
-    if not detected_columns:
-        fallback_country_col = get_col(
-            source_df,
-            ["Country"],
-        )
-
-        if fallback_country_col:
+        for column in detected_columns:
             normalized = (
-                source_df[fallback_country_col]
+                source_df[column]
                 .fillna("")
                 .astype(str)
                 .str.strip()
                 .str.upper()
             )
+            de_mask = de_mask | normalized.isin(de_values)
 
-            de_mask = normalized.isin(de_values)
-            detected_columns.append(fallback_country_col)
+        return de_mask, detected_columns
 
-    return de_mask, detected_columns
+    country_col = get_col(source_df, ["Country"])
+
+    if country_col:
+        normalized = (
+            source_df[country_col]
+            .fillna("")
+            .astype(str)
+            .str.strip()
+            .str.upper()
+        )
+        return normalized.isin(de_values), [country_col]
+
+    return pd.Series(False, index=source_df.index, dtype=bool), []
 
 def parse_actual_departure(series: pd.Series) -> pd.Series:
     """
@@ -286,6 +274,7 @@ def summarize_no_loco_rows(
     reason: str,
     transport_col,
     actual_departure_col,
+    performing_ru_col,
 ):
     """
     Verdichtet auffällige CSV-Zeilen auf Transportebene.
@@ -294,6 +283,7 @@ def summarize_no_loco_rows(
     - Datenquelle
     - Fehlergrund
     - TransportNumber
+    - PerformingRU
     - erstes vorhandenes ActualDeparture
     - Anzahl der betroffenen CSV-Zeilen
 
@@ -304,6 +294,7 @@ def summarize_no_loco_rows(
         "Quelle",
         "Grund",
         "TransportNumber",
+        "PerformingRU",
         "Erstes Datum",
         "Anzahl Zeilen",
     ]
@@ -325,6 +316,19 @@ def summarize_no_loco_rows(
     else:
         work["TransportNumber"] = "(TransportNumber-Spalte fehlt)"
 
+    # PerformingRU aufbereiten. Bei mehreren PerformingRUs je Transport
+    # werden die Werte für die verdichtete Ansicht eindeutig zusammengeführt.
+    if performing_ru_col and performing_ru_col in work.columns:
+        work["PerformingRU"] = (
+            work[performing_ru_col]
+            .fillna("")
+            .astype(str)
+            .str.strip()
+            .replace("", "(PerformingRU fehlt)")
+        )
+    else:
+        work["PerformingRU"] = "(PerformingRU-Spalte fehlt)"
+
     # Erstes fachlich relevantes Datum aufbereiten
     if actual_departure_col and actual_departure_col in work.columns:
         work["_first_actual_departure"] = parse_actual_departure(
@@ -340,6 +344,12 @@ def summarize_no_loco_rows(
             _first_actual_departure=(
                 "_first_actual_departure",
                 "min",
+            ),
+            PerformingRU=(
+                "PerformingRU",
+                lambda values: " | ".join(
+                    sorted(set(values.dropna().astype(str)))
+                ),
             ),
             **{
                 "Anzahl Zeilen": (
@@ -389,7 +399,8 @@ def build_no_loco_diagnostics():
     Prüfung 2:
     LocomotiveMovement.csv
     - Zeile hat einen DE-Bezug
-    - LocomotiveNo ist exakt '00000000000-0'
+    - LocomotiveNo fehlt, ist exakt '00000000000-0'
+      oder LocomotiveType enthält 'Dummy'
 
     Rückgabe:
     - summary_df: Übersicht mit den zwei Zählern
@@ -432,6 +443,19 @@ def build_no_loco_diagnostics():
             "TransportNo",
             "TransportId",
             "TransportID",
+        ],
+    )
+
+    td_performing_ru_col = get_col(
+        transport_detail,
+        [
+            "PerformingRU",
+            "CurrentContractant",
+            "CALPerformingRU",
+            "PerformingRailwayUndertaking",
+            "RailwayUndertaking",
+            "Carrier",
+            "ProductionCompany",
         ],
     )
 
@@ -516,13 +540,17 @@ def build_no_loco_diagnostics():
             ),
             transport_col=td_transport_col,
             actual_departure_col=td_actual_col,
+            performing_ru_col=td_performing_ru_col,
         )
+
+        td_transport_count = len(td_details)
 
         if not td_details.empty:
             detail_frames.append(td_details)
 
     else:
         td_count = None
+        td_transport_count = None
         td_status = (
             "Nicht auswertbar: "
             "ActualDeparture, FirstLocomotiveNo, MovementType "
@@ -545,6 +573,7 @@ def build_no_loco_diagnostics():
             "aber FirstLocomotiveNo leer"
         ),
         "Anzahl Zeilen": td_count,
+        "Betroffene Transporte": td_transport_count,
         "Status": td_status,
     })
 
@@ -583,6 +612,19 @@ def build_no_loco_diagnostics():
         ],
     )
 
+    lm_performing_ru_col = get_col(
+        locomotive_movement,
+        [
+            "CurrentContractant",
+            "CALPerformingRU",
+            "PerformingRU",
+            "PerformingRailwayUndertaking",
+            "RailwayUndertaking",
+            "Carrier",
+            "ProductionCompany",
+        ],
+    )
+
     lm_is_de_relevant, lm_de_country_cols = (
         build_de_relevance_mask(
             locomotive_movement
@@ -590,6 +632,10 @@ def build_no_loco_diagnostics():
     )
 
     if lm_loco_col and lm_de_country_cols:
+        lm_is_missing_loco_no = ~has_value(
+            locomotive_movement[lm_loco_col]
+        )
+
         lm_is_technical_loco_no = (
             locomotive_movement[lm_loco_col]
             .fillna("")
@@ -624,7 +670,8 @@ def build_no_loco_diagnostics():
         lm_mask = (
             lm_is_de_relevant
             & (
-                lm_is_technical_loco_no
+                lm_is_missing_loco_no
+                | lm_is_technical_loco_no
                 | lm_is_dummy_type
             )
         )
@@ -637,19 +684,23 @@ def build_no_loco_diagnostics():
             mask=lm_mask,
             source_name="LocomotiveMovement.csv",
             reason=(
-                "DE-relevanter Abschnitt, "
+                "DE-relevanter Abschnitt, LocomotiveNo fehlt, "
                 "LocomotiveNo = 00000000000-0 "
                 "oder LocomotiveType enthält Dummy"
             ),
             transport_col=lm_transport_col,
             actual_departure_col=lm_actual_col,
+            performing_ru_col=lm_performing_ru_col,
         )
+
+        lm_transport_count = len(lm_details)
 
         if not lm_details.empty:
             detail_frames.append(lm_details)
 
     else:
         lm_count = None
+        lm_transport_count = None
         lm_status = (
             "Nicht auswertbar: "
             "LocomotiveNo oder Länderfeld fehlt als Spalte."
@@ -665,11 +716,12 @@ def build_no_loco_diagnostics():
     summary_rows.append({
         "Quelle": "LocomotiveMovement.csv",
         "Prüfung": (
-            "DE-relevanter Abschnitt, "
+            "DE-relevanter Abschnitt, LocomotiveNo fehlt, "
             "LocomotiveNo = 00000000000-0 "
             "oder LocomotiveType enthält Dummy"
         ),
         "Anzahl Zeilen": lm_count,
+        "Betroffene Transporte": lm_transport_count,
         "Status": lm_status,
     })
 
@@ -688,6 +740,7 @@ def build_no_loco_diagnostics():
             "Quelle",
             "Grund",
             "TransportNumber",
+            "PerformingRU",
             "Erstes Datum",
             "Anzahl Zeilen",
         ])
@@ -1086,6 +1139,7 @@ except Exception as diagnostics_error:
         "Quelle",
         "Prüfung",
         "Anzahl Zeilen",
+        "Betroffene Transporte",
         "Status",
     ])
 
@@ -1093,6 +1147,7 @@ except Exception as diagnostics_error:
         "Quelle",
         "Grund",
         "TransportNumber",
+        "PerformingRU",
         "Erstes Datum",
         "Anzahl Zeilen",
     ])
@@ -1406,8 +1461,10 @@ with tab_overview:
     )
 
     st.caption(
-        "Diese Zähler werden direkt aus TransportDetail.csv "
-        "und LocomotiveMovement.csv gebildet."
+        "Diese Zähler werden direkt aus TransportDetail.csv und "
+        "LocomotiveMovement.csv gebildet. Die zusätzliche Spalte "
+        "'Betroffene Transporte' entspricht der verdichteten R012-Logik "
+        "der Fehlerqueue."
     )
 
     for warning in no_loco_warnings:
@@ -1451,19 +1508,52 @@ with tab_no_loco:
         )
 
     else:
+        filtered_no_loco_cases = no_loco_cases.copy()
+
+        performing_ru_values = sorted(
+            {
+                value.strip()
+                for cell_value in no_loco_cases["PerformingRU"]
+                .fillna("")
+                .astype(str)
+                for value in cell_value.split(" | ")
+                if value.strip()
+            }
+        )
+
+        selected_performing_ru = st.selectbox(
+            "PerformingRU",
+            ["Alle"] + performing_ru_values,
+            key="no_loco_filter_performing_ru",
+        )
+
+        if selected_performing_ru != "Alle":
+            filtered_no_loco_cases = filtered_no_loco_cases[
+                filtered_no_loco_cases["PerformingRU"]
+                .fillna("")
+                .astype(str)
+                .apply(
+                    lambda cell_value: selected_performing_ru
+                    in {
+                        value.strip()
+                        for value in cell_value.split(" | ")
+                    }
+                )
+            ].copy()
+
         st.write(
             f"Betroffene Transporte: "
-            f"**{len(no_loco_cases)}**"
+            f"**{len(filtered_no_loco_cases)}**"
         )
 
         st.dataframe(
-            no_loco_cases,
+            filtered_no_loco_cases,
             use_container_width=True,
             hide_index=True,
         )
 
         csv = (
-            no_loco_cases
+            filtered_no_loco_cases
             .to_csv(index=False, sep=";")
             .encode("utf-8-sig")
         )
@@ -1634,10 +1724,6 @@ with tab_findings:
         "Die Queue enthält einzelne Regelverletzungen. "
         "Ein Transport kann mehrfach vorkommen, wenn mehrere Regeln greifen."
     )
-
-    # Fehlende vEns-/tEns-Referenzdaten werden im MVP bewusst nicht als
-    # Fehler oder Hinweis in der Fehlerqueue dargestellt. Sie bleiben nur
-    # für den XLSX-Export technisch relevant.
 
     if findings.empty:
         st.success("Keine Findings gefunden oder Datei dq_findings.csv fehlt.")
