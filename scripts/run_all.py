@@ -1659,13 +1659,6 @@ def build_core(con, run_id):
                     when m.loco_no is null
                         then 'Keine passende Mapping-Zeile für Lok gefunden.'
 
-                    when (m.default_vens is null or m.default_vens = '')
-                     and coalesce(vens_tens_exception.exempt_vens, false) = true
-                        then 'vEns fehlt, aber PerformingRU ist explizit von der vEns-/tEns-Prüfung ausgenommen.'
-
-                    when m.default_vens is null or m.default_vens = ''
-                        then 'Mapping vorhanden, aber vEns fehlt. Wird als INFO behandelt.'
-
                     when e.performing_ru is null or e.performing_ru = ''
                         then 'PerformingRU fehlt. Manuelle Prüfung erforderlich.'
 
@@ -1874,10 +1867,6 @@ left join core_transport_route r
                     when performing_ru is null or performing_ru = ''
                         then 'MANUAL_REVIEW'
 
-                    when (user_vens is null or user_vens = '')
-                     and coalesce(exempt_vens, false) = false
-                        then 'WARNING'
-
                     else ''
                 end as dq_severity,
 
@@ -1904,13 +1893,6 @@ left join core_transport_route r
 
                     when performing_ru is null or performing_ru = ''
                         then 'DE-relevanter Abschnitt ohne PerformingRU; manuelle Prüfung erforderlich.'
-
-                    when (user_vens is null or user_vens = '')
-                     and coalesce(exempt_vens, false) = true
-                        then 'vEns/VENS fehlt, aber PerformingRU steht auf der freigegebenen vEns-/tEns-Ausnahmeliste.'
-
-                    when user_vens is null or user_vens = ''
-                        then 'vEns/VENS fehlt; wird als Hinweis behandelt und blockiert die Zeitachsenlogik nicht.'
 
                     else ''
                 end as dq_message,

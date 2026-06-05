@@ -168,20 +168,16 @@ def has_value(series: pd.Series) -> pd.Series:
 
 def build_de_relevance_mask(source_df: pd.DataFrame):
     """
-    Ermittelt zeilenweise, ob ein Datensatz für Deutschland relevant ist.
+    Ermittelt die DE-Relevanz streng anhand der Länder des Abschnitts.
 
-    Primär wird das Feld Country ausgewertet. Zusätzlich werden vorhandene
-    Origin-/Destination-Länderfelder als Fallback berücksichtigt.
+    Fachliche Regel:
+    - OriginCountryISO = "DE"
+      ODER
+    - DestinationCountryISO = "DE"
 
-    Dadurch werden:
-    - reine Auslandsabschnitte ausgeschlossen,
-    - Einfahrten nach DE berücksichtigt,
-    - Ausfahrten aus DE berücksichtigt,
-    - Inland-Abschnitte in DE berücksichtigt.
-
-    Rückgabe:
-    - mask: boolesche Series mit DE-Relevanz je Zeile
-    - detected_columns: tatsächlich verwendete Länderfelder
+    Nur wenn die detaillierten Origin-/Destination-Felder in einer Rohdatei
+    technisch nicht vorhanden sind, wird Country als defensiver Fallback
+    verwendet. Reine Auslandsbewegungen werden nicht berücksichtigt.
     """
     de_values = {
         "DE",
@@ -190,15 +186,23 @@ def build_de_relevance_mask(source_df: pd.DataFrame):
         "DEUTSCHLAND",
     }
 
-    country_candidates = [
-        "Country",
-        "OriginCountryISO",
-        "OriginCountry",
-        "DestinationCountryISO",
-        "DestinationCountry",
-        "TransportOriginCountry",
-        "TransportDestinationCountry",
-    ]
+    origin_col = get_col(
+        source_df,
+        [
+            "OriginCountryISO",
+            "OriginCountry",
+            "TransportOriginCountry",
+        ],
+    )
+
+    destination_col = get_col(
+        source_df,
+        [
+            "DestinationCountryISO",
+            "DestinationCountry",
+            "TransportDestinationCountry",
+        ],
+    )
 
     de_mask = pd.Series(
         False,
@@ -208,12 +212,7 @@ def build_de_relevance_mask(source_df: pd.DataFrame):
 
     detected_columns = []
 
-    for candidate in country_candidates:
-        column = get_col(
-            source_df,
-            [candidate],
-        )
-
+    for column in [origin_col, destination_col]:
         if not column or column in detected_columns:
             continue
 
@@ -227,6 +226,24 @@ def build_de_relevance_mask(source_df: pd.DataFrame):
 
         de_mask = de_mask | normalized.isin(de_values)
         detected_columns.append(column)
+
+    if not detected_columns:
+        fallback_country_col = get_col(
+            source_df,
+            ["Country"],
+        )
+
+        if fallback_country_col:
+            normalized = (
+                source_df[fallback_country_col]
+                .fillna("")
+                .astype(str)
+                .str.strip()
+                .str.upper()
+            )
+
+            de_mask = normalized.isin(de_values)
+            detected_columns.append(fallback_country_col)
 
     return de_mask, detected_columns
 
@@ -1618,72 +1635,9 @@ with tab_findings:
         "Ein Transport kann mehrfach vorkommen, wenn mehrere Regeln greifen."
     )
 
-    with st.expander(
-        "⚪ Ausnahmeliste vEns/tEns",
-        expanded=False,
-    ):
-        st.caption(
-            "Diese PerformingRUs sind explizit von den vEns-/tEns-bezogenen "
-            "Prüfungen ausgenommen. Für sie werden weder R006 noch R007 erzeugt. "
-            "Zeitachsenfehler und fehlende PerformingRU bleiben weiterhin aktiv."
-        )
-
-        if vens_tens_exception.empty:
-            st.info(
-                "Keine aktive vEns-/tEns-Ausnahmeliste gefunden "
-                "oder Exportdatei noch nicht vorhanden."
-            )
-        else:
-            st.dataframe(
-                vens_tens_exception,
-                use_container_width=True,
-                hide_index=True,
-            )
-
-    with st.expander(
-        "🏢 Ungeklärte PerformingRU-Schreibweisen",
-        expanded=False,
-    ):
-        st.caption(
-            "Diese Liste enthält DE-relevante PerformingRU-Werte ohne "
-            "eindeutige ANU_VENS-Marktpartner-ID. PerformingRUs auf der "
-            "freigegebenen vEns-/tEns-Ausnahmeliste werden hier nicht angezeigt."
-        )
-
-        if unresolved_performing_ru_market_partner_alias.empty:
-            st.success(
-                "Keine ungeklärten PerformingRU-Schreibweisen gefunden "
-                "oder Exportdatei noch nicht vorhanden."
-            )
-
-        else:
-            st.write(
-                "Ungeklärte Schreibweisen: "
-                f"**{len(unresolved_performing_ru_market_partner_alias)}**"
-            )
-
-            st.dataframe(
-                unresolved_performing_ru_market_partner_alias,
-                use_container_width=True,
-                hide_index=True,
-            )
-
-            unresolved_csv = (
-                unresolved_performing_ru_market_partner_alias
-                .to_csv(
-                    index=False,
-                    sep=";",
-                )
-                .encode("utf-8-sig")
-            )
-
-            st.download_button(
-                "Ungeklärte PerformingRU-Schreibweisen herunterladen",
-                data=unresolved_csv,
-                file_name="dq_unresolved_performing_ru_market_partner_alias.csv",
-                mime="text/csv",
-                key="download_unresolved_performing_ru_market_partner_alias",
-            )
+    # Fehlende vEns-/tEns-Referenzdaten werden im MVP bewusst nicht als
+    # Fehler oder Hinweis in der Fehlerqueue dargestellt. Sie bleiben nur
+    # für den XLSX-Export technisch relevant.
 
     if findings.empty:
         st.success("Keine Findings gefunden oder Datei dq_findings.csv fehlt.")

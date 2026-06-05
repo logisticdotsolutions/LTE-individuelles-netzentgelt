@@ -16,21 +16,12 @@ Grundprinzipien
 - INFO-Hinweise blockieren weder Bearbeitung noch Export.
 - ERROR und MANUAL_REVIEW markieren einen aktiven Prüffall.
 - R005 bleibt als ältere separate UI-Prüfung erhalten.
-- R012 übernimmt fehlende oder technische Loknummern zentral in dq_findings,
-  damit diese Fälle auch in der Fehlerqueue und im Audit-Export enthalten sind.
+- R012 übernimmt fehlende oder technische Loknummern zentral in dq_findings.
+  Dafür wird pro Quelle und TransportNumber nur ein verdichteter Prüffall erzeugt.
+- Fehlende vEns-/tEns-Zuordnungen bleiben für Exporttests sichtbar, erzeugen im
+  MVP aber bewusst keine Findings.
 - R008 entfällt: TfzE, tEns und LocomotiveNo werden im MVP als dieselbe
   fachliche Identifikation behandelt.
-
-Referenzdatenauflösung
------------------------
-R007 prüft, ob die PerformingRU-Marktpartner-ID eindeutig aufgelöst werden konnte.
-Die Auflösung erfolgt rollenbezogen über:
-1. vollständige Mappingtabelle data/01_mapping/market_partner_mapping_import.csv
-2. offizielle Marktpartnerliste data/01_mapping/vens liste.csv zur Validierung
-3. exaktem offiziellen Firmennamen als Fallback
-
-Nicht eindeutig auflösbare PerformingRU-Schreibweisen werden zusätzlich verdichtet
-in dq_unresolved_performing_ru_market_partner_alias.csv ausgegeben.
 """
 
 
@@ -102,11 +93,11 @@ def _de_relevance_expr(
     available_columns: list[str],
 ) -> str:
     """
-    DE-Relevanz analog zur Timeline bilden.
+    DE-Relevanz strikt über OriginCountryISO oder DestinationCountryISO bilden.
 
-    OriginCountryISO und DestinationCountryISO werden priorisiert.
-    Country bleibt als Fallback unterstützt, falls die detaillierten Felder
-    in einer Rohdatei nicht vorhanden sind.
+    Country wird ausschließlich als technischer Fallback verwendet, wenn in
+    der jeweiligen Rohdatei weder ein Origin- noch ein Destination-Länderfeld
+    vorhanden ist. Dadurch erzeugen reine Auslandsbewegungen keine Findings.
     """
     origin_column = _pick_column(
         available_columns,
@@ -118,7 +109,6 @@ def _de_relevance_expr(
             "FromCountry",
             "DepartureCountryISO",
             "DepartureCountry",
-            "Country",
         ],
     )
 
@@ -132,9 +122,20 @@ def _de_relevance_expr(
             "ToCountry",
             "ArrivalCountryISO",
             "ArrivalCountry",
-            "Country",
         ],
     )
+
+    if origin_column is None and destination_column is None:
+        country_column = _pick_column(
+            available_columns,
+            ["Country"],
+        )
+        country_expr = _text_expr(country_column)
+        return (
+            "(upper(coalesce("
+            + country_expr
+            + ", '')) = 'DE')"
+        )
 
     origin_expr = _text_expr(origin_column)
     destination_expr = _text_expr(destination_column)
@@ -156,17 +157,11 @@ def build_r012_raw_findings(
     """
     R012 direkt aus den Rohdaten bilden.
 
-    Die Prüfung wird bewusst vor dem Core-Aggregat erzeugt, weil fehlende
-    Loknummern keiner Lok-Zeitachse zugeordnet werden können und deshalb im
-    Core teilweise nicht mehr sichtbar sind.
-
-    Enthalten sind:
-    1. TransportDetail.csv:
-       DE-relevanter Train movement, ActualDeparture mindestens 24 Stunden alt,
-       FirstLocomotiveNo fehlt.
-    2. LocomotiveMovement.csv:
-       DE-relevante Zeile mit fehlender Loknummer, technischer Dummy-Nummer
-       00000000000-0 oder LocomotiveType enthält "Dummy".
+    Fehlende oder technische Loknummern werden bewusst vor dem Core-Aggregat
+    geprüft. Die Fehlerqueue erhält dabei pro Quelle und TransportNumber
+    nur einen verdichteten Prüffall. Mehrere betroffene Rohdatenzeilen
+    desselben Transports werden im Meldungstext ausgewiesen, aber nicht als
+    separate Queue-Einträge vervielfacht.
     """
     con.execute("""
         create or replace temp table tmp_r012_findings (
@@ -198,47 +193,21 @@ def build_r012_raw_findings(
         td_columns = _columns(con, td_table)
 
         td_actual_departure = _text_expr(
-            _pick_column(
-                td_columns,
-                [
-                    "ActualDeparture",
-                ],
-            )
+            _pick_column(td_columns, ["ActualDeparture"])
         )
-
         td_first_loco = _text_expr(
-            _pick_column(
-                td_columns,
-                [
-                    "FirstLocomotiveNo",
-                ],
-            )
+            _pick_column(td_columns, ["FirstLocomotiveNo"])
         )
-
         td_movement_type = _text_expr(
-            _pick_column(
-                td_columns,
-                [
-                    "MovementType",
-                ],
-            )
+            _pick_column(td_columns, ["MovementType"])
         )
-
         td_transport_number = _text_expr(
             _pick_column(
                 td_columns,
-                [
-                    "TransportNumber",
-                    "TransportNo",
-                    "TransportId",
-                    "TransportID",
-                ],
+                ["TransportNumber", "TransportNo", "TransportId", "TransportID"],
             )
         )
-
-        td_de_relevant = _de_relevance_expr(
-            td_columns
-        )
+        td_de_relevant = _de_relevance_expr(td_columns)
 
         if (
             td_actual_departure != "NULL"
@@ -248,30 +217,58 @@ def build_r012_raw_findings(
             con.execute(
                 f"""
                 insert into tmp_r012_findings
+                with raw_rows as (
+                    select
+                        row_number() over () as source_row_id,
+                        {td_transport_number} as transport_number,
+                        try_cast({td_actual_departure} as timestamp) as period_start_utc,
+                        {td_de_relevant} as is_de_relevant,
+                        {td_movement_type} as movement_type,
+                        {td_first_loco} as first_loco_no
+                    from {qident(td_table)}
+                ),
+                raw_matches as (
+                    select *
+                    from raw_rows
+                    where is_de_relevant
+                      and lower(coalesce(movement_type, '')) = 'train movement'
+                      and period_start_utc is not null
+                      and period_start_utc <= current_timestamp - interval '1 day'
+                      and first_loco_no is null
+                ),
+                grouped as (
+                    select
+                        transport_number,
+                        min(period_start_utc) as period_start_utc,
+                        min(source_row_id) as source_row_id,
+                        count(*) as affected_raw_rows
+                    from raw_matches
+                    group by
+                        transport_number,
+                        case
+                            when transport_number is null then source_row_id
+                            else null
+                        end
+                )
                 select
                     {sql_lit(run_id)} as run_id,
                     'ERROR' as severity,
                     'R012' as rule_id,
                     'NO_LOCO_RAW' as rule_group,
-                    {td_first_loco} as loco_no,
-                    {td_transport_number} as transport_number,
+                    null::varchar as loco_no,
+                    transport_number,
                     null::varchar as performing_ru,
                     'RAW_TRANSPORT_DETAIL' as row_type,
                     null::bigint as movement_sequence_no,
-                    try_cast({td_actual_departure} as timestamp) as period_start_utc,
+                    period_start_utc,
                     null::timestamp as period_end_utc,
-                    'Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo.' as message,
+                    'Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: '
+                        || cast(affected_raw_rows as varchar) || '.' as message,
                     'Transportplanung prüfen und FirstLocomotiveNo ergänzen.' as suggested_action,
                     'open' as status,
                     {sql_lit(td_table)} as source_table,
-                    row_number() over () as source_row_id
-                from {qident(td_table)}
-                where {td_de_relevant}
-                  and lower(coalesce({td_movement_type}, '')) = 'train movement'
-                  and try_cast({td_actual_departure} as timestamp) is not null
-                  and try_cast({td_actual_departure} as timestamp)
-                        <= current_timestamp - interval '1 day'
-                  and {td_first_loco} is null
+                    source_row_id
+                from grouped
                 """
             )
 
@@ -284,37 +281,17 @@ def build_r012_raw_findings(
         lm_columns = _columns(con, lm_table)
 
         lm_loco_no = _text_expr(
-            _pick_column(
-                lm_columns,
-                [
-                    "LocomotiveNo",
-                    "FirstLocomotiveNo",
-                    "Alias",
-                ],
-            )
+            _pick_column(lm_columns, ["LocomotiveNo", "FirstLocomotiveNo", "Alias"])
         )
-
         lm_locomotive_type = _text_expr(
-            _pick_column(
-                lm_columns,
-                [
-                    "LocomotiveType",
-                ],
-            )
+            _pick_column(lm_columns, ["LocomotiveType"])
         )
-
         lm_transport_number = _text_expr(
             _pick_column(
                 lm_columns,
-                [
-                    "TransportNumber",
-                    "TransportNo",
-                    "TransportId",
-                    "TransportID",
-                ],
+                ["TransportNumber", "TransportNo", "TransportId", "TransportID"],
             )
         )
-
         lm_performing_ru = _text_expr(
             _pick_column(
                 lm_columns,
@@ -329,65 +306,89 @@ def build_r012_raw_findings(
                 ],
             )
         )
-
         lm_actual_departure = _text_expr(
-            _pick_column(
-                lm_columns,
-                [
-                    "ActualDeparture",
-                    "LocomotiveActualDeparture",
-                ],
-            )
+            _pick_column(lm_columns, ["ActualDeparture", "LocomotiveActualDeparture"])
         )
-
         lm_actual_arrival = _text_expr(
-            _pick_column(
-                lm_columns,
-                [
-                    "ActualArrival",
-                    "LocomotiveActualArrival",
-                ],
-            )
+            _pick_column(lm_columns, ["ActualArrival", "LocomotiveActualArrival"])
         )
-
-        lm_de_relevant = _de_relevance_expr(
-            lm_columns
-        )
+        lm_de_relevant = _de_relevance_expr(lm_columns)
 
         if lm_loco_no != "NULL":
             con.execute(
                 f"""
                 insert into tmp_r012_findings
+                with raw_rows as (
+                    select
+                        row_number() over () as source_row_id,
+                        {lm_loco_no} as loco_no,
+                        {lm_transport_number} as transport_number,
+                        {lm_performing_ru} as performing_ru,
+                        try_cast({lm_actual_departure} as timestamp) as period_start_utc,
+                        try_cast({lm_actual_arrival} as timestamp) as period_end_utc,
+                        {lm_de_relevant} as is_de_relevant,
+                        case when {lm_loco_no} is null then true else false end as has_missing_loco,
+                        case when {lm_loco_no} = '00000000000-0' then true else false end as has_technical_loco,
+                        case
+                            when upper(coalesce({lm_locomotive_type}, '')) like '%DUMMY%'
+                                then true
+                            else false
+                        end as has_dummy_type
+                    from {qident(lm_table)}
+                ),
+                raw_matches as (
+                    select *
+                    from raw_rows
+                    where is_de_relevant
+                      and (has_missing_loco or has_technical_loco or has_dummy_type)
+                ),
+                grouped as (
+                    select
+                        max(loco_no) as loco_no,
+                        transport_number,
+                        max(performing_ru) as performing_ru,
+                        min(period_start_utc) as period_start_utc,
+                        max(period_end_utc) as period_end_utc,
+                        bool_or(has_missing_loco) as has_missing_loco,
+                        bool_or(has_technical_loco) as has_technical_loco,
+                        bool_or(has_dummy_type) as has_dummy_type,
+                        min(source_row_id) as source_row_id,
+                        count(*) as affected_raw_rows
+                    from raw_matches
+                    group by
+                        transport_number,
+                        case
+                            when transport_number is null then source_row_id
+                            else null
+                        end
+                )
                 select
                     {sql_lit(run_id)} as run_id,
                     'ERROR' as severity,
                     'R012' as rule_id,
                     'NO_LOCO_RAW' as rule_group,
-                    {lm_loco_no} as loco_no,
-                    {lm_transport_number} as transport_number,
-                    {lm_performing_ru} as performing_ru,
+                    loco_no,
+                    transport_number,
+                    performing_ru,
                     'RAW_LOCOMOTIVE_MOVEMENT' as row_type,
                     null::bigint as movement_sequence_no,
-                    try_cast({lm_actual_departure} as timestamp) as period_start_utc,
-                    try_cast({lm_actual_arrival} as timestamp) as period_end_utc,
+                    period_start_utc,
+                    period_end_utc,
                     case
-                        when {lm_loco_no} is null
+                        when has_missing_loco
                             then 'Loknummer fehlt in LocomotiveMovement.csv.'
-                        when {lm_loco_no} = '00000000000-0'
+                        when has_technical_loco
                             then 'Technische Dummy-Loknummer 00000000000-0 erkannt.'
                         else 'LocomotiveType enthält Dummy.'
-                    end as message,
+                    end
+                    || ' Betroffene Rohdatenzeilen: '
+                    || cast(affected_raw_rows as varchar)
+                    || '.' as message,
                     'Loknummer beziehungsweise Dummy-Zuordnung fachlich prüfen und korrigieren.' as suggested_action,
                     'open' as status,
                     {sql_lit(lm_table)} as source_table,
-                    row_number() over () as source_row_id
-                from {qident(lm_table)}
-                where {lm_de_relevant}
-                  and (
-                        {lm_loco_no} is null
-                     or {lm_loco_no} = '00000000000-0'
-                     or upper(coalesce({lm_locomotive_type}, '')) like '%DUMMY%'
-                  )
+                    source_row_id
+                from grouped
                 """
             )
 
@@ -412,12 +413,12 @@ def build_rule_catalog(con) -> None:
                 ('R005', 'NO_LOCO_RAW', 'SEPARATE',
                  'Keine-Loks-Logik wird direkt aus den Rohdaten in app.py gebildet.',
                  false),
-                ('R006', 'REFERENCE_DATA', 'INFO',
-                 'vEns fehlt. PerformingRUs auf der freigegebenen vEns-/tEns-Ausnahmeliste werden nicht gemeldet.',
-                 true),
-                ('R007', 'REFERENCE_DATA', 'ERROR',
-                 'PerformingRU-Marktpartner-ID konnte nicht eindeutig aufgelöst werden. PerformingRUs auf der freigegebenen vEns-/tEns-Ausnahmeliste werden nicht gemeldet.',
-                 true),
+                ('R006', 'REFERENCE_DATA', 'IGNORED',
+                 'Fehlende vEns werden im MVP nicht als Finding bewertet.',
+                 false),
+                ('R007', 'REFERENCE_DATA', 'IGNORED',
+                 'Fehlende ANE_TENS-/Marktpartner-Zuordnungen werden im MVP nicht als Finding bewertet.',
+                 false),
                 ('R008', 'TFZE_IDENT', 'REMOVED',
                  'Entfällt: TfzE, tEns und LocomotiveNo gelten im MVP als dieselbe Identifikation.',
                  false),
@@ -425,10 +426,10 @@ def build_rule_catalog(con) -> None:
                  'DE-relevanter Abschnitt ohne PerformingRU.',
                  true),
                 ('R010', 'TIMELINE', 'ERROR',
-                 'Ortskette endet oder ist unterbrochen. Unterbrechung über 8 Stunden; fachliche Prüfung erforderlich.',
+                 'Ortskette endet oder ist unterbrochen. Unterbrechung über 8 Stunden.',
                  true),
                 ('R010.5', 'TIMELINE', 'INFO',
-                 'Ortskette endet oder ist unterbrochen. Unterbrechung bis einschließlich 8 Stunden; nur dokumentieren.',
+                 'Ortskette endet oder ist unterbrochen. Unterbrechung bis einschließlich 8 Stunden.',
                  true),
                 ('R011', 'TIMELINE', 'ERROR',
                  'Zeitliche Überschneidung zur vorherigen Bewegung gleicher Lok.',
@@ -564,6 +565,7 @@ def build_findings(
             select *
             from core_loco_timeline
             where row_type = 'MOVEMENT'
+              and report_scope = 'IN_REPORT'
         ),
         overlap as (
             select
@@ -704,56 +706,9 @@ def build_findings(
         -- R005 entfällt hier bewusst:
         -- Die Keine-Loks-Prüfung greift direkt auf die Rohdaten zu.
 
-        union all
 
-        -- R006: Fehlende vEns nur als Hinweis.
-        select
-            {run},
-            'INFO',
-            'R006',
-            'REFERENCE_DATA',
-            loco_no,
-            transport_number,
-            performing_ru,
-            row_type,
-            movement_sequence_no,
-            period_start_utc,
-            period_end_utc,
-            'vEns fehlt.',
-            'vEns-Referenzdaten prüfen oder ergänzen.',
-            'info',
-            source_table,
-            source_row_id
-        from movement_base
-        where report_scope = 'IN_REPORT'
-          and (user_vens is null or user_vens = '')
-          and coalesce(exempt_vens, false) = false
-
-        union all
-
-        -- R007: Halter-Marktpartner-ID ist exportrelevant.
-        -- Die Auflösung erfolgt rollenbezogen über ANE_TENS.
-        select
-            {run},
-            'ERROR',
-            'R007',
-            'REFERENCE_DATA',
-            loco_no,
-            transport_number,
-            performing_ru,
-            row_type,
-            movement_sequence_no,
-            period_start_utc,
-            period_end_utc,
-            'Halter-Marktpartner-ID (ANE_TENS) konnte für die PerformingRU nicht eindeutig aufgelöst werden.',
-            'market_partner_mapping_import.csv prüfen und ANE_TENS-Zuordnung ergänzen oder freigeben.',
-            'open',
-            source_table,
-            source_row_id
-        from movement_base
-        where report_scope = 'IN_REPORT'
-          and (holder_market_partner_id is null or holder_market_partner_id = '')
-          and coalesce(exempt_tens, false) = false
+        -- R006 und R007 entfallen im MVP vollständig:
+        -- Fehlende vEns-/tEns-Zuordnungen werden nicht als Findings bewertet.
 
         -- R008 entfällt vollständig:
         -- tfze_or_tens = loco_no ist fachlich zulässig.
@@ -784,8 +739,7 @@ def build_findings(
 
         union all
 
-        -- R010: Nur DE-relevante GAP-Zeilen über 8 Stunden sind ERROR.
-        -- Exakt 8 Stunden bleiben bewusst INFO und werden unter R010.5 geführt.
+        -- R010: DE-relevante Unterbrechung über 8 Stunden = ERROR.
         select
             {run},
             'ERROR',
@@ -813,8 +767,7 @@ def build_findings(
 
         union all
 
-        -- R010.5: Nur DE-relevante GAP-Zeilen bis einschließlich 8 Stunden
-        -- dokumentieren. Diese Hinweise sind kein aktiver Prüffall.
+        -- R010.5: DE-relevante Unterbrechung bis einschließlich 8 Stunden = INFO.
         select
             {run},
             'INFO',
@@ -915,6 +868,7 @@ def build_findings(
                 ) as prev_transport_number
             from core_loco_timeline
             where row_type = 'MOVEMENT'
+              and report_scope = 'IN_REPORT'
         ) as o
         where f.rule_id = 'R011'
           and f.source_table is not distinct from o.source_table
