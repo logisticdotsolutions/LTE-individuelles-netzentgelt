@@ -41,6 +41,17 @@ SCRIPT_RUN_ALL = BASE_DIR / "scripts" / "run_all.py"
 # Anzeigezeitraum in der Lok-Detailprüfung.
 DETAIL_LOOKBACK_DAYS = 30
 
+# Technische Spalten bleiben intern für Filterung und Styling verfügbar,
+# werden in den fachlichen Timeline-Ansichten aber nicht angezeigt.
+TIMELINE_HIDDEN_COLUMNS = [
+    "row_type",
+    "report_scope",
+    "sequence_ts_source",
+    "gap_from_utc",
+    "gap_to_utc",
+    "tfze_or_tens",
+]
+
 st.set_page_config(
     page_title="Netzentgelt MVP Tool",
     page_icon="🚆",
@@ -365,7 +376,7 @@ def build_no_loco_diagnostics():
 
     Rückgabe:
     - summary_df: Übersicht mit den zwei Zählern
-    - detail_df:  gruppierte Liste für den Tab 'Keine Loks'
+    - detail_df:  gruppierte Liste für den Tab 'Dummys & missing Locos'
     - warnings:   technische Hinweise bei fehlenden Dateien oder Spalten
     """
     summary_rows = []
@@ -666,6 +677,256 @@ def build_no_loco_diagnostics():
 
     return summary_df, detail_df, warnings
 
+def build_border_crossing_view(source_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Grenzübertritte aus der Lok-Zeitachse ableiten.
+
+    Ergebnis:
+    - nur Einfahrten und Ausfahrten
+    - eine Zeile je Grenzübertritt
+    - bei CleanDir = E/A entstehen zwei Zeilen:
+      eine Einfahrt und eine Ausfahrt
+
+    Zeitstempel und Ort folgen derselben fachlichen Richtungsermittlung
+    wie die Timeline-Bildung in run_all.py:
+    - FaultyDir = E  -> ActualArrival, Destination
+    - FaultyDir = A  -> ActualDeparture, Origin
+    - CleanDir = E   -> ActualDeparture, Origin
+    - CleanDir = A   -> ActualArrival, Destination
+    - CleanDir = E/A -> Einfahrt über Departure/Origin
+                        und Ausfahrt über Arrival/Destination
+    """
+    result_columns = [
+        "Grenzübertritt",
+        "PerformingRU",
+        "LocomotiveNo",
+        "Zeitstempel",
+        "Ort",
+        "Zugnummer",
+        "TransportNumber",
+    ]
+
+    if source_df.empty:
+        return pd.DataFrame(columns=result_columns)
+
+    work = source_df.copy()
+
+    required_columns = [
+        "row_type",
+        "performing_ru",
+        "loco_no",
+        "train_no",
+        "transport_number",
+        "clean_dir",
+        "faulty_dir",
+        "actual_departure_ts",
+        "actual_arrival_ts",
+        "origin_name",
+        "destination_name",
+    ]
+
+    for column in required_columns:
+        if column not in work.columns:
+            work[column] = pd.NA
+
+    movement_rows = work[
+        work["row_type"]
+        .fillna("")
+        .astype(str)
+        .str.strip()
+        .str.upper()
+        .eq("MOVEMENT")
+    ].copy()
+
+    if movement_rows.empty:
+        return pd.DataFrame(columns=result_columns)
+
+    faulty_dir = (
+        movement_rows["faulty_dir"]
+        .fillna("")
+        .astype(str)
+        .str.strip()
+        .str.upper()
+    )
+
+    clean_dir = (
+        movement_rows["clean_dir"]
+        .fillna("")
+        .astype(str)
+        .str.strip()
+        .str.upper()
+    )
+
+    has_faulty_border_direction = faulty_dir.isin(["E", "A"])
+
+    entry_mask = (
+        faulty_dir.eq("E")
+        | (
+            ~has_faulty_border_direction
+            & clean_dir.isin(["E", "E/A"])
+        )
+    )
+
+    exit_mask = (
+        faulty_dir.eq("A")
+        | (
+            ~has_faulty_border_direction
+            & clean_dir.isin(["A", "E/A"])
+        )
+    )
+
+    common_rename_map = {
+        "performing_ru": "PerformingRU",
+        "loco_no": "LocomotiveNo",
+        "train_no": "Zugnummer",
+        "transport_number": "TransportNumber",
+    }
+
+    crossing_frames = []
+
+    if bool(entry_mask.any()):
+        entry_rows = movement_rows.loc[
+            entry_mask,
+            [
+                "performing_ru",
+                "loco_no",
+                "train_no",
+                "transport_number",
+                "faulty_dir",
+                "actual_departure_ts",
+                "actual_arrival_ts",
+                "origin_name",
+                "destination_name",
+            ],
+        ].copy()
+
+        entry_rows = entry_rows.rename(
+            columns=common_rename_map
+        )
+
+        entry_faulty_dir = (
+            entry_rows["faulty_dir"]
+            .fillna("")
+            .astype(str)
+            .str.strip()
+            .str.upper()
+        )
+
+        entry_rows["Grenzübertritt"] = "Einfahrt"
+        entry_rows["Zeitstempel"] = entry_rows[
+            "actual_departure_ts"
+        ]
+        entry_rows["Ort"] = entry_rows[
+            "origin_name"
+        ]
+
+        faulty_entry_mask = entry_faulty_dir.eq("E")
+
+        entry_rows.loc[
+            faulty_entry_mask,
+            "Zeitstempel",
+        ] = entry_rows.loc[
+            faulty_entry_mask,
+            "actual_arrival_ts",
+        ]
+
+        entry_rows.loc[
+            faulty_entry_mask,
+            "Ort",
+        ] = entry_rows.loc[
+            faulty_entry_mask,
+            "destination_name",
+        ]
+
+        crossing_frames.append(
+            entry_rows[result_columns]
+        )
+
+    if bool(exit_mask.any()):
+        exit_rows = movement_rows.loc[
+            exit_mask,
+            [
+                "performing_ru",
+                "loco_no",
+                "train_no",
+                "transport_number",
+                "faulty_dir",
+                "actual_departure_ts",
+                "actual_arrival_ts",
+                "origin_name",
+                "destination_name",
+            ],
+        ].copy()
+
+        exit_rows = exit_rows.rename(
+            columns=common_rename_map
+        )
+
+        exit_faulty_dir = (
+            exit_rows["faulty_dir"]
+            .fillna("")
+            .astype(str)
+            .str.strip()
+            .str.upper()
+        )
+
+        exit_rows["Grenzübertritt"] = "Ausfahrt"
+        exit_rows["Zeitstempel"] = exit_rows[
+            "actual_arrival_ts"
+        ]
+        exit_rows["Ort"] = exit_rows[
+            "destination_name"
+        ]
+
+        faulty_exit_mask = exit_faulty_dir.eq("A")
+
+        exit_rows.loc[
+            faulty_exit_mask,
+            "Zeitstempel",
+        ] = exit_rows.loc[
+            faulty_exit_mask,
+            "actual_departure_ts",
+        ]
+
+        exit_rows.loc[
+            faulty_exit_mask,
+            "Ort",
+        ] = exit_rows.loc[
+            faulty_exit_mask,
+            "origin_name",
+        ]
+
+        crossing_frames.append(
+            exit_rows[result_columns]
+        )
+
+    if not crossing_frames:
+        return pd.DataFrame(columns=result_columns)
+
+    result = pd.concat(
+        crossing_frames,
+        ignore_index=True,
+    )
+
+    result["Zeitstempel"] = pd.to_datetime(
+        result["Zeitstempel"],
+        errors="coerce",
+    )
+
+    result = result.sort_values(
+        by=[
+            "LocomotiveNo",
+            "Zeitstempel",
+            "TransportNumber",
+            "Grenzübertritt",
+        ],
+        ascending=True,
+        na_position="last",
+    )
+
+    return result[result_columns]
+
+
 @st.cache_data(show_spinner=False)
 def build_nutzungsmeldung_download_cached(
     db_path_text: str,
@@ -821,13 +1082,13 @@ except Exception as diagnostics_error:
 
     no_loco_warnings = [
         (
-            "Die Datenqualitätsprüfung 'Keine Loks' konnte nicht vollständig "
+            "Die Datenqualitätsprüfung 'Dummys & missing Locos' konnte nicht vollständig "
             f"ausgeführt werden: {diagnostics_error}"
         )
     ]
 
     st.error(
-        "Fehler beim Aufbau der Datenqualitätsprüfung 'Keine Loks'. "
+        "Fehler beim Aufbau der Datenqualitätsprüfung 'Dummys & missing Locos'. "
         "Die übrigen Bereiche der Anwendung bleiben verfügbar."
     )
 
@@ -835,7 +1096,7 @@ except Exception as diagnostics_error:
 
 tab_overview, tab_no_loco, tab_timeline, tab_findings, tab_exports, tab_run = st.tabs([
     "Überblick",
-    "Keine Loks",
+    "Dummys & missing Locos",
     "Lok-Zeitachse",
     "Fehlerqueue",
     "Exporte",
@@ -1156,7 +1417,7 @@ with tab_overview:
         st.dataframe(timeline.head(100), use_container_width=True, hide_index=True)
 
 with tab_no_loco:
-    st.subheader("Keine Loks")
+    st.subheader("Dummys & missing Locos")
 
     st.caption(
         "Auflistung der Transporte aus den beiden Rohdaten-Prüfungen. "
@@ -1191,7 +1452,7 @@ with tab_no_loco:
         )
 
         st.download_button(
-            "Liste 'Keine Loks' herunterladen",
+            "Liste 'Dummys & missing Locos' herunterladen",
             data=csv,
             file_name="keine_loks.csv",
             mime="text/csv",
@@ -1204,41 +1465,150 @@ with tab_timeline:
     if timeline.empty:
         st.warning("Keine Timeline vorhanden. Bitte zuerst Pipeline ausführen.")
     else:
-        loco_col = get_col(timeline, [
-            "loco_no",
-            "LocomotiveNo",
-            "locomotive_no",
-            "locomotiveno",
-            "loco",
-            "tfze_or_tens"
-        ])
+        loco_col = get_col(
+            timeline,
+            [
+                "loco_no",
+                "LocomotiveNo",
+                "locomotive_no",
+                "locomotiveno",
+                "loco",
+                "tfze_or_tens",
+            ],
+        )
+
+        report_scope_col = get_col(
+            timeline,
+            [
+                "report_scope",
+            ],
+        )
 
         if loco_col:
-            locos = sorted(timeline[loco_col].dropna().astype(str).unique().tolist())
-            selected_loco = st.selectbox(
-                "Lok auswählen",
-                ["Alle"] + locos,
-                key="timeline_preview_loco",
-            )
+            filter_col_loco, filter_col_scope = st.columns(2)
+
+            with filter_col_loco:
+                locos = sorted(
+                    timeline[loco_col]
+                    .dropna()
+                    .astype(str)
+                    .unique()
+                    .tolist()
+                )
+
+                selected_loco = st.selectbox(
+                    "Lok auswählen",
+                    ["Alle"] + locos,
+                    key="timeline_preview_loco",
+                )
 
             filtered = timeline.copy()
+
             if selected_loco != "Alle":
-                filtered = filtered[filtered[loco_col].astype(str) == selected_loco]
+                filtered = filtered[
+                    filtered[loco_col]
+                    .astype(str)
+                    .eq(selected_loco)
+                ]
+
+            with filter_col_scope:
+                if report_scope_col:
+                    scope_label_map = {
+                        "IN_REPORT": "In Report",
+                        "NOT_IN_REPORT": "Not in the Report",
+                        "GAP": "GAP",
+                    }
+
+                    available_scopes = (
+                        timeline[report_scope_col]
+                        .dropna()
+                        .astype(str)
+                        .str.strip()
+                        .unique()
+                        .tolist()
+                    )
+
+                    preferred_scope_order = [
+                        "IN_REPORT",
+                        "NOT_IN_REPORT",
+                        "GAP",
+                    ]
+
+                    ordered_scopes = [
+                        scope
+                        for scope in preferred_scope_order
+                        if scope in available_scopes
+                    ]
+
+                    ordered_scopes.extend(
+                        sorted(
+                            scope
+                            for scope in available_scopes
+                            if scope not in ordered_scopes
+                        )
+                    )
+
+                    selected_report_scopes = st.multiselect(
+                        "Report Scope",
+                        ordered_scopes,
+                        default=ordered_scopes,
+                        format_func=lambda value: scope_label_map.get(
+                            str(value),
+                            str(value),
+                        ),
+                        key="timeline_preview_report_scope",
+                    )
+
+                    filtered = filtered[
+                        filtered[report_scope_col]
+                        .fillna("")
+                        .astype(str)
+                        .isin(selected_report_scopes)
+                    ]
+
+                else:
+                    st.caption(
+                        "Report-Scope-Filter nicht verfügbar: "
+                        "Spalte report_scope fehlt."
+                    )
 
             st.write(f"Treffer: **{len(filtered)}**")
-            st.dataframe(filtered, use_container_width=True, hide_index=True)
 
-            csv = filtered.to_csv(index=False, sep=";").encode("utf-8-sig")
+            filtered_display = filtered.drop(
+                columns=TIMELINE_HIDDEN_COLUMNS,
+                errors="ignore",
+            )
+
+            st.dataframe(
+                filtered_display,
+                use_container_width=True,
+                hide_index=True,
+            )
+
+            csv = (
+                filtered_display
+                .to_csv(
+                    index=False,
+                    sep=";",
+                )
+                .encode("utf-8-sig")
+            )
+
             st.download_button(
                 "Gefilterte Timeline herunterladen",
                 data=csv,
                 file_name="timeline_gefiltert.csv",
-                mime="text/csv"
+                mime="text/csv",
             )
+
         else:
             st.warning("Keine Lok-Spalte erkannt. Verfügbare Spalten:")
             st.write(list(timeline.columns))
-            st.dataframe(timeline, use_container_width=True, hide_index=True)
+            st.dataframe(
+                timeline,
+                use_container_width=True,
+                hide_index=True,
+            )
 
 with tab_findings:
     st.subheader("Fehler- und Prüfqueue")
@@ -2122,25 +2492,204 @@ with tab_timeline:
                 c4.metric("Transit", "-")
 
             def highlight_problem_rows(row):
+                """
+                Zeilen in der Lok-Detailprüfung fachlich hervorheben.
+
+                Priorität:
+                1. GAP-Zeilen: hellrot mit schwarzer Schrift
+                2. NOT_IN_REPORT: dunkler Hintergrund mit grauer Schrift
+                3. IN_REPORT mit Prüffall: hellrot mit schwarzer Schrift
+                4. IN_REPORT ohne Prüffall: helle Standarddarstellung
+                """
+                row_type = str(
+                    row.get(
+                        "row_type",
+                        "",
+                    )
+                ).strip().upper()
+
+                report_scope = str(
+                    row.get(
+                        "report_scope",
+                        "",
+                    )
+                ).strip().upper()
+
+                de_event_label = str(
+                    row.get(
+                        "de_event_label",
+                        "",
+                    )
+                ).strip().upper()
+
+                # Normale IN_REPORT-Zeilen und explizite "In DE"-Zeilen
+                # erhalten dieselbe helle Darstellung.
+                is_in_report_or_in_de = (
+                    report_scope == "IN_REPORT"
+                    or de_event_label == "IN DE"
+                )
+
                 is_problem = False
 
                 if "needs_manual_review" in row.index:
-                    is_problem = normalize_bool(row["needs_manual_review"])
+                    is_problem = normalize_bool(
+                        row["needs_manual_review"]
+                    )
 
-                if "dq_severity" in row.index and pd.notna(row["dq_severity"]):
-                    if "ERROR" in str(row["dq_severity"]).upper():
-                        is_problem = True
+                if (
+                    "dq_severity" in row.index
+                    and pd.notna(row["dq_severity"])
+                    and "ERROR" in str(
+                        row["dq_severity"]
+                    ).upper()
+                ):
+                    is_problem = True
+
+                if row_type == "GAP":
+                    return [
+                        (
+                            "background-color: #fde2e2; "
+                            "color: #111111"
+                        )
+                    ] * len(row)
+
+                if report_scope == "NOT_IN_REPORT":
+                    return [
+                        (
+                            "background-color: #161a20; "
+                            "color: #8b949e"
+                        )
+                    ] * len(row)
+
+                # Grenzübertritte in DE werden grün hervorgehoben.
+                # Bei fehlerhaften Zeilen bleibt die rote Fehlerdarstellung
+                # wichtiger als die grüne fachliche Markierung.
+                if (
+                    de_event_label in {
+                        "EINFAHRT",
+                        "AUSFAHRT",
+                        "EINFAHRT + AUSFAHRT",
+                    }
+                    and not is_problem
+                ):
+                    return [
+                        (
+                            "background-color: #d9ead3; "
+                            "color: #111111"
+                        )
+                    ] * len(row)
+
+                if is_in_report_or_in_de and is_problem:
+                    return [
+                        (
+                            "background-color: #fde2e2; "
+                            "color: #111111"
+                        )
+                    ] * len(row)
+
+                if is_in_report_or_in_de:
+                    return [
+                        (
+                            "background-color: #f4f4f4; "
+                            "color: #555555"
+                        )
+                    ] * len(row)
 
                 if is_problem:
-                    return ["background-color: #fde2e2; color: #111111"] * len(row)
+                    return [
+                        (
+                            "background-color: #fde2e2; "
+                            "color: #111111"
+                        )
+                    ] * len(row)
 
                 return [""] * len(row)
 
-            st.dataframe(
-                view_df.style.apply(highlight_problem_rows, axis=1),
-                use_container_width=True,
-                hide_index=True
+            styled_view_df = view_df.style.apply(
+                highlight_problem_rows,
+                axis=1,
             )
+
+            hidden_view_cols = [
+                column
+                for column in TIMELINE_HIDDEN_COLUMNS
+                if column in view_df.columns
+            ]
+
+            if hidden_view_cols:
+                styled_view_df = styled_view_df.hide(
+                    axis="columns",
+                    subset=hidden_view_cols,
+                )
+
+            st.dataframe(
+                styled_view_df,
+                use_container_width=True,
+                hide_index=True,
+            )
+
+            st.divider()
+
+            st.subheader("Grenzübertritte: Einfahrt und Ausfahrt")
+
+            st.caption(
+                "Die Tabelle verwendet dieselbe Lokauswahl und denselben "
+                "30-Tage-Anzeigezeitraum wie die Lok-Detailprüfung. "
+                "Bei E/A-Bewegungen werden Einfahrt und Ausfahrt als "
+                "separate Zeilen dargestellt."
+            )
+
+            border_crossings = build_border_crossing_view(
+                loco_df
+            )
+
+            if border_crossings.empty:
+                st.info(
+                    "Für die ausgewählte Lok wurden im Anzeigezeitraum "
+                    "keine Grenzübertritte gefunden."
+                )
+
+            else:
+                st.write(
+                    f"Grenzübertritte: **{len(border_crossings)}**"
+                )
+
+                st.dataframe(
+                    border_crossings,
+                    use_container_width=True,
+                    hide_index=True,
+                )
+
+                border_crossing_download = border_crossings.copy()
+
+                border_crossing_download["Zeitstempel"] = (
+                    border_crossing_download["Zeitstempel"]
+                    .dt.strftime("%d.%m.%Y %H:%M")
+                    .fillna("")
+                )
+
+                border_crossing_csv = (
+                    border_crossing_download
+                    .to_csv(
+                        index=False,
+                        sep=";",
+                    )
+                    .encode("utf-8-sig")
+                )
+
+                st.download_button(
+                    "Grenzübertritte herunterladen",
+                    data=border_crossing_csv,
+                    file_name=(
+                        "grenzuebertritte_"
+                        + str(selected_loco)
+                        .replace("/", "_")
+                        .replace("\\", "_")
+                        + ".csv"
+                    ),
+                    mime="text/csv",
+                    key="download_grenzuebertritte_lok_detail",
+                )
 
             st.divider()
 
@@ -2171,62 +2720,35 @@ with tab_timeline:
 
                 st.markdown("### Bewegung(en) dieser Lok zu diesem Transport")
 
-                detail_cols = [c for c in display_cols if c in movement_detail.columns]
-                st.dataframe(
-                    movement_detail[detail_cols].style.apply(highlight_problem_rows, axis=1),
-                    use_container_width=True,
-                    hide_index=True
+                detail_cols = [
+                    column
+                    for column in display_cols
+                    if column in movement_detail.columns
+                ]
+
+                movement_detail_view = movement_detail[
+                    detail_cols
+                ].copy()
+
+                styled_movement_detail = movement_detail_view.style.apply(
+                    highlight_problem_rows,
+                    axis=1,
                 )
 
-                st.markdown("### Grenz-/Segmentverlauf des Transports")
+                hidden_movement_detail_cols = [
+                    column
+                    for column in TIMELINE_HIDDEN_COLUMNS
+                    if column in movement_detail_view.columns
+                ]
 
-                if route_details.empty:
-                    st.info("Keine stg_transport_details_enriched.csv gefunden. Bitte Transport-Routenklassifikation in der Pipeline aktivieren.")
-                elif "transport_number" not in route_details.columns:
-                    st.warning("Die Datei stg_transport_details_enriched.csv enthält keine Spalte transport_number.")
-                else:
-                    seg_df = route_details[
-                        route_details["transport_number"].astype(str) == str(selected_transport)
-                    ].copy()
+                if hidden_movement_detail_cols:
+                    styled_movement_detail = styled_movement_detail.hide(
+                        axis="columns",
+                        subset=hidden_movement_detail_cols,
+                    )
 
-                    if seg_df.empty:
-                        st.info("Keine TransportDetail-Segmente zu dieser Transportnummer gefunden.")
-                    else:
-                        if "cal_seqnum" in seg_df.columns:
-                            seg_df["cal_seqnum"] = pd.to_numeric(seg_df["cal_seqnum"], errors="coerce")
-                            seg_df = seg_df.sort_values("cal_seqnum")
-
-                        seg_cols_preferred = [
-                            "cal_seqnum",
-                            "origin_country_iso",
-                            "destination_country_iso",
-                            "cal_border_event_home",
-                            "origin_name",
-                            "destination_name",
-                            "departure_time_utc",
-                            "arrival_time_utc",
-                            "source_table",
-                            "source_row_id",
-                        ]
-
-                        seg_cols = [c for c in seg_cols_preferred if c in seg_df.columns]
-
-                        def highlight_border_events(row):
-                            event = str(row.get("cal_border_event_home", ""))
-
-                            if event == "Einfahrt":
-                                return ["background-color: #fff3cd; color: #111111"] * len(row)
-
-                            if event == "Ausfahrt":
-                                return ["background-color: #e2f0ff; color: #111111"] * len(row)
-
-                            if event == "Unklar":
-                                return ["background-color: #fde2e2; color: #111111"] * len(row)
-
-                            return ["color: #111111"] * len(row)
-
-                        st.dataframe(
-                            seg_df[seg_cols].style.apply(highlight_border_events, axis=1),
-                            use_container_width=True,
-                            hide_index=True
-                        )
+                st.dataframe(
+                    styled_movement_detail,
+                    use_container_width=True,
+                    hide_index=True,
+                )

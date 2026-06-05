@@ -15,8 +15,9 @@ Grundprinzipien
 - Eine Bewegung kann mehrere atomare Findings erzeugen.
 - INFO-Hinweise blockieren weder Bearbeitung noch Export.
 - ERROR und MANUAL_REVIEW markieren einen aktiven Prüffall.
-- R005 ("Keine Loks") wird bewusst nicht hier erzeugt, weil diese Prüfung
-  direkt auf den Rohdaten in app.py erfolgt.
+- R005 bleibt als ältere separate UI-Prüfung erhalten.
+- R012 übernimmt fehlende oder technische Loknummern zentral in dq_findings,
+  damit diese Fälle auch in der Fehlerqueue und im Audit-Export enthalten sind.
 - R008 entfällt: TfzE, tEns und LocomotiveNo werden im MVP als dieselbe
   fachliche Identifikation behandelt.
 
@@ -26,7 +27,7 @@ R007 prüft, ob die PerformingRU-Marktpartner-ID eindeutig aufgelöst werden kon
 Die Auflösung erfolgt rollenbezogen über:
 1. vollständige Mappingtabelle data/01_mapping/market_partner_mapping_import.csv
 2. offizielle Marktpartnerliste data/01_mapping/vens liste.csv zur Validierung
-3. bestehenden Legacy-Wert aus loco_mapping.csv als temporären Fallback
+3. exaktem offiziellen Firmennamen als Fallback
 
 Nicht eindeutig auflösbare PerformingRU-Schreibweisen werden zusätzlich verdichtet
 in dq_unresolved_performing_ru_market_partner_alias.csv ausgegeben.
@@ -37,6 +38,358 @@ def sql_lit(value: str) -> str:
     """SQL-Textliteral sicher quoten."""
     return "'" + str(value).replace("'", "''") + "'"
 
+
+def qident(name: str) -> str:
+    """SQL-Identifier sicher quoten."""
+    return '"' + str(name).replace('"', '""') + '"'
+
+
+def _table_exists(con, table_name: str) -> bool:
+    """Prüfen, ob eine DuckDB-Tabelle existiert."""
+    return (
+        con.execute(
+            """
+            select count(*)
+            from information_schema.tables
+            where lower(table_name) = lower(?)
+            """,
+            [table_name],
+        ).fetchone()[0]
+        > 0
+    )
+
+
+def _columns(con, table_name: str) -> list[str]:
+    """Spalten einer DuckDB-Tabelle auslesen."""
+    return [
+        row[0]
+        for row in con.execute(
+            f"describe {qident(table_name)}"
+        ).fetchall()
+    ]
+
+
+def _pick_column(
+    available_columns: list[str],
+    candidates: list[str],
+) -> str | None:
+    """Erste tatsächlich vorhandene Spalte aus einer Kandidatenliste wählen."""
+    by_lower = {
+        column.lower(): column
+        for column in available_columns
+    }
+
+    for candidate in candidates:
+        if candidate.lower() in by_lower:
+            return by_lower[candidate.lower()]
+
+    return None
+
+
+def _text_expr(column_name: str | None) -> str:
+    """Bereinigten SQL-Textausdruck für eine optionale Spalte liefern."""
+    if column_name is None:
+        return "NULL"
+
+    return (
+        "nullif(trim(cast("
+        + qident(column_name)
+        + " as varchar)), '')"
+    )
+
+
+def _de_relevance_expr(
+    available_columns: list[str],
+) -> str:
+    """
+    DE-Relevanz analog zur Timeline bilden.
+
+    OriginCountryISO und DestinationCountryISO werden priorisiert.
+    Country bleibt als Fallback unterstützt, falls die detaillierten Felder
+    in einer Rohdatei nicht vorhanden sind.
+    """
+    origin_column = _pick_column(
+        available_columns,
+        [
+            "OriginCountryISO",
+            "OriginCountryIso",
+            "OriginCountry",
+            "FromCountryISO",
+            "FromCountry",
+            "DepartureCountryISO",
+            "DepartureCountry",
+            "Country",
+        ],
+    )
+
+    destination_column = _pick_column(
+        available_columns,
+        [
+            "DestinationCountryISO",
+            "DestinationCountryIso",
+            "DestinationCountry",
+            "ToCountryISO",
+            "ToCountry",
+            "ArrivalCountryISO",
+            "ArrivalCountry",
+            "Country",
+        ],
+    )
+
+    origin_expr = _text_expr(origin_column)
+    destination_expr = _text_expr(destination_column)
+
+    return (
+        "(upper(coalesce("
+        + origin_expr
+        + ", '')) = 'DE' "
+        + "or upper(coalesce("
+        + destination_expr
+        + ", '')) = 'DE')"
+    )
+
+
+def build_r012_raw_findings(
+    con,
+    run_id: str,
+) -> None:
+    """
+    R012 direkt aus den Rohdaten bilden.
+
+    Die Prüfung wird bewusst vor dem Core-Aggregat erzeugt, weil fehlende
+    Loknummern keiner Lok-Zeitachse zugeordnet werden können und deshalb im
+    Core teilweise nicht mehr sichtbar sind.
+
+    Enthalten sind:
+    1. TransportDetail.csv:
+       DE-relevanter Train movement, ActualDeparture mindestens 24 Stunden alt,
+       FirstLocomotiveNo fehlt.
+    2. LocomotiveMovement.csv:
+       DE-relevante Zeile mit fehlender Loknummer, technischer Dummy-Nummer
+       00000000000-0 oder LocomotiveType enthält "Dummy".
+    """
+    con.execute("""
+        create or replace temp table tmp_r012_findings (
+            run_id varchar,
+            severity varchar,
+            rule_id varchar,
+            rule_group varchar,
+            loco_no varchar,
+            transport_number varchar,
+            performing_ru varchar,
+            row_type varchar,
+            movement_sequence_no bigint,
+            period_start_utc timestamp,
+            period_end_utc timestamp,
+            message varchar,
+            suggested_action varchar,
+            status varchar,
+            source_table varchar,
+            source_row_id bigint
+        )
+    """)
+
+    # --------------------------------------------------
+    # TransportDetail.csv
+    # --------------------------------------------------
+    td_table = "raw_transportdetail"
+
+    if _table_exists(con, td_table):
+        td_columns = _columns(con, td_table)
+
+        td_actual_departure = _text_expr(
+            _pick_column(
+                td_columns,
+                [
+                    "ActualDeparture",
+                ],
+            )
+        )
+
+        td_first_loco = _text_expr(
+            _pick_column(
+                td_columns,
+                [
+                    "FirstLocomotiveNo",
+                ],
+            )
+        )
+
+        td_movement_type = _text_expr(
+            _pick_column(
+                td_columns,
+                [
+                    "MovementType",
+                ],
+            )
+        )
+
+        td_transport_number = _text_expr(
+            _pick_column(
+                td_columns,
+                [
+                    "TransportNumber",
+                    "TransportNo",
+                    "TransportId",
+                    "TransportID",
+                ],
+            )
+        )
+
+        td_de_relevant = _de_relevance_expr(
+            td_columns
+        )
+
+        if (
+            td_actual_departure != "NULL"
+            and td_first_loco != "NULL"
+            and td_movement_type != "NULL"
+        ):
+            con.execute(
+                f"""
+                insert into tmp_r012_findings
+                select
+                    {sql_lit(run_id)} as run_id,
+                    'ERROR' as severity,
+                    'R012' as rule_id,
+                    'NO_LOCO_RAW' as rule_group,
+                    {td_first_loco} as loco_no,
+                    {td_transport_number} as transport_number,
+                    null::varchar as performing_ru,
+                    'RAW_TRANSPORT_DETAIL' as row_type,
+                    null::bigint as movement_sequence_no,
+                    try_cast({td_actual_departure} as timestamp) as period_start_utc,
+                    null::timestamp as period_end_utc,
+                    'Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo.' as message,
+                    'Transportplanung prüfen und FirstLocomotiveNo ergänzen.' as suggested_action,
+                    'open' as status,
+                    {sql_lit(td_table)} as source_table,
+                    row_number() over () as source_row_id
+                from {qident(td_table)}
+                where {td_de_relevant}
+                  and lower(coalesce({td_movement_type}, '')) = 'train movement'
+                  and try_cast({td_actual_departure} as timestamp) is not null
+                  and try_cast({td_actual_departure} as timestamp)
+                        <= current_timestamp - interval '1 day'
+                  and {td_first_loco} is null
+                """
+            )
+
+    # --------------------------------------------------
+    # LocomotiveMovement.csv
+    # --------------------------------------------------
+    lm_table = "raw_locomotivemovement"
+
+    if _table_exists(con, lm_table):
+        lm_columns = _columns(con, lm_table)
+
+        lm_loco_no = _text_expr(
+            _pick_column(
+                lm_columns,
+                [
+                    "LocomotiveNo",
+                    "FirstLocomotiveNo",
+                    "Alias",
+                ],
+            )
+        )
+
+        lm_locomotive_type = _text_expr(
+            _pick_column(
+                lm_columns,
+                [
+                    "LocomotiveType",
+                ],
+            )
+        )
+
+        lm_transport_number = _text_expr(
+            _pick_column(
+                lm_columns,
+                [
+                    "TransportNumber",
+                    "TransportNo",
+                    "TransportId",
+                    "TransportID",
+                ],
+            )
+        )
+
+        lm_performing_ru = _text_expr(
+            _pick_column(
+                lm_columns,
+                [
+                    "CurrentContractant",
+                    "CALPerformingRU",
+                    "PerformingRU",
+                    "PerformingRailwayUndertaking",
+                    "RailwayUndertaking",
+                    "Carrier",
+                    "ProductionCompany",
+                ],
+            )
+        )
+
+        lm_actual_departure = _text_expr(
+            _pick_column(
+                lm_columns,
+                [
+                    "ActualDeparture",
+                    "LocomotiveActualDeparture",
+                ],
+            )
+        )
+
+        lm_actual_arrival = _text_expr(
+            _pick_column(
+                lm_columns,
+                [
+                    "ActualArrival",
+                    "LocomotiveActualArrival",
+                ],
+            )
+        )
+
+        lm_de_relevant = _de_relevance_expr(
+            lm_columns
+        )
+
+        if lm_loco_no != "NULL":
+            con.execute(
+                f"""
+                insert into tmp_r012_findings
+                select
+                    {sql_lit(run_id)} as run_id,
+                    'ERROR' as severity,
+                    'R012' as rule_id,
+                    'NO_LOCO_RAW' as rule_group,
+                    {lm_loco_no} as loco_no,
+                    {lm_transport_number} as transport_number,
+                    {lm_performing_ru} as performing_ru,
+                    'RAW_LOCOMOTIVE_MOVEMENT' as row_type,
+                    null::bigint as movement_sequence_no,
+                    try_cast({lm_actual_departure} as timestamp) as period_start_utc,
+                    try_cast({lm_actual_arrival} as timestamp) as period_end_utc,
+                    case
+                        when {lm_loco_no} is null
+                            then 'Loknummer fehlt in LocomotiveMovement.csv.'
+                        when {lm_loco_no} = '00000000000-0'
+                            then 'Technische Dummy-Loknummer 00000000000-0 erkannt.'
+                        else 'LocomotiveType enthält Dummy.'
+                    end as message,
+                    'Loknummer beziehungsweise Dummy-Zuordnung fachlich prüfen und korrigieren.' as suggested_action,
+                    'open' as status,
+                    {sql_lit(lm_table)} as source_table,
+                    row_number() over () as source_row_id
+                from {qident(lm_table)}
+                where {lm_de_relevant}
+                  and (
+                        {lm_loco_no} is null
+                     or {lm_loco_no} = '00000000000-0'
+                     or upper(coalesce({lm_locomotive_type}, '')) like '%DUMMY%'
+                  )
+                """
+            )
 
 def build_rule_catalog(con) -> None:
     """Dokumentierte Übersicht der aktiven Regeln in DuckDB bereitstellen."""
@@ -71,11 +424,17 @@ def build_rule_catalog(con) -> None:
                 ('R009', 'ASSIGNMENT', 'MANUAL_REVIEW',
                  'DE-relevanter Abschnitt ohne PerformingRU.',
                  true),
-                ('R010', 'TIMELINE', 'INFO',
-                 'Ortskette endet oder ist unterbrochen. Nachverfolgung endet hier.',
+                ('R010', 'TIMELINE', 'ERROR',
+                 'Ortskette endet oder ist unterbrochen. Unterbrechung über 8 Stunden; fachliche Prüfung erforderlich.',
+                 true),
+                ('R010.5', 'TIMELINE', 'INFO',
+                 'Ortskette endet oder ist unterbrochen. Unterbrechung bis einschließlich 8 Stunden; nur dokumentieren.',
                  true),
                 ('R011', 'TIMELINE', 'ERROR',
                  'Zeitliche Überschneidung zur vorherigen Bewegung gleicher Lok.',
+                 true),
+                ('R012', 'NO_LOCO_RAW', 'ERROR',
+                 'Fehlende Loknummer, technische Dummy-Loknummer oder LocomotiveType enthält Dummy.',
                  true)
         ) as rules(
             rule_id,
@@ -372,8 +731,8 @@ def build_findings(
 
         union all
 
-        -- R007: Marktpartner-ID ist weiterhin exportrelevant.
-        -- Künftig soll sie aus vens_liste.csv aufgelöst werden.
+        -- R007: Halter-Marktpartner-ID ist exportrelevant.
+        -- Die Auflösung erfolgt rollenbezogen über ANE_TENS.
         select
             {run},
             'ERROR',
@@ -386,15 +745,15 @@ def build_findings(
             movement_sequence_no,
             period_start_utc,
             period_end_utc,
-            'PerformingRU-Marktpartner-ID konnte nicht eindeutig aufgelöst werden.',
-            'market_partner_mapping_import.csv prüfen und Active_Flag nach fachlicher Freigabe auf Y setzen. Details siehe dq_unresolved_performing_ru_market_partner_alias.csv.',
+            'Halter-Marktpartner-ID (ANE_TENS) konnte für die PerformingRU nicht eindeutig aufgelöst werden.',
+            'market_partner_mapping_import.csv prüfen und ANE_TENS-Zuordnung ergänzen oder freigeben.',
             'open',
             source_table,
             source_row_id
         from movement_base
         where report_scope = 'IN_REPORT'
-          and (performing_ru_marktpartner_id is null or performing_ru_marktpartner_id = '')
-          and coalesce(vens_tens_exception_flag, false) = false
+          and (holder_market_partner_id is null or holder_market_partner_id = '')
+          and coalesce(exempt_tens, false) = false
 
         -- R008 entfällt vollständig:
         -- tfze_or_tens = loco_no ist fachlich zulässig.
@@ -425,11 +784,41 @@ def build_findings(
 
         union all
 
-        -- R010: GAP nur als Info. Die Nachverfolgung endet an dieser Stelle.
+        -- R010: Nur DE-relevante GAP-Zeilen über 8 Stunden sind ERROR.
+        -- Exakt 8 Stunden bleiben bewusst INFO und werden unter R010.5 geführt.
+        select
+            {run},
+            'ERROR',
+            'R010',
+            'TIMELINE',
+            loco_no,
+            transport_number,
+            performing_ru,
+            row_type,
+            movement_sequence_no,
+            period_start_utc,
+            period_end_utc,
+            dq_message,
+            'Ortskette mit Unterbrechung über 8 Stunden fachlich prüfen.',
+            'open',
+            source_table,
+            source_row_id
+        from core_loco_timeline
+        where row_type = 'GAP'
+          and coalesce(gap_duration_minutes, 0) > 480
+          and (
+                upper(coalesce(origin_country_iso, '')) = {home}
+             or upper(coalesce(destination_country_iso, '')) = {home}
+          )
+
+        union all
+
+        -- R010.5: Nur DE-relevante GAP-Zeilen bis einschließlich 8 Stunden
+        -- dokumentieren. Diese Hinweise sind kein aktiver Prüffall.
         select
             {run},
             'INFO',
-            'R010',
+            'R010.5',
             'TIMELINE',
             loco_no,
             transport_number,
@@ -445,6 +834,7 @@ def build_findings(
             source_row_id
         from core_loco_timeline
         where row_type = 'GAP'
+          and coalesce(gap_duration_minutes, 0) <= 480
           and (
                 upper(coalesce(origin_country_iso, '')) = {home}
              or upper(coalesce(destination_country_iso, '')) = {home}
@@ -477,17 +867,20 @@ def build_findings(
           and period_start_utc < prev_end
     """)
 
-    # ==================================================
-    # R011: Referenz auf den überschneidenden Transport ergänzen
-    # ==================================================
-    #
-    # dq_findings enthält bei einer zeitlichen Überschneidung zunächst
-    # den aktuell geprüften Transport. Zusätzlich wird für R011 die
-    # Transportnummer der unmittelbar vorherigen Bewegung derselben Lok
-    # ergänzt, mit der sich der aktuelle Datensatz überschneidet.
-    #
-    # Andere Regeln erhalten in dieser Spalte NULL.
-    # ==================================================
+    # R012 wird direkt aus den Rohdaten ergänzt, weil fehlende Loknummern
+    # keiner Lok-Zeitachse zugeordnet werden können.
+    build_r012_raw_findings(
+        con=con,
+        run_id=run_id,
+    )
+
+    con.execute("""
+        insert into dq_findings
+        select *
+        from tmp_r012_findings
+    """)
+
+    # R011: Referenztransport ergänzen.
     con.execute("""
         alter table dq_findings
         add column overlap_with_transport_number varchar
@@ -500,8 +893,6 @@ def build_findings(
             select
                 source_table,
                 source_row_id,
-                period_start_utc,
-
                 lag(period_end_utc) over (
                     partition by loco_no
                     order by
@@ -512,7 +903,6 @@ def build_findings(
                         ) asc nulls last,
                         source_row_id asc
                 ) as prev_end,
-
                 lag(transport_number) over (
                     partition by loco_no
                     order by
@@ -523,16 +913,13 @@ def build_findings(
                         ) asc nulls last,
                         source_row_id asc
                 ) as prev_transport_number
-
             from core_loco_timeline
             where row_type = 'MOVEMENT'
         ) as o
-
         where f.rule_id = 'R011'
           and f.source_table is not distinct from o.source_table
           and f.source_row_id is not distinct from o.source_row_id
           and o.prev_end is not null
-          and o.period_start_utc < o.prev_end
     """)
 
     refresh_core_quality_flags(con)

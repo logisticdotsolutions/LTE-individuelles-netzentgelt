@@ -1594,6 +1594,19 @@ def build_core(con, run_id):
                     else 'UNRESOLVED'
                 end as performing_ru_marktpartner_id_source,
 
+                coalesce(
+                    performing_ru_ane_tens_mapping.market_partner_id,
+                    performing_ru_ane_tens_direct_role.market_partner_id
+                ) as holder_market_partner_id,
+
+                case
+                    when performing_ru_ane_tens_mapping.market_partner_id is not null
+                        then 'MAPPING_IMPORT'
+                    when performing_ru_ane_tens_direct_role.market_partner_id is not null
+                        then 'OFFICIAL_NAME_EXACT'
+                    else 'UNRESOLVED'
+                end as holder_market_partner_id_source,
+
                 m.default_vens as user_vens,
 
                 coalesce(vens_tens_exception.exempt_vens, false) as exempt_vens,
@@ -1770,6 +1783,8 @@ left join core_transport_route r
 
                 performing_ru_marktpartner_id,
                 performing_ru_marktpartner_id_source,
+                holder_market_partner_id,
+                holder_market_partner_id_source,
                 user_vens,
                 exempt_vens,
                 exempt_tens,
@@ -1994,6 +2009,8 @@ left join core_transport_route r
 
                 performing_ru_marktpartner_id,
                 performing_ru_marktpartner_id_source,
+                holder_market_partner_id,
+                holder_market_partner_id_source,
                 user_vens,
 
                 false as exempt_vens,
