@@ -9,6 +9,7 @@ Dieses Modul bündelt sämtliche Exportaufgaben der Netzentgelt-Pipeline:
 1. Aufbau der fachlichen CSV-Exporttabellen in DuckDB
 2. Schreiben der fachlichen sowie Audit-/Debug-CSV-Dateien
 3. Erzeugung der UKL-XLSX-Nutzungsmeldung je PerformingRU
+4. Erzeugung der UKL-XLSX-Aufenthaltsereignisse je PerformingRU
 
 Die XLSX-Ausgabe basiert auf der offiziellen Vorlage
 ``data/05_templates/Vorlage_Nutzungsmeldung.xlsx``.
@@ -47,6 +48,7 @@ ROOT = Path(__file__).resolve().parents[1]
 EXP_DIR = ROOT / "data" / "03_exports"
 TEMPLATE_DIR = ROOT / "data" / "05_templates"
 NUTZUNGSMELDUNG_TEMPLATE_PATH = TEMPLATE_DIR / "Vorlage_Nutzungsmeldung.xlsx"
+AUFENTHALTSEREIGNIS_TEMPLATE_PATH = TEMPLATE_DIR / "Vorlage_Aufenthaltsereignis.xlsx"
 
 
 # ---------------------------------------------------------------------------
@@ -136,6 +138,16 @@ class NutzungsmeldungExportResult:
     missing_required_mapping_count: int
 
 
+@dataclass(frozen=True)
+class AufenthaltsereignisExportResult:
+    """Ergebnis eines dynamisch erzeugten UKL-XLSX-Aufenthaltsereignis-Exports."""
+
+    content: bytes
+    file_name: str
+    row_count: int
+    missing_required_field_count: int
+
+
 def qident(name: str) -> str:
     """SQL-Identifier sicher quoten, beispielsweise DuckDB-Tabellennamen."""
     return '"' + name.replace('"', '""') + '"'
@@ -187,9 +199,9 @@ def build_export_tables(con) -> None:
             tfze_or_tens as "TfzE oder tEns*",
             period_start_utc as "Beginn der Nutzung*",
             period_end_utc as "Ende der Nutzung",
-            user_vens as "Nutzer-vEns*",
-            performing_ru_marktpartner_id as "Marktpartner ID für Nutzungsüberlassung*",
-            'Übergabemeldung' as "Übernahmeanfrage oder Übergabemeldung?"
+            coalesce(nullif(user_vens, ''), performing_ru) as "Nutzer-vEns*",
+            coalesce(nullif(holder_market_partner_id, ''), holder_name) as "Marktpartner ID für Nutzungsüberlassung*",
+            '' as "Übernahmeanfrage oder Übergabemeldung?"
         from core_loco_timeline
         where row_type = 'MOVEMENT'
           and report_scope = 'IN_REPORT'
@@ -485,6 +497,14 @@ def _fetch_usage_segments(
                     where row_type = 'MOVEMENT'
                 ) as movement_count,
 
+                first(
+                    nullif(trim(holder_name), '')
+                    order by sort_sequence asc, source_row_id asc
+                ) filter (
+                    where row_type = 'MOVEMENT'
+                      and nullif(trim(holder_name), '') is not null
+                ) as holder_name,
+
                 max(
                     case
                         when row_type = 'MOVEMENT'
@@ -511,12 +531,14 @@ def _fetch_usage_segments(
 
             coalesce(
                 anu_mapping.market_partner_id,
-                anu_direct.market_partner_id
+                anu_direct.market_partner_id,
+                s.performing_ru
             ) as user_vens,
 
             coalesce(
                 ane_mapping.market_partner_id,
-                ane_direct.market_partner_id
+                ane_direct.market_partner_id,
+                s.holder_name
             ) as holder_market_partner_id
 
         from segment_summary s
@@ -664,11 +686,22 @@ def _copy_row_style(ws, source_row: int, target_row: int, max_column: int = 6) -
             target_cell.border = copy(source_cell.border)
 
 
-def _prepare_template_rows(ws, required_data_rows: int) -> None:
-    """Bestehende Zeilen leeren und bei Bedarf zusätzliche formatierte Zeilen anlegen."""
-    first_data_row = 7
-    template_style_row = 8 if ws.max_row >= 8 else first_data_row
-    last_required_row = max(first_data_row, first_data_row + required_data_rows - 1)
+def _prepare_template_rows(
+    ws,
+    required_data_rows: int,
+    first_data_row: int = 7,
+    max_column: int = 6,
+) -> None:
+    """Bestehende Datenzeilen leeren und bei Bedarf formatiert erweitern."""
+    template_style_row = (
+        first_data_row + 1
+        if ws.max_row >= first_data_row + 1
+        else first_data_row
+    )
+    last_required_row = max(
+        first_data_row,
+        first_data_row + required_data_rows - 1,
+    )
 
     if last_required_row > ws.max_row:
         for row_number in range(ws.max_row + 1, last_required_row + 1):
@@ -676,10 +709,11 @@ def _prepare_template_rows(ws, required_data_rows: int) -> None:
                 ws=ws,
                 source_row=template_style_row,
                 target_row=row_number,
+                max_column=max_column,
             )
 
     for row_number in range(first_data_row, max(ws.max_row, last_required_row) + 1):
-        for column in range(1, 7):
+        for column in range(1, max_column + 1):
             ws.cell(row=row_number, column=column).value = None
 
 
@@ -698,9 +732,9 @@ def build_nutzungsmeldung_xlsx(
     A: LocomotiveNo
     B: Beginn der ersten Bewegung der ununterbrochenen Nutzung
     C: Ende der letzten Bewegung der ununterbrochenen Nutzung
-    D: ANU_VENS-MP-ID der PerformingRU
-    E: ANE_TENS-MP-ID der PerformingRU
-    F: Übergabemeldung
+    D: ANU_VENS-MP-ID der PerformingRU; Fallback: PerformingRU
+    E: ANE_TENS-MP-ID der PerformingRU; Fallback: Halter der Lok
+    F: leer
     """
     db_path = Path(db_path)
     template_path = Path(template_path)
@@ -778,7 +812,7 @@ def build_nutzungsmeldung_xlsx(
         )
         worksheet.cell(row=row_number, column=5).number_format = "@"
 
-        worksheet.cell(row=row_number, column=6).value = "Übergabemeldung"
+        worksheet.cell(row=row_number, column=6).value = None
 
     missing_required_mapping_count = sum(
         1
@@ -801,3 +835,244 @@ def build_nutzungsmeldung_xlsx(
         row_count=len(rows),
         missing_required_mapping_count=missing_required_mapping_count,
     )
+
+# ---------------------------------------------------------------------------
+# Dynamischer XLSX-Export der Aufenthaltsereignisse
+# ---------------------------------------------------------------------------
+
+
+def _fetch_aufenthaltsereignisse(
+    con,
+    performing_ru_values: Sequence[str],
+    date_from: date,
+    date_to: date,
+) -> list[dict[str, object]]:
+    """
+    Aufenthaltsereignisse für die gewählte PerformingRU ermitteln.
+
+    Ableitung je Movement-Zeile:
+    - FaultyDir=E:  einfahrend, ActualArrival, Destination
+    - FaultyDir=A:  ausfahrend, ActualDeparture, Origin
+    - CleanDir=E:   einfahrend, ActualDeparture, Origin
+    - CleanDir=A:   ausfahrend, ActualArrival, Destination
+    - CleanDir=E/A: zwei Ereignisse: Einfahrt und Ausfahrt
+    - sonstige DE-Zeile: netzintern
+    - sonstige Nicht-DE-Zeile: netzextern
+
+    Bei netzintern/netzextern wird der erste verfügbare Ort der Movement-Zeile
+    verwendet. Der Datumsfilter greift tagesscharf auf den Ereigniszeitpunkt.
+    """
+    ru_values = _as_ru_tuple(performing_ru_values)
+    placeholders = _placeholders(ru_values)
+    window_start, window_end_exclusive = _to_day_bounds(date_from, date_to)
+
+    rows = con.execute(
+        f"""
+        with movement_base as (
+            select
+                cast(loco_no as varchar) as locomotive_no,
+                performing_ru,
+                upper(coalesce(faulty_dir, '')) as faulty_dir_norm,
+                upper(coalesce(clean_dir, '')) as clean_dir_norm,
+                report_scope,
+                sequence_ts,
+                actual_departure_ts,
+                actual_arrival_ts,
+                origin_name,
+                destination_name
+            from core_loco_timeline
+            where row_type = 'MOVEMENT'
+              and nullif(trim(loco_no), '') is not null
+              and performing_ru in ({placeholders})
+        ),
+        primary_events as (
+            select
+                locomotive_no,
+                performing_ru,
+                case
+                    when faulty_dir_norm = 'E' then destination_name
+                    when faulty_dir_norm = 'A' then origin_name
+                    when clean_dir_norm in ('E', 'E/A') then origin_name
+                    when clean_dir_norm = 'A' then destination_name
+                    else coalesce(origin_name, destination_name)
+                end as event_location,
+                case
+                    when faulty_dir_norm = 'E' then actual_arrival_ts
+                    when faulty_dir_norm = 'A' then actual_departure_ts
+                    when clean_dir_norm in ('E', 'E/A') then actual_departure_ts
+                    when clean_dir_norm = 'A' then actual_arrival_ts
+                    else coalesce(sequence_ts, actual_departure_ts, actual_arrival_ts)
+                end as event_ts,
+                case
+                    when faulty_dir_norm = 'E' then 'einfahrend'
+                    when faulty_dir_norm = 'A' then 'ausfahrend'
+                    when clean_dir_norm in ('E', 'E/A') then 'einfahrend'
+                    when clean_dir_norm = 'A' then 'ausfahrend'
+                    when report_scope = 'IN_REPORT' then 'netzintern'
+                    else 'netzextern'
+                end as network_status
+            from movement_base
+        ),
+        clean_double_exit as (
+            select
+                locomotive_no,
+                performing_ru,
+                destination_name as event_location,
+                actual_arrival_ts as event_ts,
+                'ausfahrend' as network_status
+            from movement_base
+            where clean_dir_norm = 'E/A'
+              and faulty_dir_norm not in ('E', 'A')
+        ),
+        all_events as (
+            select * from primary_events
+            union all
+            select * from clean_double_exit
+        )
+        select
+            locomotive_no,
+            performing_ru,
+            event_location,
+            event_ts,
+            network_status
+        from all_events
+        where event_ts >= ?
+          and event_ts < ?
+        order by
+            locomotive_no asc,
+            event_ts asc,
+            network_status asc
+        """,
+        [*ru_values, window_start, window_end_exclusive],
+    ).fetchall()
+
+    return [
+        {
+            "locomotive_no": row[0],
+            "performing_ru": row[1],
+            "event_location": row[2],
+            "event_ts": row[3],
+            "network_status": row[4],
+        }
+        for row in rows
+    ]
+
+
+def build_aufenthaltsereignis_xlsx(
+    db_path: Path,
+    performing_ru_values: Iterable[str],
+    export_label: str,
+    date_from: date,
+    date_to: date,
+    template_path: Path = AUFENTHALTSEREIGNIS_TEMPLATE_PATH,
+) -> AufenthaltsereignisExportResult:
+    """
+    UKL-XLSX-Aufenthaltsereignisse je PerformingRU als Download-Bytes erzeugen.
+
+    Spalten der UKL-Vorlage:
+    A: TfzE oder tEns = LocomotiveNo
+    B: vEns = PerformingRU
+    C: Ort = Border Point beziehungsweise Movement-Ort
+    D: Zeitpunkt = Border Time beziehungsweise Movement-Zeitpunkt
+    E: Netzstatus = einfahrend / ausfahrend / netzintern / netzextern
+    """
+    db_path = Path(db_path)
+    template_path = Path(template_path)
+
+    if not db_path.exists():
+        raise FileNotFoundError(f"DuckDB-Datei fehlt: {db_path}")
+
+    if not template_path.exists():
+        raise FileNotFoundError(
+            "XLSX-Vorlage fehlt. Erwartete Ablage: "
+            f"{template_path}"
+        )
+
+    ru_values = _as_ru_tuple(performing_ru_values)
+    con = duckdb.connect(str(db_path), read_only=True)
+
+    try:
+        rows = _fetch_aufenthaltsereignisse(
+            con=con,
+            performing_ru_values=ru_values,
+            date_from=date_from,
+            date_to=date_to,
+        )
+
+        header_market_partner_id, header_market_partner_name = _resolve_export_header(
+            con=con,
+            performing_ru_values=ru_values,
+        )
+
+    finally:
+        con.close()
+
+    workbook = load_workbook(template_path)
+
+    if "Aufenthaltsereignisse" not in workbook.sheetnames:
+        raise RuntimeError(
+            "Die XLSX-Vorlage enthält das erwartete Tabellenblatt "
+            "'Aufenthaltsereignisse' nicht."
+        )
+
+    worksheet = workbook["Aufenthaltsereignisse"]
+    _prepare_template_rows(
+        worksheet,
+        required_data_rows=len(rows),
+        first_data_row=8,
+        max_column=5,
+    )
+
+    worksheet["B3"] = str(header_market_partner_id) if header_market_partner_id else ""
+    worksheet["B3"].number_format = "@"
+    worksheet["B4"] = header_market_partner_name or " / ".join(ru_values)
+
+    first_data_row = 8
+
+    for offset, export_row in enumerate(rows):
+        row_number = first_data_row + offset
+
+        worksheet.cell(row=row_number, column=1).value = str(export_row["locomotive_no"])
+        worksheet.cell(row=row_number, column=1).number_format = "@"
+
+        worksheet.cell(row=row_number, column=2).value = str(export_row["performing_ru"])
+        worksheet.cell(row=row_number, column=2).number_format = "@"
+
+        worksheet.cell(row=row_number, column=3).value = (
+            str(export_row["event_location"])
+            if export_row["event_location"] is not None
+            else ""
+        )
+
+        worksheet.cell(row=row_number, column=4).value = export_row["event_ts"]
+        worksheet.cell(row=row_number, column=4).number_format = "dd.mm.yyyy hh:mm"
+
+        worksheet.cell(row=row_number, column=5).value = str(export_row["network_status"])
+        worksheet.cell(row=row_number, column=5).number_format = "@"
+
+    missing_required_field_count = sum(
+        1
+        for row in rows
+        if not row["locomotive_no"]
+        or not row["performing_ru"]
+        or not row["event_location"]
+        or not row["event_ts"]
+        or not row["network_status"]
+    )
+
+    output = BytesIO()
+    workbook.save(output)
+
+    file_name = (
+        "Aufenthaltsereignis_"
+        f"{_safe_file_part(export_label)}_"
+        f"{date_from.isoformat()}_bis_{date_to.isoformat()}.xlsx"
+    )
+
+    return AufenthaltsereignisExportResult(
+        content=output.getvalue(),
+        file_name=file_name,
+        row_count=len(rows),
+        missing_required_field_count=missing_required_field_count,
+    )
+

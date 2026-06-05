@@ -24,6 +24,7 @@ if str(SCRIPTS_DIR) not in sys.path:
 
 from export_module import (
     LTE_EXPORT_GROUPS,
+    build_aufenthaltsereignis_xlsx,
     build_nutzungsmeldung_xlsx,
     list_non_lte_performing_rus,
     list_unconfigured_lte_performing_rus,
@@ -141,6 +142,102 @@ def hide_non_relevant_gap_rows(source_df: pd.DataFrame) -> pd.DataFrame:
 
     return source_df[
         ~is_gap | is_relevant_gap
+    ].copy()
+
+
+def hide_non_relevant_gap_findings(
+    findings_df: pd.DataFrame,
+    timeline_df: pd.DataFrame,
+) -> pd.DataFrame:
+    """
+    Nicht DE-relevante GAP-Findings defensiv aus KPI und Fehlerqueue entfernen.
+
+    Die zentrale Berechnung in error_rules.py filtert diese Fälle bereits.
+    Dieser zusätzliche UI-Schutz hält die Anzeige auch dann konsistent, wenn
+    nach einem Code-Update noch eine ältere dq_findings.csv vorhanden ist.
+    """
+    if findings_df.empty or timeline_df.empty:
+        return findings_df
+
+    required_findings_columns = {
+        "row_type",
+        "loco_no",
+        "source_table",
+        "source_row_id",
+        "period_start_utc",
+        "period_end_utc",
+    }
+
+    required_timeline_columns = required_findings_columns | {
+        "gap_relevant_de",
+    }
+
+    if not required_findings_columns.issubset(findings_df.columns):
+        return findings_df
+
+    if not required_timeline_columns.issubset(timeline_df.columns):
+        return findings_df
+
+    key_columns = [
+        "loco_no",
+        "source_table",
+        "source_row_id",
+        "period_start_utc",
+        "period_end_utc",
+    ]
+
+    def build_key(source_df: pd.DataFrame) -> pd.Series:
+        key_parts = []
+
+        for column in key_columns:
+            key_parts.append(
+                source_df[column]
+                .fillna("")
+                .astype(str)
+                .str.strip()
+            )
+
+        result = key_parts[0]
+
+        for part in key_parts[1:]:
+            result = result + "||" + part
+
+        return result
+
+    timeline_gap_mask = (
+        timeline_df["row_type"]
+        .fillna("")
+        .astype(str)
+        .str.strip()
+        .str.upper()
+        .eq("GAP")
+    )
+
+    timeline_relevant_gap_mask = (
+        timeline_gap_mask
+        & timeline_df["gap_relevant_de"].apply(normalize_bool)
+    )
+
+    relevant_gap_keys = set(
+        build_key(
+            timeline_df.loc[timeline_relevant_gap_mask]
+        ).tolist()
+    )
+
+    findings_gap_mask = (
+        findings_df["row_type"]
+        .fillna("")
+        .astype(str)
+        .str.strip()
+        .str.upper()
+        .eq("GAP")
+    )
+
+    finding_keys = build_key(findings_df)
+
+    return findings_df[
+        ~findings_gap_mask
+        | finding_keys.isin(relevant_gap_keys)
     ].copy()
 
 
@@ -1140,6 +1237,80 @@ def render_nutzungsmeldung_export_section(
     )
 
 
+@st.cache_data(show_spinner=False)
+def build_aufenthaltsereignis_download_cached(
+    db_path_text: str,
+    db_mtime_ns: int,
+    performing_ru_values: tuple[str, ...],
+    export_label: str,
+    date_from_iso: str,
+    date_to_iso: str,
+):
+    """XLSX-Aufenthaltsereignisse bis zur nächsten DuckDB-Änderung cachen."""
+    _ = db_mtime_ns
+
+    return build_aufenthaltsereignis_xlsx(
+        db_path=Path(db_path_text),
+        performing_ru_values=performing_ru_values,
+        export_label=export_label,
+        date_from=date.fromisoformat(date_from_iso),
+        date_to=date.fromisoformat(date_to_iso),
+    )
+
+
+def render_aufenthaltsereignis_export_section(
+    title: str,
+    export_label: str,
+    performing_ru_values: tuple[str, ...],
+    date_from_value: date,
+    date_to_value: date,
+    key_suffix: str,
+):
+    """Einen RU-spezifischen Aufenthaltsereignis-Export anzeigen."""
+    st.markdown(f"#### {title}")
+
+    try:
+        result = build_aufenthaltsereignis_download_cached(
+            db_path_text=str(DB_PATH),
+            db_mtime_ns=DB_PATH.stat().st_mtime_ns,
+            performing_ru_values=performing_ru_values,
+            export_label=export_label,
+            date_from_iso=date_from_value.isoformat(),
+            date_to_iso=date_to_value.isoformat(),
+        )
+
+    except Exception as error:
+        st.error(
+            f"XLSX-Aufenthaltsereignis konnte nicht erzeugt werden: {error}"
+        )
+        return
+
+    st.caption(
+        f"Exportzeilen: {result.row_count}. "
+        "Grenzübertritte werden als einfahrend beziehungsweise ausfahrend "
+        "ausgegeben. Sonstige DE-Zeilen sind netzintern, sonstige "
+        "Nicht-DE-Zeilen netzextern."
+    )
+
+    if result.missing_required_field_count > 0:
+        st.warning(
+            f"{result.missing_required_field_count} Exportzeilen enthalten "
+            "mindestens ein leeres Pflichtfeld."
+        )
+
+    st.download_button(
+        label="XLSX-Aufenthaltsereignis herunterladen",
+        data=result.content,
+        file_name=result.file_name,
+        mime=(
+            "application/vnd.openxmlformats-officedocument."
+            "spreadsheetml.sheet"
+        ),
+        key=f"download_aufenthaltsereignis_{key_suffix}",
+        use_container_width=True,
+    )
+
+
 def file_status_box():
     st.sidebar.header("Datenstatus")
 
@@ -1187,6 +1358,10 @@ timeline = hide_non_relevant_gap_rows(
     timeline_raw
 )
 findings = read_csv_safe(findings_path)
+findings = hide_non_relevant_gap_findings(
+    findings_df=findings,
+    timeline_df=timeline_raw,
+)
 rule_catalog = read_csv_safe(rule_catalog_path)
 unresolved_performing_ru_market_partner_alias = read_csv_safe(
     unresolved_market_partner_path
@@ -2342,6 +2517,55 @@ with tab_exports:
                     title=f"Export für {selected_non_lte_ru}",
                     export_label=selected_non_lte_ru,
                     performing_ru_values=(selected_non_lte_ru,),
+                    date_from_value=export_date_from,
+                    date_to_value=export_date_to,
+                    key_suffix="non_lte",
+                )
+
+            st.divider()
+            st.subheader("XLSX-Aufenthaltsereignisse je Performing RU")
+
+            st.caption(
+                "Der Export basiert auf Vorlage_Aufenthaltsereignis.xlsx. "
+                "TfzE oder tEns wird mit der Loknummer befüllt, vEns mit der "
+                "PerformingRU. Grenzübertritte werden als einfahrend oder "
+                "ausfahrend ausgegeben. Sonstige Bewegungen innerhalb DE sind "
+                "netzintern, sonstige Auslandsbewegungen netzextern."
+            )
+
+            for group_key, group_config in LTE_EXPORT_GROUPS.items():
+                st.divider()
+
+                render_aufenthaltsereignis_export_section(
+                    title=group_config["title"],
+                    export_label=group_config["file_label"],
+                    performing_ru_values=tuple(
+                        group_config["performing_ru_values"]
+                    ),
+                    date_from_value=export_date_from,
+                    date_to_value=export_date_to,
+                    key_suffix=group_key.lower(),
+                )
+
+            st.divider()
+            st.markdown("#### Performing RU nicht LTE")
+
+            if not non_lte_performing_rus:
+                st.info(
+                    "Keine weiteren PerformingRUs mit DE-relevanten Bewegungen gefunden."
+                )
+
+            else:
+                selected_non_lte_aufenthaltsereignis_ru = st.selectbox(
+                    "Performing RU für Aufenthaltsereignis auswählen",
+                    non_lte_performing_rus,
+                    key="aufenthaltsereignis_non_lte_performing_ru",
+                )
+
+                render_aufenthaltsereignis_export_section(
+                    title=f"Export für {selected_non_lte_aufenthaltsereignis_ru}",
+                    export_label=selected_non_lte_aufenthaltsereignis_ru,
+                    performing_ru_values=(selected_non_lte_aufenthaltsereignis_ru,),
                     date_from_value=export_date_from,
                     date_to_value=export_date_to,
                     key_suffix="non_lte",

@@ -826,6 +826,29 @@ def build_findings(
         from tmp_r012_findings
     """)
 
+    # Defensive Nachbereinigung für GAP-Findings:
+    # Nur explizit als DE-relevant klassifizierte Lücken dürfen in der
+    # Fehlerqueue und in den KPI-Zählern verbleiben. Dadurch bleiben auch
+    # ältere oder zukünftig ergänzte GAP-Regeln sicher auf die fachlich
+    # freigegebenen Kombinationen begrenzt.
+    con.execute("""
+        delete from dq_findings as f
+        where f.row_type = 'GAP'
+          and not exists (
+                select 1
+                from core_loco_timeline as c
+                where c.row_type = 'GAP'
+                  and coalesce(c.gap_relevant_de, false) = true
+                  and c.loco_no is not distinct from f.loco_no
+                  and c.transport_number is not distinct from f.transport_number
+                  and c.movement_sequence_no is not distinct from f.movement_sequence_no
+                  and c.period_start_utc is not distinct from f.period_start_utc
+                  and c.period_end_utc is not distinct from f.period_end_utc
+                  and c.source_table is not distinct from f.source_table
+                  and c.source_row_id is not distinct from f.source_row_id
+          )
+    """)
+
     # R011: Referenztransport ergänzen.
     con.execute("""
         alter table dq_findings
