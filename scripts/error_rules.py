@@ -477,6 +477,64 @@ def build_findings(
           and period_start_utc < prev_end
     """)
 
+    # ==================================================
+    # R011: Referenz auf den überschneidenden Transport ergänzen
+    # ==================================================
+    #
+    # dq_findings enthält bei einer zeitlichen Überschneidung zunächst
+    # den aktuell geprüften Transport. Zusätzlich wird für R011 die
+    # Transportnummer der unmittelbar vorherigen Bewegung derselben Lok
+    # ergänzt, mit der sich der aktuelle Datensatz überschneidet.
+    #
+    # Andere Regeln erhalten in dieser Spalte NULL.
+    # ==================================================
+    con.execute("""
+        alter table dq_findings
+        add column overlap_with_transport_number varchar
+    """)
+
+    con.execute("""
+        update dq_findings as f
+        set overlap_with_transport_number = o.prev_transport_number
+        from (
+            select
+                source_table,
+                source_row_id,
+                period_start_utc,
+
+                lag(period_end_utc) over (
+                    partition by loco_no
+                    order by
+                        coalesce(
+                            sequence_ts,
+                            period_start_utc,
+                            period_end_utc
+                        ) asc nulls last,
+                        source_row_id asc
+                ) as prev_end,
+
+                lag(transport_number) over (
+                    partition by loco_no
+                    order by
+                        coalesce(
+                            sequence_ts,
+                            period_start_utc,
+                            period_end_utc
+                        ) asc nulls last,
+                        source_row_id asc
+                ) as prev_transport_number
+
+            from core_loco_timeline
+            where row_type = 'MOVEMENT'
+        ) as o
+
+        where f.rule_id = 'R011'
+          and f.source_table is not distinct from o.source_table
+          and f.source_row_id is not distinct from o.source_row_id
+          and o.prev_end is not null
+          and o.period_start_utc < o.prev_end
+    """)
+
     refresh_core_quality_flags(con)
 
     finding_count = con.execute(

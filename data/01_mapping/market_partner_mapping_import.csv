@@ -129,6 +129,7 @@ RailCube/DataLake;Company name;MEV Eisenbahn-Verkehrsgesellschaft mbH;ANU_VENS;M
 RailCube/DataLake;Company name;Montan Speditionsges.m.b.H;ANU_VENS;Traditionsgemeinschaft Bw Halle P e.V.;1900100301466;N;PROPOSED_LOW;57.6;Y;
 RailCube/DataLake;Company name;Rail Cargo Austria GmbH;ANU_VENS;Rail Cargo Austria AG;1900100301474;N;REVIEW_LEGAL_FORM_VARIANT;99.0;Y;
 RailCube/DataLake;Company name;LTE NL - LTE Netherlands B.V.;ANU_VENS;LTE Netherlands B.V.;1900100301482;Y;AUTO_COSMETIC;100.0;N;
+RailCube/DataLake;Company name;LTE NL - LTE Netherlands B.V.;ANU_VENS;LTE NL - LTE Netherlands B.V.;1900100301482;Y;AUTO_COSMETIC;100.0;N;
 RailCube/DataLake;Company name;Eisenbahn-Bau- und Betriebsgesellschaft Pressnitztalbahn mbH;ANU_VENS;Eisenbahn-Bau- und Betriebsgesellschaft Pressnitztalbahn mbH;1900100301490;Y;AUTO_EXACT;100.0;N;
 RailCube/DataLake;Company name;ORLEN KolTrans Sp. z o.o.;ANU_VENS;ORLEN Kolej sp. z o.o.;1900100301507;N;PROPOSED_LOW;83.7;Y;
 RailCube/DataLake;Company name;Train 4 Train;ANU_VENS;TRI Train Rental GmbH;1900100301515;N;PROPOSED_MEDIUM;83.3;Y;
@@ -514,6 +515,7 @@ RailCube/DataLake;Company name;MEV Eisenbahn-Verkehrsgesellschaft mbH;ANE_TENS;M
 RailCube/DataLake;Company name;Montan Speditionsges.m.b.H;ANE_TENS;Traditionsgemeinschaft Bw Halle P e.V.;1900100401464;N;PROPOSED_LOW;57.6;Y;
 RailCube/DataLake;Company name;Rail Cargo Austria GmbH;ANE_TENS;Rail Cargo Austria AG;1900100401472;N;REVIEW_LEGAL_FORM_VARIANT;99.0;Y;
 RailCube/DataLake;Company name;LTE NL - LTE Netherlands B.V.;ANE_TENS;LTE Netherlands B.V.;1900100401480;Y;AUTO_COSMETIC;100.0;N;
+RailCube/DataLake;Company name;LTE NL - LTE Netherlands B.V.;ANE_TENS;LTE NL - LTE Netherlands B.V.;1900100401480;Y;AUTO_COSMETIC;100.0;N;
 RailCube/DataLake;Company name;Eisenbahn-Bau- und Betriebsgesellschaft Pressnitztalbahn mbH;ANE_TENS;Eisenbahn-Bau- und Betriebsgesellschaft Pressnitztalbahn mbH;1900100401498;Y;AUTO_EXACT;100.0;N;
 RailCube/DataLake;Company name;ORLEN KolTrans Sp. z o.o.;ANE_TENS;ORLEN Kolej sp. z o.o.;1900100401505;N;PROPOSED_LOW;83.7;Y;
 RailCube/DataLake;Company name;Train 4 Train;ANE_TENS;TRI Train Rental GmbH;1900100401513;N;PROPOSED_MEDIUM;83.3;Y;

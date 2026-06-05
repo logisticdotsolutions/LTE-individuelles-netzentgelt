@@ -1,7 +1,8 @@
 ﻿from pathlib import Path
-from datetime import datetime
+from datetime import date, datetime, timedelta
 import subprocess
 import sys
+import importlib.util
 import pandas as pd
 import streamlit as st
 
@@ -13,6 +14,20 @@ def normalize_bool(value):
 BASE_DIR = Path(__file__).resolve().parents[1]
 EXPORT_DIR = BASE_DIR / "data" / "03_exports"
 RAW_DIR = BASE_DIR / "data" / "00_raw"
+DB_PATH = BASE_DIR / "data" / "02_duckdb" / "netzentgelt.duckdb"
+SCRIPTS_DIR = BASE_DIR / "scripts"
+
+# Das Exportmodul liegt bewusst im scripts-Ordner, damit es sowohl von
+# run_all.py als auch von der Streamlit-App verwendet werden kann.
+if str(SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_DIR))
+
+from export_module import (
+    LTE_EXPORT_GROUPS,
+    build_nutzungsmeldung_xlsx,
+    list_non_lte_performing_rus,
+    list_unconfigured_lte_performing_rus,
+)
 # ------------------------------------------------------
 # Skripte und Datenbankpfade
 # ------------------------------------------------------
@@ -517,6 +532,11 @@ def build_no_loco_diagnostics():
         ["LocomotiveNo"],
     )
 
+    lm_locomotive_type_col = get_col(
+        locomotive_movement,
+        ["LocomotiveType"],
+    )
+
     lm_actual_col = get_col(
         locomotive_movement,
         [
@@ -542,13 +562,43 @@ def build_no_loco_diagnostics():
     )
 
     if lm_loco_col and lm_de_country_cols:
-        lm_mask = (
-            lm_is_de_relevant
-            & locomotive_movement[lm_loco_col]
+        lm_is_technical_loco_no = (
+            locomotive_movement[lm_loco_col]
             .fillna("")
             .astype(str)
             .str.strip()
             .eq("00000000000-0")
+        )
+
+        # LocomotiveType ist optional.
+        # Falls die Spalte vorhanden ist, werden zusätzlich alle Zeilen
+        # berücksichtigt, deren Wert "Dummy" enthält.
+        # Groß-/Kleinschreibung spielt keine Rolle.
+        lm_is_dummy_type = pd.Series(
+            False,
+            index=locomotive_movement.index,
+            dtype=bool,
+        )
+
+        if lm_locomotive_type_col:
+            lm_is_dummy_type = (
+                locomotive_movement[lm_locomotive_type_col]
+                .fillna("")
+                .astype(str)
+                .str.strip()
+                .str.contains(
+                    "dummy",
+                    case=False,
+                    na=False,
+                )
+            )
+
+        lm_mask = (
+            lm_is_de_relevant
+            & (
+                lm_is_technical_loco_no
+                | lm_is_dummy_type
+            )
         )
 
         lm_count = int(lm_mask.sum())
@@ -560,7 +610,8 @@ def build_no_loco_diagnostics():
             source_name="LocomotiveMovement.csv",
             reason=(
                 "DE-relevanter Abschnitt, "
-                "LocomotiveNo = 00000000000-0"
+                "LocomotiveNo = 00000000000-0 "
+                "oder LocomotiveType enthält Dummy"
             ),
             transport_col=lm_transport_col,
             actual_departure_col=lm_actual_col,
@@ -579,14 +630,16 @@ def build_no_loco_diagnostics():
         warnings.append(
             "LocomotiveMovement.csv konnte nicht vollständig geprüft werden. "
             "Benötigt werden die Spalte LocomotiveNo und mindestens "
-            "ein auswertbares Länderfeld wie Country."
+            "ein auswertbares Länderfeld wie Country. "
+            "LocomotiveType ist optional."
         )
 
     summary_rows.append({
         "Quelle": "LocomotiveMovement.csv",
         "Prüfung": (
             "DE-relevanter Abschnitt, "
-            "LocomotiveNo = 00000000000-0"
+            "LocomotiveNo = 00000000000-0 "
+            "oder LocomotiveType enthält Dummy"
         ),
         "Anzahl Zeilen": lm_count,
         "Status": lm_status,
@@ -612,6 +665,81 @@ def build_no_loco_diagnostics():
         ])
 
     return summary_df, detail_df, warnings
+
+@st.cache_data(show_spinner=False)
+def build_nutzungsmeldung_download_cached(
+    db_path_text: str,
+    db_mtime_ns: int,
+    performing_ru_values: tuple[str, ...],
+    export_label: str,
+    date_from_iso: str,
+    date_to_iso: str,
+):
+    """XLSX-Download erzeugen und bis zur nächsten DuckDB-Änderung cachen."""
+    # db_mtime_ns ist bewusst Teil des Cache-Keys. Nach einem neuen Pipeline-Lauf
+    # wird dadurch automatisch eine frische XLSX-Datei erzeugt.
+    _ = db_mtime_ns
+
+    return build_nutzungsmeldung_xlsx(
+        db_path=Path(db_path_text),
+        performing_ru_values=performing_ru_values,
+        export_label=export_label,
+        date_from=date.fromisoformat(date_from_iso),
+        date_to=date.fromisoformat(date_to_iso),
+    )
+
+
+def render_nutzungsmeldung_export_section(
+    title: str,
+    export_label: str,
+    performing_ru_values: tuple[str, ...],
+    date_from_value: date,
+    date_to_value: date,
+    key_suffix: str,
+):
+    """Einen RU-spezifischen Nutzungs-Export mit Downloadbutton anzeigen."""
+    st.markdown(f"#### {title}")
+
+    try:
+        result = build_nutzungsmeldung_download_cached(
+            db_path_text=str(DB_PATH),
+            db_mtime_ns=DB_PATH.stat().st_mtime_ns,
+            performing_ru_values=performing_ru_values,
+            export_label=export_label,
+            date_from_iso=date_from_value.isoformat(),
+            date_to_iso=date_to_value.isoformat(),
+        )
+
+    except Exception as error:
+        st.error(
+            f"XLSX-Export konnte nicht erzeugt werden: {error}"
+        )
+        return
+
+    st.caption(
+        f"Exportzeilen: {result.row_count}. "
+        "Sortierung: LocomotiveNo, danach Beginn der Nutzung. "
+        "Eine GAP-Zeile erzeugt ein neues Nutzungssegment."
+    )
+
+    if result.missing_required_mapping_count > 0:
+        st.warning(
+            f"{result.missing_required_mapping_count} Exportzeilen enthalten "
+            "keine vollständige ANU_VENS-/ANE_TENS-Zuordnung."
+        )
+
+    st.download_button(
+        label="XLSX-Nutzungsmeldung herunterladen",
+        data=result.content,
+        file_name=result.file_name,
+        mime=(
+            "application/vnd.openxmlformats-officedocument."
+            "spreadsheetml.sheet"
+        ),
+        key=f"download_nutzungsmeldung_{key_suffix}",
+        use_container_width=True,
+    )
+
 
 def file_status_box():
     st.sidebar.header("Datenstatus")
@@ -1559,6 +1687,39 @@ with tab_findings:
             int(max_rows)
         )
 
+        # R011-Referenztransport direkt neben dem aktuellen Transport anzeigen.
+        if "overlap_with_transport_number" in display_findings.columns:
+            display_columns = list(display_findings.columns)
+
+            display_columns.remove(
+                "overlap_with_transport_number"
+            )
+
+            if "transport_number" in display_columns:
+                insert_position = (
+                    display_columns.index("transport_number") + 1
+                )
+            else:
+                insert_position = len(display_columns)
+
+            display_columns.insert(
+                insert_position,
+                "overlap_with_transport_number",
+            )
+
+            display_findings = (
+                display_findings[
+                    display_columns
+                ]
+                .rename(
+                    columns={
+                        "overlap_with_transport_number": (
+                            "Überschneidet sich mit TransportNumber"
+                        ),
+                    }
+                )
+            )
+
         st.info(
             f"Angezeigt werden {len(display_findings)} von "
             f"{len(filtered_findings)} Treffern. "
@@ -1589,40 +1750,144 @@ with tab_findings:
         )
 
 with tab_exports:
-    st.subheader("Exportdateien")
+    st.subheader("XLSX-Nutzungsmeldungen je Performing RU")
 
-    export_files = sorted(EXPORT_DIR.glob("*.*"))
+    st.caption(
+        "Der Export basiert auf der UKL-Vorlage. Eine Exportzeile entspricht "
+        "einer ununterbrochenen Nutzung. Eine GAP-Zeile oder ein Wechsel der "
+        "PerformingRU erzeugt ein neues Segment. Der Datumsfilter prüft "
+        "ActualDeparture tagesscharf und inklusive des vollständigen Bis-Tags."
+    )
 
-    if not export_files:
-        st.warning("Keine Exportdateien gefunden.")
+    if not DB_PATH.exists():
+        st.warning(
+            "Keine produktive DuckDB gefunden. Bitte zuerst die Pipeline ausführen."
+        )
+
     else:
-        for file in export_files:
-            size_kb = file.stat().st_size / 1024
-            col1, col2 = st.columns([4, 1])
+        today = datetime.now().date()
+        first_allowed_day = today - timedelta(days=29)
 
-            with col1:
-                st.write(f"**{file.name}**  \n{size_kb:.1f} KB")
+        date_col_1, date_col_2 = st.columns(2)
 
-            with col2:
-                with open(file, "rb") as f:
-                    st.download_button(
-                        label="Download",
-                        data=f,
-                        file_name=file.name,
-                        key=f"download_{file.name}"
-                    )
+        with date_col_1:
+            export_date_from = st.date_input(
+                "Von",
+                value=first_allowed_day,
+                min_value=first_allowed_day,
+                max_value=today,
+                key="nutzungsmeldung_export_date_from",
+            )
+
+        with date_col_2:
+            export_date_to = st.date_input(
+                "Bis",
+                value=today,
+                min_value=first_allowed_day,
+                max_value=today,
+                key="nutzungsmeldung_export_date_to",
+            )
+
+        if export_date_from > export_date_to:
+            st.error("Das Von-Datum darf nicht nach dem Bis-Datum liegen.")
+
+        else:
+            unconfigured_lte_performing_rus = list_unconfigured_lte_performing_rus(
+                db_path=DB_PATH
+            )
+
+            if unconfigured_lte_performing_rus:
+                st.warning(
+                    "Folgende LTE-PerformingRUs sind noch keiner festen "
+                    "Exportsektion zugeordnet: "
+                    + ", ".join(unconfigured_lte_performing_rus)
+                )
+
+            for group_key, group_config in LTE_EXPORT_GROUPS.items():
+                st.divider()
+
+                render_nutzungsmeldung_export_section(
+                    title=group_config["title"],
+                    export_label=group_config["file_label"],
+                    performing_ru_values=tuple(
+                        group_config["performing_ru_values"]
+                    ),
+                    date_from_value=export_date_from,
+                    date_to_value=export_date_to,
+                    key_suffix=group_key.lower(),
+                )
+
+            st.divider()
+            st.markdown("#### Performing RU nicht LTE")
+
+            non_lte_performing_rus = list_non_lte_performing_rus(
+                db_path=DB_PATH
+            )
+
+            if not non_lte_performing_rus:
+                st.info(
+                    "Keine weiteren PerformingRUs mit DE-relevanten Bewegungen gefunden."
+                )
+
+            else:
+                selected_non_lte_ru = st.selectbox(
+                    "Performing RU auswählen",
+                    non_lte_performing_rus,
+                    key="nutzungsmeldung_non_lte_performing_ru",
+                )
+
+                render_nutzungsmeldung_export_section(
+                    title=f"Export für {selected_non_lte_ru}",
+                    export_label=selected_non_lte_ru,
+                    performing_ru_values=(selected_non_lte_ru,),
+                    date_from_value=export_date_from,
+                    date_to_value=export_date_to,
+                    key_suffix="non_lte",
+                )
+
+    st.divider()
+
+    with st.expander("Technische CSV-Exportdateien", expanded=False):
+        export_files = sorted(EXPORT_DIR.glob("*.*"))
+
+        if not export_files:
+            st.warning("Keine Exportdateien gefunden.")
+        else:
+            for file in export_files:
+                size_kb = file.stat().st_size / 1024
+                col1, col2 = st.columns([4, 1])
+
+                with col1:
+                    st.write(f"**{file.name}**  \n{size_kb:.1f} KB")
+
+                with col2:
+                    with open(file, "rb") as export_file:
+                        st.download_button(
+                            label="Download",
+                            data=export_file,
+                            file_name=file.name,
+                            key=f"download_{file.name}",
+                        )
 
     st.divider()
 
     st.subheader("Zuordnungen Vorschau")
     if not zuordnungen.empty:
-        st.dataframe(zuordnungen.head(100), use_container_width=True, hide_index=True)
+        st.dataframe(
+            zuordnungen.head(100),
+            use_container_width=True,
+            hide_index=True,
+        )
     else:
         st.info("Keine export_zuordnungen.csv vorhanden.")
 
     st.subheader("Nutzungsmeldung Vorschau")
     if not nutzungsmeldung.empty:
-        st.dataframe(nutzungsmeldung.head(100), use_container_width=True, hide_index=True)
+        st.dataframe(
+            nutzungsmeldung.head(100),
+            use_container_width=True,
+            hide_index=True,
+        )
     else:
         st.info("Keine export_nutzungsmeldung.csv vorhanden.")
 

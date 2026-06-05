@@ -1581,15 +1581,15 @@ def build_core(con, run_id):
                 r.cal_exit_count_home,
                 r.cal_route_type_home,
 
-                coalesce(
-                    performing_ru_mapping.market_partner_id,
-                    performing_ru_direct_role.market_partner_id
+                               coalesce(
+                    performing_ru_anu_vens_mapping.market_partner_id,
+                    performing_ru_anu_vens_direct_role.market_partner_id
                 ) as performing_ru_marktpartner_id,
 
                 case
-                    when performing_ru_mapping.market_partner_id is not null
+                    when performing_ru_anu_vens_mapping.market_partner_id is not null
                         then 'MAPPING_IMPORT'
-                    when performing_ru_direct_role.market_partner_id is not null
+                    when performing_ru_anu_vens_direct_role.market_partner_id is not null
                         then 'OFFICIAL_NAME_EXACT'
                     else 'UNRESOLVED'
                 end as performing_ru_marktpartner_id_source,
@@ -1625,16 +1625,16 @@ def build_core(con, run_id):
                     when m.default_vens is not null
                      and m.default_vens <> ''
                      and coalesce(
-                            performing_ru_mapping.market_partner_id,
-                            performing_ru_direct_role.market_partner_id
+                            performing_ru_anu_vens_mapping.market_partner_id,
+                            performing_ru_anu_vens_direct_role.market_partner_id
                          ) is not null
                      and coalesce(nullif(m.tfze_or_tens, ''), e.loco_no) is not null
                         then 'HIGH'
 
                     when m.default_vens is not null
                       or coalesce(
-                            performing_ru_mapping.market_partner_id,
-                            performing_ru_direct_role.market_partner_id
+                            performing_ru_anu_vens_mapping.market_partner_id,
+                            performing_ru_anu_vens_direct_role.market_partner_id
                          ) is not null
                       or coalesce(nullif(m.tfze_or_tens, ''), e.loco_no) is not null
                         then 'MEDIUM'
@@ -1656,10 +1656,10 @@ def build_core(con, run_id):
                     when e.performing_ru is null or e.performing_ru = ''
                         then 'PerformingRU fehlt. Manuelle Prüfung erforderlich.'
 
-                    when performing_ru_mapping.market_partner_id is not null
+                    when performing_ru_anu_vens_mapping.market_partner_id is not null
                         then 'PerformingRU-MP-ID über market_partner_mapping_import.csv rollenbezogen und offiziell validiert aufgelöst.'
 
-                    when performing_ru_direct_role.market_partner_id is not null
+                    when performing_ru_anu_vens_direct_role.market_partner_id is not null
                         then 'PerformingRU-MP-ID über exakten offiziellen Firmennamen und ANU_VENS-Rollenliste aufgelöst.'
 
                     else 'PerformingRU-MP-ID nicht eindeutig auflösbar. Mappingtabelle oder offiziellen Firmennamen prüfen.'
@@ -1681,25 +1681,34 @@ def build_core(con, run_id):
                  or m.valid_to_utc = ''
                  or e.period_start_utc < try_cast(replace(m.valid_to_utc,'Z','') as timestamp)
              )
-            left join cfg_market_partner_mapping_effective performing_ru_mapping
-              on performing_ru_mapping.role_code = 'ANU_VENS'
-             and performing_ru_mapping.source_value_normalized = normalize_company_name(
-                    e.performing_ru
-             )
+            
+             left join cfg_market_partner_mapping_effective performing_ru_anu_vens_mapping
+  on performing_ru_anu_vens_mapping.role_code = 'ANU_VENS'
+ and performing_ru_anu_vens_mapping.source_value_normalized =
+        normalize_company_name(e.performing_ru)
 
-            left join cfg_market_partner_role_effective performing_ru_direct_role
-              on performing_ru_direct_role.role_code = 'ANU_VENS'
-             and performing_ru_direct_role.company_name_normalized = normalize_company_name(
-                    e.performing_ru
-             )
+left join cfg_market_partner_role_effective performing_ru_anu_vens_direct_role
+  on performing_ru_anu_vens_direct_role.role_code = 'ANU_VENS'
+ and performing_ru_anu_vens_direct_role.company_name_normalized =
+        normalize_company_name(e.performing_ru)
 
-            left join cfg_vens_tens_exception_effective vens_tens_exception
-              on vens_tens_exception.source_value_normalized = normalize_company_name(
-                    e.performing_ru
-             )
+left join cfg_market_partner_mapping_effective performing_ru_ane_tens_mapping
+  on performing_ru_ane_tens_mapping.role_code = 'ANE_TENS'
+ and performing_ru_ane_tens_mapping.source_value_normalized =
+        normalize_company_name(e.performing_ru)
 
-            left join core_transport_route r
-              on e.transport_number = r.transport_number
+left join cfg_market_partner_role_effective performing_ru_ane_tens_direct_role
+  on performing_ru_ane_tens_direct_role.role_code = 'ANE_TENS'
+ and performing_ru_ane_tens_direct_role.company_name_normalized =
+        normalize_company_name(e.performing_ru)
+
+left join cfg_vens_tens_exception_effective vens_tens_exception
+  on vens_tens_exception.source_value_normalized =
+        normalize_company_name(e.performing_ru)
+
+left join core_transport_route r
+  on e.transport_number = r.transport_number
+
         ),
         ordered_movements as (
             select
