@@ -52,6 +52,37 @@ TIMELINE_HIDDEN_COLUMNS = [
     "tfze_or_tens",
 ]
 
+# Zusätzliche technische Spalten, die ausschließlich in der Lok-Detailprüfung
+# und in "Transport kontrollieren" intern verfügbar bleiben. Sie werden für
+# Styling und fachliche Berechnungen weiterhin verwendet, aber nicht angezeigt.
+DETAIL_TIMELINE_HIDDEN_COLUMNS = [
+    "display_sequence_no",
+    "row_type",
+    "report_scope",
+    "sequence_ts_source",
+    "gap_from_utc",
+    "gap_to_utc",
+    "tfze_or_tens",
+    "user_vens",
+    "performing_ru_marktpartner_id",
+    "exempt_vens",
+    "exempt_tens",
+    "vens_tens_exception_flag",
+    "vens_tens_exception_comment",
+    "cal_entry_count_home",
+    "cal_exit_count_home",
+    "confidence",
+    "dq_rule_ids",
+    "decision_reason",
+]
+
+DETAIL_TIMELINE_RENAME_MAP = {
+    "dq_messages": "Error Message",
+    "cal_route_type_home": "Route Type",
+    "sequence_ts": "Border Time",
+    "de_event_label": "Event Type",
+}
+
 st.set_page_config(
     page_title="Netzentgelt MVP Tool",
     page_icon="🚆",
@@ -1429,27 +1460,36 @@ with tab_overview:
 
     st.divider()
 
-    c1, c2, c3, c4 = st.columns(4)
-
-    with c1:
-        st.metric("Timeline-Zeilen", len(timeline))
-
-    with c2:
-        st.metric("Findings", len(findings))
-
     severity_col = get_col(findings, ["severity", "Severity"])
+
     if severity_col:
-        errors = len(findings[findings[severity_col].astype(str).str.upper() == "ERROR"])
-        warnings = len(findings[findings[severity_col].astype(str).str.upper() == "WARNING"])
+        normalized_severity = (
+            findings[severity_col]
+            .fillna("")
+            .astype(str)
+            .str.strip()
+            .str.upper()
+        )
+
+        errors = int((normalized_severity == "ERROR").sum())
+        infos = int((normalized_severity == "INFO").sum())
+
     else:
         errors = 0
-        warnings = 0
+        infos = 0
 
-    with c3:
+    error_col, info_col = st.columns(2)
+
+    with error_col:
         st.metric("Errors", errors)
 
-    with c4:
-        st.metric("Warnings", warnings)
+    with info_col:
+        st.metric("Infos", infos)
+
+    st.caption(
+        "Errors sind DE-relevante Prüffälle, die fachlich bearbeitet werden müssen. "
+        "Infos dokumentieren DE-relevante Hinweise, blockieren die weitere Verarbeitung aber nicht."
+    )
 
     st.divider()
 
@@ -2505,6 +2545,10 @@ with tab_timeline:
             ]
 
             display_cols = [c for c in preferred_cols if c in loco_df.columns]
+            # Technische Spalten bleiben zunächst im DataFrame erhalten, damit
+            # die Styling-Logik weiterhin darauf zugreifen kann. Vor der
+            # Übergabe an st.dataframe() werden sie anschließend tatsächlich
+            # entfernt und nicht nur per Styler.hide() ausgeblendet.
             view_df = loco_df[display_cols].copy()
 
             st.subheader(f"Bewegungen für Lok {selected_loco}")
@@ -2560,8 +2604,11 @@ with tab_timeline:
 
                 de_event_label = str(
                     row.get(
-                        "de_event_label",
-                        "",
+                        "Event Type",
+                        row.get(
+                            "de_event_label",
+                            "",
+                        ),
                     )
                 ).strip().upper()
 
@@ -2664,22 +2711,40 @@ with tab_timeline:
                     )
                 ] * len(row)
 
-            styled_view_df = view_df.style.apply(
-                highlight_problem_rows,
-                axis=1,
-            )
+            def build_visible_timeline_styler(source_df: pd.DataFrame):
+                """
+                Technische Spalten vor der Anzeige physisch entfernen und die
+                zeilenweise Farbmarkierung dennoch aus dem vollständigen
+                internen Datensatz ableiten.
 
-            hidden_view_cols = [
-                column
-                for column in TIMELINE_HIDDEN_COLUMNS
-                if column in view_df.columns
-            ]
-
-            if hidden_view_cols:
-                styled_view_df = styled_view_df.hide(
-                    axis="columns",
-                    subset=hidden_view_cols,
+                Styler.hide() wird von st.dataframe() nicht in allen
+                Streamlit-Versionen zuverlässig berücksichtigt. Deshalb wird
+                für die sichtbare Tabelle ein eigenes DataFrame erzeugt.
+                """
+                visible_df = (
+                    source_df
+                    .drop(
+                        columns=DETAIL_TIMELINE_HIDDEN_COLUMNS,
+                        errors="ignore",
+                    )
+                    .rename(columns=DETAIL_TIMELINE_RENAME_MAP)
                 )
+
+                def highlight_visible_row(display_row):
+                    source_row = source_df.loc[display_row.name]
+                    source_styles = highlight_problem_rows(source_row)
+                    row_style = source_styles[0] if source_styles else ""
+
+                    return [row_style] * len(display_row)
+
+                return visible_df.style.apply(
+                    highlight_visible_row,
+                    axis=1,
+                )
+
+            styled_view_df = build_visible_timeline_styler(
+                view_df
+            )
 
             st.dataframe(
                 styled_view_df,
@@ -2789,22 +2854,9 @@ with tab_timeline:
                     detail_cols
                 ].copy()
 
-                styled_movement_detail = movement_detail_view.style.apply(
-                    highlight_problem_rows,
-                    axis=1,
+                styled_movement_detail = build_visible_timeline_styler(
+                    movement_detail_view
                 )
-
-                hidden_movement_detail_cols = [
-                    column
-                    for column in TIMELINE_HIDDEN_COLUMNS
-                    if column in movement_detail_view.columns
-                ]
-
-                if hidden_movement_detail_cols:
-                    styled_movement_detail = styled_movement_detail.hide(
-                        axis="columns",
-                        subset=hidden_movement_detail_cols,
-                    )
 
                 st.dataframe(
                     styled_movement_detail,
