@@ -2536,10 +2536,13 @@ with tab_timeline:
                 Zeilen in der Lok-Detailprüfung fachlich hervorheben.
 
                 Priorität:
-                1. GAP-Zeilen: hellrot mit schwarzer Schrift
-                2. NOT_IN_REPORT: dunkler Hintergrund mit grauer Schrift
-                3. IN_REPORT mit Prüffall: hellrot mit schwarzer Schrift
-                4. IN_REPORT ohne Prüffall: helle Standarddarstellung
+                1. GAP-Zeilen: orange mit schwarzer Schrift
+                2. Zeilen ohne DE-Bezug: dunkler Hintergrund mit grauer Schrift
+                3. Grenzübertritte ohne Prüffall: pastellgrün mit fetter schwarzer Schrift
+                4. DE-relevante Prüffälle: hellrot mit fetter schwarzer Schrift
+                5. Normale DE-relevante Bewegungen: pastellblau mit fetter schwarzer Schrift
+                6. Sonstige Prüffälle mit DE-Bezug: hellrot mit schwarzer Schrift
+                7. Sonstige Zeilen ohne DE-Bezug: wie NOT_IN_REPORT
                 """
                 row_type = str(
                     row.get(
@@ -2562,11 +2565,20 @@ with tab_timeline:
                     )
                 ).strip().upper()
 
-                # Normale IN_REPORT-Zeilen und explizite "In DE"-Zeilen
-                # erhalten dieselbe helle Darstellung.
-                is_in_report_or_in_de = (
+                border_event_labels = {
+                    "EINFAHRT",
+                    "AUSFAHRT",
+                    "EINFAHRT + AUSFAHRT",
+                }
+
+                # Eine Zeile gilt nur dann als DE-relevant, wenn sie entweder
+                # ausdrücklich im Report liegt oder als DE-/Grenzereignis
+                # klassifiziert wurde. Alle anderen Fälle werden visuell wie
+                # NOT_IN_REPORT behandelt.
+                has_de_reference = (
                     report_scope == "IN_REPORT"
                     or de_event_label == "IN DE"
+                    or de_event_label in border_event_labels
                 )
 
                 is_problem = False
@@ -2588,12 +2600,15 @@ with tab_timeline:
                 if row_type == "GAP":
                     return [
                         (
-                            "background-color: #fde2e2; "
+                            "background-color: #fce5cd; "
                             "color: #111111"
                         )
                     ] * len(row)
 
-                if report_scope == "NOT_IN_REPORT":
+                if (
+                    report_scope == "NOT_IN_REPORT"
+                    or not has_de_reference
+                ):
                     return [
                         (
                             "background-color: #161a20; "
@@ -2605,33 +2620,32 @@ with tab_timeline:
                 # Bei fehlerhaften Zeilen bleibt die rote Fehlerdarstellung
                 # wichtiger als die grüne fachliche Markierung.
                 if (
-                    de_event_label in {
-                        "EINFAHRT",
-                        "AUSFAHRT",
-                        "EINFAHRT + AUSFAHRT",
-                    }
+                    de_event_label in border_event_labels
                     and not is_problem
                 ):
                     return [
                         (
                             "background-color: #d9ead3; "
-                            "color: #111111"
+                            "color: #111111; "
+                            "font-weight: bold"
                         )
                     ] * len(row)
 
-                if is_in_report_or_in_de and is_problem:
+                if has_de_reference and is_problem:
                     return [
                         (
                             "background-color: #fde2e2; "
-                            "color: #111111"
+                            "color: #111111; "
+                            "font-weight: bold"
                         )
                     ] * len(row)
 
-                if is_in_report_or_in_de:
+                if has_de_reference:
                     return [
                         (
-                            "background-color: #f4f4f4; "
-                            "color: #555555"
+                            "background-color: #d9eaf7; "
+                            "color: #111111; "
+                            "font-weight: bold"
                         )
                     ] * len(row)
 
@@ -2643,7 +2657,12 @@ with tab_timeline:
                         )
                     ] * len(row)
 
-                return [""] * len(row)
+                return [
+                    (
+                        "background-color: #161a20; "
+                        "color: #8b949e"
+                    )
+                ] * len(row)
 
             styled_view_df = view_df.style.apply(
                 highlight_problem_rows,
