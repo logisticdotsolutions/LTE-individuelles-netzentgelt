@@ -1,5 +1,5 @@
 ﻿from pathlib import Path
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, timedelta
 import subprocess
 import sys
 import importlib.util
@@ -280,7 +280,7 @@ def get_last_raw_import_datetime():
         for file_path in existing_files
     )
 
-    return datetime.fromtimestamp(newest_timestamp, tz=timezone.utc)
+    return datetime.fromtimestamp(newest_timestamp)
 
 
 def run_python_script(script_path: Path):
@@ -576,24 +576,6 @@ def build_no_loco_diagnostics():
     detail_frames = []
     warnings = []
 
-    last_import = get_last_raw_import_datetime()
-
-    if last_import is None:
-        error_cutoff_ts = pd.Timestamp.now(tz="UTC") - pd.Timedelta(days=1)
-        warnings.append(
-            "Kein Rohdaten-Importzeitpunkt gefunden. "
-            "Für die 24h-Prüfung wird ersatzweise aktuelle Zeit minus 24 Stunden verwendet."
-        )
-    else:
-        last_import_ts = pd.Timestamp(last_import)
-
-        if last_import_ts.tzinfo is None:
-            last_import_ts = last_import_ts.tz_localize("UTC")
-        else:
-            last_import_ts = last_import_ts.tz_convert("UTC")
-
-        error_cutoff_ts = last_import_ts - pd.Timedelta(days=1)
-
     # ==================================================
     # Prüfung 1: TransportDetail.csv
     # ==================================================
@@ -693,8 +675,8 @@ def build_no_loco_diagnostics():
 
         # Rolling Window:
         # Als Fehler gelten nur Transporte, deren ActualDeparture
-        # mindestens 24 Stunden vor dem letzten Importzeitpunkt liegt.
-        td_cutoff_ts = error_cutoff_ts
+        # mindestens 24 Stunden vor dem aktuellen Zeitpunkt liegt.
+        td_cutoff_ts = pd.Timestamp.now(tz="UTC") - pd.Timedelta(days=1)
 
         td_is_at_least_one_day_old = (
             td_actual_departure_ts.notna()
@@ -814,7 +796,7 @@ def build_no_loco_diagnostics():
         )
     )
 
-    if lm_loco_col and lm_actual_col and lm_de_country_cols:
+    if lm_loco_col and lm_de_country_cols:
         lm_is_missing_loco_no = ~has_value(
             locomotive_movement[lm_loco_col]
         )
@@ -850,18 +832,8 @@ def build_no_loco_diagnostics():
                 )
             )
 
-        lm_actual_departure_ts = parse_actual_departure(
-            locomotive_movement[lm_actual_col]
-        )
-
-        lm_is_at_least_one_day_old = (
-            lm_actual_departure_ts.notna()
-            & (lm_actual_departure_ts <= error_cutoff_ts)
-        )
-
         lm_mask = (
             lm_is_de_relevant
-            & lm_is_at_least_one_day_old
             & (
                 lm_is_missing_loco_no
                 | lm_is_technical_loco_no
@@ -877,9 +849,9 @@ def build_no_loco_diagnostics():
             mask=lm_mask,
             source_name="LocomotiveMovement.csv",
             reason=(
-                "DE-relevanter Abschnitt, ActualDeparture mindestens 24 Stunden "
-                "vor dem letzten Import, LocomotiveNo fehlt, "
-                "LocomotiveNo = 00000000000-0 oder LocomotiveType enthält Dummy"
+                "DE-relevanter Abschnitt, LocomotiveNo fehlt, "
+                "LocomotiveNo = 00000000000-0 "
+                "oder LocomotiveType enthält Dummy"
             ),
             transport_col=lm_transport_col,
             actual_departure_col=lm_actual_col,
@@ -896,12 +868,12 @@ def build_no_loco_diagnostics():
         lm_transport_count = None
         lm_status = (
             "Nicht auswertbar: "
-            "LocomotiveNo, ActualDeparture oder Länderfeld fehlt als Spalte."
+            "LocomotiveNo oder Länderfeld fehlt als Spalte."
         )
 
         warnings.append(
             "LocomotiveMovement.csv konnte nicht vollständig geprüft werden. "
-            "Benötigt werden die Spalten LocomotiveNo, ActualDeparture und mindestens "
+            "Benötigt werden die Spalte LocomotiveNo und mindestens "
             "ein auswertbares Länderfeld wie Country. "
             "LocomotiveType ist optional."
         )
@@ -909,9 +881,9 @@ def build_no_loco_diagnostics():
     summary_rows.append({
         "Quelle": "LocomotiveMovement.csv",
         "Prüfung": (
-            "DE-relevanter Abschnitt, ActualDeparture mindestens 24 Stunden "
-            "vor dem letzten Import, LocomotiveNo fehlt, "
-            "LocomotiveNo = 00000000000-0 oder LocomotiveType enthält Dummy"
+            "DE-relevanter Abschnitt, LocomotiveNo fehlt, "
+            "LocomotiveNo = 00000000000-0 "
+            "oder LocomotiveType enthält Dummy"
         ),
         "Anzahl Zeilen": lm_count,
         "Betroffene Transporte": lm_transport_count,

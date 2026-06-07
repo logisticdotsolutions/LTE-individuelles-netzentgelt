@@ -150,39 +150,9 @@ def _de_relevance_expr(
     )
 
 
-def _get_error_cutoff_utc(con, run_id: str) -> str:
-    """
-    Fachlichen 24h-Cutoff aus dem letzten erfolgreichen Rohdatenimport ableiten.
-
-    ERROR- und MANUAL_REVIEW-Findings dürfen nur für Datenzeilen entstehen,
-    deren relevanter Zeitstempel mindestens 24 Stunden vor diesem Import liegt.
-    Falls wider Erwarten kein Import-Audit vorhanden ist, wird defensiv der
-    aktuelle Zeitpunkt als Fallback verwendet.
-    """
-    imported_at_utc = con.execute("""
-        select max(try_cast(imported_at_utc as timestamp))
-        from raw_import_run
-        where run_id = ?
-          and status = 'imported'
-    """, [run_id]).fetchone()[0]
-
-    if imported_at_utc is None:
-        imported_at_utc = con.execute(
-            "select current_timestamp"
-        ).fetchone()[0]
-
-    return str(
-        con.execute(
-            "select try_cast(? as timestamp) - interval '1 day'",
-            [str(imported_at_utc)],
-        ).fetchone()[0]
-    )
-
-
 def build_r012_raw_findings(
     con,
     run_id: str,
-    error_cutoff_utc: str,
 ) -> None:
     """
     R012 direkt aus den Rohdaten bilden.
@@ -193,8 +163,6 @@ def build_r012_raw_findings(
     desselben Transports werden im Meldungstext ausgewiesen, aber nicht als
     separate Queue-Einträge vervielfacht.
     """
-    error_cutoff = sql_lit(error_cutoff_utc)
-
     con.execute("""
         create or replace temp table tmp_r012_findings (
             run_id varchar,
@@ -265,7 +233,7 @@ def build_r012_raw_findings(
                     where is_de_relevant
                       and lower(coalesce(movement_type, '')) = 'train movement'
                       and period_start_utc is not null
-                      and period_start_utc <= try_cast({error_cutoff} as timestamp)
+                      and period_start_utc <= current_timestamp - interval '1 day'
                       and first_loco_no is null
                 ),
                 grouped as (
@@ -372,8 +340,6 @@ def build_r012_raw_findings(
                     select *
                     from raw_rows
                     where is_de_relevant
-                      and coalesce(period_start_utc, period_end_utc) is not null
-                      and coalesce(period_start_utc, period_end_utc) <= try_cast({error_cutoff} as timestamp)
                       and (has_missing_loco or has_technical_loco or has_dummy_type)
                 ),
                 grouped as (
@@ -589,10 +555,6 @@ def build_findings(
     TransportNumber mehrfach vorkommen, wenn mehrere Regeln greifen.
     """
     run = sql_lit(run_id)
-    error_cutoff_utc = _get_error_cutoff_utc(con, run_id)
-    error_cutoff = sql_lit(error_cutoff_utc)
-
-    print(f"DQ 24h-Cutoff UTC: {error_cutoff_utc}")
 
     build_rule_catalog(con)
 
@@ -604,20 +566,6 @@ def build_findings(
             where row_type = 'MOVEMENT'
               and report_scope = 'IN_REPORT'
         ),
-        movement_error_base as (
-            select *
-            from movement_base
-            where coalesce(period_start_utc, period_end_utc) is not null
-              and coalesce(period_start_utc, period_end_utc) <= try_cast({error_cutoff} as timestamp)
-        ),
-        gap_error_base as (
-            select *
-            from core_loco_timeline
-            where row_type = 'GAP'
-              and coalesce(gap_relevant_de, false) = true
-              and coalesce(period_end_utc, period_start_utc) is not null
-              and coalesce(period_end_utc, period_start_utc) <= try_cast({error_cutoff} as timestamp)
-        ),
         overlap as (
             select
                 b.*,
@@ -627,7 +575,7 @@ def build_findings(
                         coalesce(sequence_ts, period_start_utc, period_end_utc) asc nulls last,
                         source_row_id asc
                 ) as prev_end
-            from movement_error_base b
+            from movement_base b
         )
 
         -- R001: Erste Bewegung im geladenen Zeitfenster mit fehlendem
@@ -675,7 +623,7 @@ def build_findings(
             'open',
             source_table,
             source_row_id
-        from movement_error_base
+        from movement_base
         where report_scope = 'IN_REPORT'
           and coalesce(movement_sequence_no, 0) <> 1
           and sequence_ts is null
@@ -748,7 +696,7 @@ def build_findings(
             'open',
             source_table,
             source_row_id
-        from movement_error_base
+        from movement_base
         where report_scope = 'IN_REPORT'
           and period_start_utc is not null
           and period_end_utc is not null
@@ -784,7 +732,7 @@ def build_findings(
             'open',
             source_table,
             source_row_id
-        from movement_error_base
+        from movement_base
         where report_scope = 'IN_REPORT'
           and (performing_ru is null or performing_ru = '')
 
@@ -808,8 +756,10 @@ def build_findings(
             'open',
             source_table,
             source_row_id
-        from gap_error_base
-        where coalesce(gap_duration_minutes, 0) > 480
+        from core_loco_timeline
+        where row_type = 'GAP'
+          and coalesce(gap_relevant_de, false) = true
+          and coalesce(gap_duration_minutes, 0) > 480
 
         union all
 
@@ -868,7 +818,6 @@ def build_findings(
     build_r012_raw_findings(
         con=con,
         run_id=run_id,
-        error_cutoff_utc=error_cutoff_utc,
     )
 
     con.execute("""
