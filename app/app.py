@@ -1,3 +1,4 @@
+# NETZENTGELT_MANUAL_OVERRIDE_PHASE5A_V1_20260607
 from pathlib import Path
 from datetime import date, datetime, timedelta, timezone
 import json
@@ -34,6 +35,7 @@ from export_module import (
 )
 from rest_export_module import PRIMARY_EXPORT_GROUPS, list_rest_export_overview
 from operator_ui_module import render_operator_dashboard, render_open_tasks
+from manual_override_ui_module import render_manual_override_cockpit
 # ------------------------------------------------------
 # Skripte und Datenbankpfade
 # ------------------------------------------------------
@@ -1582,11 +1584,12 @@ except Exception as diagnostics_error:
 
     st.exception(diagnostics_error)
 
-tab_overview, tab_tasks, tab_timeline, tab_exports, tab_no_loco, tab_findings, tab_run = st.tabs([
+tab_overview, tab_tasks, tab_override, tab_timeline, tab_exports, tab_no_loco, tab_findings, tab_run = st.tabs([
     "1. Tagesprüfung",
     "2. Offene Aufgaben",
-    "3. Lok prüfen",
-    "4. Exporte erstellen",
+    "3. Fall bearbeiten",
+    "4. Lok prüfen",
+    "5. Exporte erstellen",
     "⚙️ Technik: Loknummern",
     "⚙️ Technik: Regelqueue",
     "⚙️ Technik: Pipeline"
@@ -1942,6 +1945,15 @@ with tab_tasks:
         export_gate=export_gate,
         global_export_blockers=global_export_blockers,
         findings=findings,
+    )
+
+
+with tab_override:
+    render_manual_override_cockpit(
+        db_path=DB_PATH,
+        run_all_script=SCRIPT_RUN_ALL,
+        findings=findings,
+        timeline=timeline_raw,
     )
 
 

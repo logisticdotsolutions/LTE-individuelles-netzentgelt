@@ -1,3 +1,4 @@
+# NETZENTGELT_MANUAL_OVERRIDE_PHASE5A_V1_20260607
 r"""
 Netzentgelt MVP - täglicher Neuaufbau der DuckDB-Datenbasis
 ===========================================================
@@ -40,6 +41,11 @@ from datetime import datetime, timezone
 from error_rules import build_findings
 from export_module import build_export_tables
 from quality_gate_module import build_quality_gate_tables, refresh_reconciliation_table
+from manual_override_module import (
+    apply_raw_manual_overrides,
+    apply_staging_manual_overrides,
+    import_manual_overrides,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 RAW_DIR = ROOT / "data" / "00_raw"
@@ -2506,10 +2512,16 @@ def main():
         import_market_partner_mapping(con)
         import_vens_tens_exception(con)
 
+        # Phase 5A: bestätigte manuelle Korrekturen auf die temporär importierten
+        # Rohdaten anwenden. Original-CSVs bleiben unverändert.
+        import_manual_overrides(con)
+        apply_raw_manual_overrides(con, run_id)
+
         # 3. Bewegungsdaten und Transport-Routen neu berechnen.
         # Die Reihenfolge ist relevant:
         # build_core() benötigt core_transport_route bereits für seinen Join.
         build_loco_events(con)
+        apply_staging_manual_overrides(con, run_id)
         build_transport_routes(con)
         build_core(con, run_id)
         build_unresolved_performing_ru_market_partner_alias(con)
@@ -2526,6 +2538,10 @@ def main():
         for table, name in [
             ("raw_import_run", "raw_import_run.csv"),
             ("audit_excluded_cancelled_transports", "audit_excluded_cancelled_transports.csv"),
+            ("cfg_manual_overrides", "cfg_manual_overrides.csv"),
+            ("cfg_manual_overrides_effective", "cfg_manual_overrides_effective.csv"),
+            ("dq_manual_override_conflicts", "dq_manual_override_conflicts.csv"),
+            ("audit_manual_override_application", "audit_manual_override_application.csv"),
             ("stg_loco_events", "stg_loco_events.csv"),
             ("core_loco_timeline", "core_loco_timeline.csv"),
             ("dq_findings", "dq_findings.csv"),

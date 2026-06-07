@@ -1,0 +1,14 @@
+rule_id;rule_group;severity_policy;description;active_flag
+R001;TIMELINE;INFO/ERROR;"Sequence-Zeitanker fehlt. Erste Bewegung im Zeitfenster ist nur INFO; spätere Fälle bleiben ERROR.";true
+R002;TIME_QUALITY;INFO;ActualDeparture fehlt oder ist ungültig.;true
+R003;TIME_QUALITY;INFO;ActualArrival fehlt oder ist ungültig.;true
+R004;TIME_QUALITY;ERROR;ActualDeparture liegt nach ActualArrival.;true
+R005;NO_LOCO_RAW;SEPARATE;Keine-Loks-Logik wird direkt aus den Rohdaten in app.py gebildet.;false
+R006;REFERENCE_DATA;IGNORED;Fehlende vEns werden im MVP nicht als Finding bewertet.;false
+R007;REFERENCE_DATA;IGNORED;Fehlende ANE_TENS-/Marktpartner-Zuordnungen werden im MVP nicht als Finding bewertet.;false
+R008;TFZE_IDENT;REMOVED;Entfällt: TfzE, tEns und LocomotiveNo gelten im MVP als dieselbe Identifikation.;false
+R009;ASSIGNMENT;MANUAL_REVIEW;DE-relevanter Abschnitt ohne PerformingRU.;true
+R010;TIMELINE;ERROR;DE-relevante Ortskette endet oder ist unterbrochen. Unterbrechung über 8 Stunden.;true
+R010.5;TIMELINE;INFO;DE-relevante Ortskette endet oder ist unterbrochen. Unterbrechung bis einschließlich 8 Stunden.;true
+R011;TIMELINE;ERROR;Zeitliche Überschneidung zur vorherigen Bewegung gleicher Lok.;true
+R012;NO_LOCO_RAW;ERROR;Fehlende Loknummer, technische Dummy-Loknummer oder LocomotiveType enthält Dummy.;true
