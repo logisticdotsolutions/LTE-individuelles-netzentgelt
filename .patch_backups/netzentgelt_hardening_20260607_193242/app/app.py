@@ -1,6 +1,5 @@
-from pathlib import Path
+﻿from pathlib import Path
 from datetime import date, datetime, timedelta, timezone
-import json
 import subprocess
 import sys
 import importlib.util
@@ -15,9 +14,7 @@ def normalize_bool(value):
 BASE_DIR = Path(__file__).resolve().parents[1]
 EXPORT_DIR = BASE_DIR / "data" / "03_exports"
 RAW_DIR = BASE_DIR / "data" / "00_raw"
-RAW_IMPORT_MANIFEST_PATH = RAW_DIR / "raw_import_manifest.json"
 DB_PATH = BASE_DIR / "data" / "02_duckdb" / "netzentgelt.duckdb"
-# NETZENTGELT_HARDENING_V1_20260607: einheitlicher Snapshot-Zeitpunkt
 SCRIPTS_DIR = BASE_DIR / "scripts"
 
 # Das Exportmodul liegt bewusst im scripts-Ordner, damit es sowohl von
@@ -253,32 +250,16 @@ def get_col(df: pd.DataFrame, candidates):
 
 def get_last_raw_import_datetime():
     """
-    Zeitpunkt des letzten vollständig übernommenen Rohdaten-Snapshots liefern.
+    Ermittelt den Zeitpunkt des letzten erfolgreichen Rohdatenimports.
 
-    Primär wird das Manifest aus download_blob_data.py gelesen. Nur für ältere
-    lokale Entwicklungsstände ohne Manifest wird defensiv auf Datei-mtime
-    zurückgefallen.
+    Die Azure-Downloadroutine ersetzt die lokalen Rohdaten-Dateien.
+    Der neueste Änderungszeitpunkt der drei erwarteten CSV-Dateien
+    entspricht daher dem letzten Importzeitpunkt.
+
+    Rückgabe:
+    - datetime: Zeitpunkt des letzten Imports
+    - None:      Noch keine Rohdaten-Datei vorhanden
     """
-    if RAW_IMPORT_MANIFEST_PATH.exists():
-        try:
-            payload = json.loads(
-                RAW_IMPORT_MANIFEST_PATH.read_text(encoding="utf-8")
-            )
-            value = str(payload.get("snapshot_at_utc", "")).strip()
-
-            if value:
-                parsed = datetime.fromisoformat(
-                    value.replace("Z", "+00:00")
-                )
-
-                if parsed.tzinfo is None:
-                    parsed = parsed.replace(tzinfo=timezone.utc)
-
-                return parsed.astimezone(timezone.utc)
-
-        except (OSError, ValueError, TypeError, json.JSONDecodeError):
-            pass
-
     expected_raw_files = [
         RAW_DIR / "LocomotiveMovement.csv",
         RAW_DIR / "TransportDetail.csv",
@@ -804,14 +785,6 @@ def build_no_loco_diagnostics():
         ],
     )
 
-    lm_actual_arrival_col = get_col(
-        locomotive_movement,
-        [
-            "ActualArrival",
-            "LocomotiveActualArrival",
-        ],
-    )
-
     lm_transport_col = get_col(
         locomotive_movement,
         [
@@ -841,7 +814,7 @@ def build_no_loco_diagnostics():
         )
     )
 
-    if lm_loco_col and (lm_actual_col or lm_actual_arrival_col) and lm_de_country_cols:
+    if lm_loco_col and lm_actual_col and lm_de_country_cols:
         lm_is_missing_loco_no = ~has_value(
             locomotive_movement[lm_loco_col]
         )
@@ -877,27 +850,13 @@ def build_no_loco_diagnostics():
                 )
             )
 
-        if lm_actual_col:
-            lm_relevant_ts = parse_actual_departure(
-                locomotive_movement[lm_actual_col]
-            )
-        else:
-            lm_relevant_ts = pd.Series(
-                pd.NaT,
-                index=locomotive_movement.index,
-                dtype="datetime64[ns, UTC]",
-            )
-
-        if lm_actual_arrival_col:
-            lm_relevant_ts = lm_relevant_ts.fillna(
-                parse_actual_departure(
-                    locomotive_movement[lm_actual_arrival_col]
-                )
-            )
+        lm_actual_departure_ts = parse_actual_departure(
+            locomotive_movement[lm_actual_col]
+        )
 
         lm_is_at_least_one_day_old = (
-            lm_relevant_ts.notna()
-            & (lm_relevant_ts <= error_cutoff_ts)
+            lm_actual_departure_ts.notna()
+            & (lm_actual_departure_ts <= error_cutoff_ts)
         )
 
         lm_mask = (
@@ -937,12 +896,12 @@ def build_no_loco_diagnostics():
         lm_transport_count = None
         lm_status = (
             "Nicht auswertbar: "
-            "LocomotiveNo, ActualDeparture/ActualArrival oder Länderfeld fehlt als Spalte."
+            "LocomotiveNo, ActualDeparture oder Länderfeld fehlt als Spalte."
         )
 
         warnings.append(
             "LocomotiveMovement.csv konnte nicht vollständig geprüft werden. "
-            "Benötigt werden LocomotiveNo, ActualDeparture oder ActualArrival und mindestens "
+            "Benötigt werden die Spalten LocomotiveNo, ActualDeparture und mindestens "
             "ein auswertbares Länderfeld wie Country. "
             "LocomotiveType ist optional."
         )

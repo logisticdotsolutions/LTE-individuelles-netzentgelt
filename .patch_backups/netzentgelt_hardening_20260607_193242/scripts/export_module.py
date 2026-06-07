@@ -105,7 +105,6 @@ AUDIT_CSV_EXPORTS = [
     ("stg_loco_events", "stg_loco_events.csv"),
     ("core_loco_timeline", "core_loco_timeline.csv"),
     ("dq_findings", "dq_findings.csv"),
-    ("dq_run_metadata", "dq_run_metadata.csv"),
     ("cfg_dq_rule_catalog", "cfg_dq_rule_catalog.csv"),
     ("cfg_market_partner_role", "cfg_market_partner_role.csv"),
     ("cfg_market_partner_role_conflicts", "cfg_market_partner_role_conflicts.csv"),
@@ -419,7 +418,6 @@ def _fetch_usage_segments(
     placeholders = _placeholders(ru_values)
     window_start, window_end_exclusive = _to_day_bounds(date_from, date_to)
     normalized_performing_ru_sql = _normalize_company_name_sql("s.performing_ru")
-    normalized_holder_sql = _normalize_company_name_sql("s.holder_name")
 
     rows = con.execute(
         f"""
@@ -499,16 +497,6 @@ def _fetch_usage_segments(
                     where row_type = 'MOVEMENT'
                 ) as movement_count,
 
-                max(
-                    case
-                        when row_type = 'MOVEMENT'
-                         and report_scope = 'IN_REPORT'
-                         and coalesce(export_ready, false) = false
-                            then 1
-                        else 0
-                    end
-                ) as has_export_blocking_movement,
-
                 first(
                     nullif(trim(holder_name), '')
                     order by sort_sequence asc, source_row_id asc
@@ -565,16 +553,15 @@ def _fetch_usage_segments(
 
         left join cfg_market_partner_mapping_effective ane_mapping
           on ane_mapping.role_code = 'ANE_TENS'
-         and ane_mapping.source_value_normalized = {normalized_holder_sql}
+         and ane_mapping.source_value_normalized = {normalized_performing_ru_sql}
 
         left join cfg_market_partner_role_effective ane_direct
           on ane_direct.role_code = 'ANE_TENS'
-         and ane_direct.company_name_normalized = {normalized_holder_sql}
+         and ane_direct.company_name_normalized = {normalized_performing_ru_sql}
 
         where s.performing_ru in ({placeholders})
           and s.matches_selected_departure_day = 1
           and s.usage_start is not null
-          and coalesce(s.has_export_blocking_movement, 0) = 0
 
         order by
             s.loco_no asc,
@@ -897,7 +884,6 @@ def _fetch_aufenthaltsereignisse(
             where row_type = 'MOVEMENT'
               and nullif(trim(loco_no), '') is not null
               and performing_ru in ({placeholders})
-              and coalesce(needs_manual_review, false) = false
         ),
         primary_events as (
             select

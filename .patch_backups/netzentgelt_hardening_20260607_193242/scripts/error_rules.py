@@ -150,51 +150,33 @@ def _de_relevance_expr(
     )
 
 
-def _get_error_cutoff_utc(con, run_id: str) -> tuple[str, str]:
+def _get_error_cutoff_utc(con, run_id: str) -> str:
     """
-    Stabilen Snapshot-Zeitpunkt und fachlichen 24h-Cutoff liefern.
+    Fachlichen 24h-Cutoff aus dem letzten erfolgreichen Rohdatenimport ableiten.
 
-    source_snapshot_at_utc stammt aus dem nach vollständigem Azure-Download
-    geschriebenen Manifest. Für ältere Datenbankstände bleibt imported_at_utc
-    als defensiver Fallback erhalten.
-    NETZENTGELT_HARDENING_V1_20260607
+    ERROR- und MANUAL_REVIEW-Findings dürfen nur für Datenzeilen entstehen,
+    deren relevanter Zeitstempel mindestens 24 Stunden vor diesem Import liegt.
+    Falls wider Erwarten kein Import-Audit vorhanden ist, wird defensiv der
+    aktuelle Zeitpunkt als Fallback verwendet.
     """
-    raw_import_columns = {
-        column.lower()
-        for column in _columns(con, "raw_import_run")
-    }
-
-    if "source_snapshot_at_utc" in raw_import_columns:
-        snapshot_expression = (
-            "coalesce(" 
-            "try_cast(source_snapshot_at_utc as timestamp), "
-            "try_cast(imported_at_utc as timestamp)"
-            ")"
-        )
-    else:
-        snapshot_expression = "try_cast(imported_at_utc as timestamp)"
-
-    source_snapshot_at_utc = con.execute(
-        f"""
-        select max({snapshot_expression})
+    imported_at_utc = con.execute("""
+        select max(try_cast(imported_at_utc as timestamp))
         from raw_import_run
         where run_id = ?
           and status = 'imported'
-        """,
-        [run_id],
-    ).fetchone()[0]
+    """, [run_id]).fetchone()[0]
 
-    if source_snapshot_at_utc is None:
-        source_snapshot_at_utc = con.execute(
+    if imported_at_utc is None:
+        imported_at_utc = con.execute(
             "select current_timestamp"
         ).fetchone()[0]
 
-    error_cutoff_utc = con.execute(
-        "select try_cast(? as timestamp) - interval '1 day'",
-        [str(source_snapshot_at_utc)],
-    ).fetchone()[0]
-
-    return str(source_snapshot_at_utc), str(error_cutoff_utc)
+    return str(
+        con.execute(
+            "select try_cast(? as timestamp) - interval '1 day'",
+            [str(imported_at_utc)],
+        ).fetchone()[0]
+    )
 
 
 def build_r012_raw_findings(
@@ -595,30 +577,6 @@ def refresh_core_quality_flags(con) -> None:
     """)
 
 
-    # Exportfähigkeit nach der zentralen Finding-Berechnung neu ableiten.
-    # Dadurch blockieren offene ERROR- und MANUAL_REVIEW-Findings auch Exporte.
-    con.execute("""
-        update core_loco_timeline
-        set export_ready = case
-            when row_type = 'MOVEMENT'
-             and report_scope = 'IN_REPORT'
-             and coalesce(needs_manual_review, false) = false
-             and sequence_ts is not null
-             and period_start_utc is not null
-             and period_end_utc is not null
-             and period_start_utc <= period_end_utc
-             and loco_no is not null
-             and loco_no <> ''
-             and user_vens is not null
-             and user_vens <> ''
-             and performing_ru_marktpartner_id is not null
-             and performing_ru_marktpartner_id <> ''
-                then true
-            else false
-        end
-    """)
-
-
 def build_findings(
     con,
     run_id: str,
@@ -631,27 +589,10 @@ def build_findings(
     TransportNumber mehrfach vorkommen, wenn mehrere Regeln greifen.
     """
     run = sql_lit(run_id)
-    source_snapshot_at_utc, error_cutoff_utc = _get_error_cutoff_utc(
-        con,
-        run_id,
-    )
+    error_cutoff_utc = _get_error_cutoff_utc(con, run_id)
     error_cutoff = sql_lit(error_cutoff_utc)
 
-    print(f"DQ Snapshot UTC: {source_snapshot_at_utc}")
     print(f"DQ 24h-Cutoff UTC: {error_cutoff_utc}")
-
-    con.execute("""
-        create or replace table dq_run_metadata as
-        select
-            ?::varchar as run_id,
-            try_cast(? as timestamp) as source_snapshot_at_utc,
-            try_cast(? as timestamp) as error_cutoff_utc,
-            current_timestamp as calculated_at_utc
-    """, [
-        run_id,
-        source_snapshot_at_utc,
-        error_cutoff_utc,
-    ])
 
     build_rule_catalog(con)
 

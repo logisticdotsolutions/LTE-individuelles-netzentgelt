@@ -1,7 +1,5 @@
 import csv
-import json
 import os
-import shutil
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -63,8 +61,6 @@ if not all([ACCOUNT_NAME, ACCOUNT_KEY, CONTAINER_NAME]):
 ROOT = Path(__file__).resolve().parents[1]
 DOWNLOAD_DIR = ROOT / "data" / "00_raw"
 TEMP_ROOT_DIR = DOWNLOAD_DIR / "_tmp_blob_download"
-SNAPSHOT_MANIFEST_PATH = DOWNLOAD_DIR / "raw_import_manifest.json"
-# NETZENTGELT_HARDENING_V1_20260607: gemeinsamer Rohdaten-Snapshot
 
 DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
 TEMP_ROOT_DIR.mkdir(parents=True, exist_ok=True)
@@ -151,88 +147,6 @@ def replace_file_safely(source_path: Path, target_path: Path) -> None:
             "Bitte die Datei in Excel, Power BI oder einem anderen Programm "
             "schließen und den Import erneut starten."
         ) from error
-
-
-
-def write_snapshot_manifest(
-    snapshot_at_utc: datetime,
-    summary_rows: list[tuple],
-) -> None:
-    """Auditierbaren Snapshot-Zeitpunkt nach erfolgreichem Gesamtdownload schreiben."""
-    payload = {
-        "schema_version": 1,
-        "snapshot_at_utc": snapshot_at_utc.astimezone(timezone.utc).strftime(
-            "%Y-%m-%dT%H:%M:%SZ"
-        ),
-        "committed_at_utc": datetime.now(timezone.utc).strftime(
-            "%Y-%m-%dT%H:%M:%SZ"
-        ),
-        "files": [
-            {
-                "file_name": row[0],
-                "mode": row[1],
-                "timestamp_column": row[2],
-                "max_timestamp": row[3],
-                "cutoff_timestamp": row[4],
-                "status": row[5],
-            }
-            for row in summary_rows
-        ],
-    }
-
-    manifest_temp = SNAPSHOT_MANIFEST_PATH.with_suffix(".json.tmp")
-    manifest_temp.write_text(
-        json.dumps(payload, ensure_ascii=False, indent=2),
-        encoding="utf-8",
-    )
-    replace_file_safely(manifest_temp, SNAPSHOT_MANIFEST_PATH)
-
-
-def commit_snapshot_safely(
-    pending_replacements: list[tuple[Path, Path]],
-    snapshot_at_utc: datetime,
-    summary_rows: list[tuple],
-    run_temp_dir: Path,
-) -> None:
-    """
-    Alle validierten Dateien gemeinsam übernehmen.
-
-    Falls das Ersetzen einer Datei fehlschlägt, werden bereits ersetzte Dateien
-    auf den vorherigen lokalen Stand zurückgesetzt. Erst danach wird das
-    Snapshot-Manifest geschrieben.
-    """
-    backup_dir = run_temp_dir / "previous_snapshot"
-    backup_dir.mkdir(parents=True, exist_ok=True)
-
-    backups: dict[Path, Path] = {}
-    replaced_targets: list[Path] = []
-
-    try:
-        for _, target_path in pending_replacements:
-            if target_path.exists():
-                backup_path = backup_dir / target_path.name
-                shutil.copy2(target_path, backup_path)
-                backups[target_path] = backup_path
-
-        for source_path, target_path in pending_replacements:
-            replace_file_safely(source_path, target_path)
-            replaced_targets.append(target_path)
-
-        write_snapshot_manifest(
-            snapshot_at_utc=snapshot_at_utc,
-            summary_rows=summary_rows,
-        )
-
-    except Exception:
-        for target_path in reversed(replaced_targets):
-            backup_path = backups.get(target_path)
-
-            if backup_path is not None and backup_path.exists():
-                shutil.copy2(backup_path, target_path)
-            elif target_path.exists():
-                target_path.unlink()
-
-        raise
 
 
 def remove_obsolete_local_files() -> None:
@@ -607,7 +521,6 @@ def main() -> None:
     resolved_blobs = find_matching_blobs(container_client)
 
     summary_rows = []
-    snapshot_at_utc = datetime.now(timezone.utc)
 
     # Jeder Importlauf erhält einen eigenen temporären Unterordner.
     # Dadurch blockiert eine gesperrte Altdatei aus einem früheren,
@@ -618,7 +531,6 @@ def main() -> None:
         ignore_cleanup_errors=True,
     ) as run_temp_dir_text:
         run_temp_dir = Path(run_temp_dir_text)
-        pending_replacements: list[tuple[Path, Path]] = []
 
         try:
             for expected_file, blob_name in resolved_blobs.items():
@@ -654,10 +566,10 @@ def main() -> None:
                         target_path=temp_full_download,
                     )
 
-                    pending_replacements.append((
-                        temp_full_download,
-                        local_target,
-                    ))
+                    replace_file_safely(
+                        source_path=temp_full_download,
+                        target_path=local_target,
+                    )
 
                     summary_rows.append(
                         (
@@ -690,10 +602,10 @@ def main() -> None:
                     days=filter_days,
                 )
 
-                pending_replacements.append((
-                    temp_filtered_output,
-                    local_target,
-                ))
+                replace_file_safely(
+                    source_path=temp_filtered_output,
+                    target_path=local_target,
+                )
 
                 summary_rows.append(
                     (
@@ -710,18 +622,6 @@ def main() -> None:
                 print(f"Neuester Treffer:  {max_timestamp}")
                 print(f"Cutoff UTC:        {cutoff_timestamp}")
                 print(f"Status:            erfolgreich gefiltert ({filtered_count} Zeilen)")
-
-            commit_snapshot_safely(
-                pending_replacements=pending_replacements,
-                snapshot_at_utc=snapshot_at_utc,
-                summary_rows=summary_rows,
-                run_temp_dir=run_temp_dir,
-            )
-
-            print(
-                "Snapshot vollständig übernommen: "
-                f"{snapshot_at_utc:%Y-%m-%dT%H:%M:%SZ}"
-            )
 
         finally:
             # Der eindeutige Laufordner wird durch TemporaryDirectory

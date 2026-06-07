@@ -30,7 +30,6 @@ Im Projektstamm ausführen:
 
 from pathlib import Path
 import csv
-import json
 import os
 import duckdb
 import hashlib
@@ -38,7 +37,6 @@ import re
 import unicodedata
 from datetime import datetime, timezone
 from error_rules import build_findings
-from export_module import build_export_tables
 
 ROOT = Path(__file__).resolve().parents[1]
 RAW_DIR = ROOT / "data" / "00_raw"
@@ -46,13 +44,6 @@ MAP_DIR = ROOT / "data" / "01_mapping"
 DB_DIR = ROOT / "data" / "02_duckdb"
 EXP_DIR = ROOT / "data" / "03_exports"
 LOG_DIR = ROOT / "data" / "04_logs"
-RAW_IMPORT_MANIFEST_PATH = RAW_DIR / "raw_import_manifest.json"
-REQUIRED_RAW_SOURCE_FILES = {
-    "locomotivemovement.csv",
-    "transportdetail.csv",
-    "locomotive.csv",
-}
-# NETZENTGELT_HARDENING_V1_20260607: stabiler Rohdaten-Snapshot
 # Produktive DuckDB-Datei:
 # Diese Datei enthält immer den letzten erfolgreich berechneten Tagesstand.
 DB_PATH = DB_DIR / "netzentgelt.duckdb"
@@ -77,54 +68,6 @@ for d in [RAW_DIR, MAP_DIR, DB_DIR, EXP_DIR, LOG_DIR]:
 def ts():
     """Aktuellen UTC-Zeitstempel für Logs und Importprotokolle erzeugen."""
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-
-
-
-def get_source_snapshot_at_utc() -> str:
-    """
-    Stabilen Zeitpunkt des letzten vollständig übernommenen Azure-Snapshots lesen.
-
-    Das Manifest wird erst geschrieben, nachdem alle benötigten Rohdaten-Dateien
-    validiert und gemeinsam übernommen wurden. Der Fallback über Datei-mtime hält
-    bestehende lokale Entwicklungsstände weiterhin lauffähig.
-    """
-    if RAW_IMPORT_MANIFEST_PATH.exists():
-        try:
-            payload = json.loads(
-                RAW_IMPORT_MANIFEST_PATH.read_text(encoding="utf-8")
-            )
-            value = str(payload.get("snapshot_at_utc", "")).strip()
-
-            if value:
-                parsed = datetime.fromisoformat(
-                    value.replace("Z", "+00:00")
-                )
-
-                if parsed.tzinfo is None:
-                    parsed = parsed.replace(tzinfo=timezone.utc)
-
-                return parsed.astimezone(timezone.utc).strftime(
-                    "%Y-%m-%dT%H:%M:%SZ"
-                )
-
-        except (OSError, ValueError, TypeError, json.JSONDecodeError):
-            pass
-
-    expected_files = [
-        RAW_DIR / "LocomotiveMovement.csv",
-        RAW_DIR / "TransportDetail.csv",
-        RAW_DIR / "Locomotive.csv",
-    ]
-    existing_files = [path for path in expected_files if path.exists()]
-
-    if existing_files:
-        newest_timestamp = max(path.stat().st_mtime for path in existing_files)
-        return datetime.fromtimestamp(
-            newest_timestamp,
-            tz=timezone.utc,
-        ).strftime("%Y-%m-%dT%H:%M:%SZ")
-
-    return ts()
 
 
 def remove_if_exists(path: Path):
@@ -204,7 +147,6 @@ def import_csvs(con):
         create table if not exists raw_import_run (
             run_id varchar,
             imported_at_utc varchar,
-            source_snapshot_at_utc varchar,
             source_file varchar,
             target_table varchar,
             source_hash varchar,
@@ -214,15 +156,11 @@ def import_csvs(con):
         )
     """)
     run_id = datetime.now(timezone.utc).strftime("RUN_%Y%m%d_%H%M%S")
-    source_snapshot_at_utc = get_source_snapshot_at_utc()
     files = sorted(RAW_DIR.glob("*.csv"))
     if not files:
         print("Keine CSVs in data/00_raw gefunden. Lege dort die DataLake-CSV-Dateien ab und starte erneut.")
         return run_id, []
     imported = []
-    successful_source_files = []
-    import_failures = []
-
     for file in files:
         target = safe_name(file.name)
         try:
@@ -231,41 +169,14 @@ def import_csvs(con):
                 select * from read_csv_auto(?, union_by_name=true, all_varchar=true, filename=true, ignore_errors=true)
             """, [str(file)])
             rc = con.execute(f"select count(*) from {qident(target)}").fetchone()[0]
-            con.execute("insert into raw_import_run values (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                        [run_id, ts(), source_snapshot_at_utc, file.name, target, sha256(file), rc, "imported", None])
+            con.execute("insert into raw_import_run values (?, ?, ?, ?, ?, ?, ?, ?)",
+                        [run_id, ts(), file.name, target, sha256(file), rc, "imported", None])
             imported.append(target)
-            successful_source_files.append(file.name.lower())
             print(f"Importiert: {file.name} -> {target} ({rc} Zeilen)")
         except Exception as e:
-            con.execute("insert into raw_import_run values (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                        [run_id, ts(), source_snapshot_at_utc, file.name, target, sha256(file), 0, "failed", str(e)])
-            import_failures.append(f"{file.name}: {e}")
+            con.execute("insert into raw_import_run values (?, ?, ?, ?, ?, ?, ?, ?)",
+                        [run_id, ts(), file.name, target, sha256(file), 0, "failed", str(e)])
             print(f"FEHLER Import {file.name}: {e}")
-
-    missing_required_files = sorted(
-        REQUIRED_RAW_SOURCE_FILES - set(successful_source_files)
-    )
-
-    if missing_required_files or import_failures:
-        details = []
-
-        if missing_required_files:
-            details.append(
-                "Fehlende Pflichtimporte: "
-                + ", ".join(missing_required_files)
-            )
-
-        if import_failures:
-            details.append(
-                "Fehlgeschlagene CSV-Importe: "
-                + " | ".join(import_failures)
-            )
-
-        raise RuntimeError(
-            "Rohdatenimport unvollständig. Fachliche Berechnung wird abgebrochen. "
-            + " ".join(details)
-        )
-
     return run_id, imported
 
 def import_mapping(con):
@@ -2233,14 +2144,35 @@ left join core_transport_route r
     """)
 
 def build_exports(con):
-    """
-    Rückwärtskompatibler Wrapper.
+    """Fachliche CSV-Exporttabellen für fehlerfreie IN_REPORT-Bewegungen bilden."""
+    con.execute("""
+        create or replace table export_zuordnungen as
+        select
+            tfze_or_tens as "TfzE oder tEns*",
+            period_start_utc as "Beginn der Zuordnung*",
+            period_end_utc as "Ende der Zuordnung",
+            user_vens as "Nutzer-vEns*",
+            performing_ru_marktpartner_id as "Marktpartner ID für Nutzungsüberlassung"
+        from core_loco_timeline
+        where row_type = 'MOVEMENT'
+          and report_scope = 'IN_REPORT'
+          and export_ready = true
+    """)
 
-    Die zentrale Exportlogik liegt ausschließlich in export_module.py, damit
-    CSV- und XLSX-Ausgaben dieselben Fallbacks und Felddefinitionen verwenden.
-    NETZENTGELT_HARDENING_V1_20260607
-    """
-    build_export_tables(con)
+    con.execute("""
+        create or replace table export_nutzungsmeldung as
+        select
+            tfze_or_tens as "TfzE oder tEns*",
+            period_start_utc as "Beginn der Nutzung*",
+            period_end_utc as "Ende der Nutzung",
+            user_vens as "Nutzer-vEns*",
+            performing_ru_marktpartner_id as "Marktpartner ID für Nutzungsüberlassung*",
+            'Übergabemeldung' as "Übernahmeanfrage oder Übergabemeldung?"
+        from core_loco_timeline
+        where row_type = 'MOVEMENT'
+          and report_scope = 'IN_REPORT'
+          and export_ready = true
+    """)
 
 def export_table(con, table, file_name):
     """Eine DuckDB-Tabelle als CSV-Datei nach data/03_exports schreiben."""
@@ -2310,7 +2242,6 @@ def main():
             ("stg_loco_events", "stg_loco_events.csv"),
             ("core_loco_timeline", "core_loco_timeline.csv"),
             ("dq_findings", "dq_findings.csv"),
-            ("dq_run_metadata", "dq_run_metadata.csv"),
             ("cfg_dq_rule_catalog", "cfg_dq_rule_catalog.csv"),
             ("cfg_market_partner_role", "cfg_market_partner_role.csv"),
             ("cfg_market_partner_role_conflicts", "cfg_market_partner_role_conflicts.csv"),
