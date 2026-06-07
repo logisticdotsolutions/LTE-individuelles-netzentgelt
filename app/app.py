@@ -571,6 +571,75 @@ def summarize_no_loco_rows(
     return grouped[result_columns]
 
 
+
+
+
+def load_cancelled_transport_numbers() -> set[str]:
+    """
+    Stornierte Transporte aus TransportDetail.csv laden.
+
+    Die Streamlit-Rohdatenprüfung verwendet dieselbe zentrale Fachlogik wie
+    die DuckDB-Pipeline: TransportStatus = Cancelled oder Canceled wird über
+    TransportNumber auf TransportDetail.csv und LocomotiveMovement.csv
+    angewendet.
+
+    NETZENTGELT_CANCELLED_HOTFIX_V2_20260607
+    """
+    transport_detail = read_csv_safe(RAW_DIR / "TransportDetail.csv")
+
+    if transport_detail.empty:
+        return set()
+
+    transport_number_col = get_col(
+        transport_detail,
+        ["TransportNumber", "TransportNo", "TransportId", "TransportID"],
+    )
+    transport_status_col = get_col(
+        transport_detail,
+        ["TransportStatus", "Status"],
+    )
+
+    if not transport_number_col or not transport_status_col:
+        return set()
+
+    normalized_status = (
+        transport_detail[transport_status_col]
+        .fillna("")
+        .astype(str)
+        .str.strip()
+        .str.lower()
+        .str.replace(r"[^a-z]+", "", regex=True)
+    )
+
+    is_cancelled = normalized_status.isin({"cancelled", "canceled"})
+
+    return {
+        str(value).strip()
+        for value in transport_detail.loc[is_cancelled, transport_number_col]
+        .dropna()
+        .tolist()
+        if str(value).strip()
+    }
+
+
+def build_cancelled_transport_mask(
+    source_df: pd.DataFrame,
+    transport_number_col: str | None,
+    cancelled_transport_numbers: set[str],
+) -> pd.Series:
+    """Zeilenmaske für zentral ausgeschlossene Transportnummern bilden."""
+    if source_df.empty or not transport_number_col or not cancelled_transport_numbers:
+        return pd.Series(False, index=source_df.index, dtype=bool)
+
+    return (
+        source_df[transport_number_col]
+        .fillna("")
+        .astype(str)
+        .str.strip()
+        .isin(cancelled_transport_numbers)
+    )
+
+
 def build_no_loco_diagnostics():
     """
     Erstellt die gewünschte Datenqualitätsprüfung direkt aus den Rohdaten.
@@ -596,6 +665,7 @@ def build_no_loco_diagnostics():
     summary_rows = []
     detail_frames = []
     warnings = []
+    cancelled_transport_numbers = load_cancelled_transport_numbers()
 
     last_import = get_last_raw_import_datetime()
 
@@ -727,6 +797,11 @@ def build_no_loco_diagnostics():
             & td_is_train_movement
             & td_is_at_least_one_day_old
             & ~has_value(transport_detail[td_loco_col])
+            & ~build_cancelled_transport_mask(
+                transport_detail,
+                td_transport_col,
+                cancelled_transport_numbers,
+            )
         )
 
         td_count = int(td_mask.sum())
@@ -909,6 +984,11 @@ def build_no_loco_diagnostics():
                 lm_is_missing_loco_no
                 | lm_is_technical_loco_no
                 | lm_is_dummy_type
+            )
+            & ~build_cancelled_transport_mask(
+                locomotive_movement,
+                lm_transport_col,
+                cancelled_transport_numbers,
             )
         )
 

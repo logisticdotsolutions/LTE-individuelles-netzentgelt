@@ -1,0 +1,21 @@
+{
+  "hotfix": "NETZENTGELT_CANCELLED_HOTFIX_V2_20260607",
+  "files": {
+    "scripts/run_all.py": {
+      "sha256": "8c97a203b63d863365b02728fdd1184ccc2b67c03ce9704e545d4d0e6a528ed6",
+      "newline": "CRLF"
+    },
+    "scripts/error_rules.py": {
+      "sha256": "3736487c19a1c4838a4ad28b6a0ab181b16b8d6fcd2078c1f14108594aa219ea",
+      "newline": "CRLF"
+    },
+    "scripts/export_module.py": {
+      "sha256": "c09ad3d4d10c5f62ee40254b369a775940d27d83833ca77b3b2e54a38cd5ee69",
+      "newline": "CRLF"
+    },
+    "app/app.py": {
+      "sha256": "a6ec05e36c22008745b1255a718815e529118b5f99a5f9e4d42fc9809e96be83",
+      "newline": "CRLF"
+    }
+  }
+}

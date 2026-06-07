@@ -205,6 +205,9 @@ def build_r012_raw_findings(
     """
     R012 direkt aus den Rohdaten bilden.
 
+    NETZENTGELT_CANCELLED_HOTFIX_V2_20260607: zentral stornierte
+    Transporte werden vor der Verdichtung vollständig ausgeschlossen.
+
     Fehlende oder technische Loknummern werden bewusst vor dem Core-Aggregat
     geprüft. Die Fehlerqueue erhält dabei pro Quelle und TransportNumber
     nur einen verdichteten Prüffall. Mehrere betroffene Rohdatenzeilen
@@ -276,6 +279,11 @@ def build_r012_raw_findings(
                         {td_movement_type} as movement_type,
                         {td_first_loco} as first_loco_no
                     from {qident(td_table)}
+                    where not exists (
+                        select 1
+                        from cfg_excluded_cancelled_transports excluded
+                        where excluded.transport_number = {td_transport_number}
+                    )
                 ),
                 raw_matches as (
                     select *
@@ -385,6 +393,11 @@ def build_r012_raw_findings(
                             else false
                         end as has_dummy_type
                     from {qident(lm_table)}
+                    where not exists (
+                        select 1
+                        from cfg_excluded_cancelled_transports excluded
+                        where excluded.transport_number = {lm_transport_number}
+                    )
                 ),
                 raw_matches as (
                     select *

@@ -1,0 +1,366 @@
+run_id;blocker_date;rule_id;severity;row_type;transport_number;performing_ru;message;gate_status
+RUN_20260607_181025;2026-06-06;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453537;DB Cargo Belgium;LocomotiveType enthält Dummy. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-06;R012;ERROR;RAW_TRANSPORT_DETAIL;454163;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-06;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;454163;Rail Force One Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-06-06;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;454424;Railtraxx;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-06;R012;ERROR;RAW_TRANSPORT_DETAIL;454424;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-06;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;454465;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-06-06;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;454494;Railtraxx;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-06;R012;ERROR;RAW_TRANSPORT_DETAIL;454494;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-06;R012;ERROR;RAW_TRANSPORT_DETAIL;454510;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-06-06;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;454510;LTE NL - LTE Netherlands B.V.;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-06-06;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;457088;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-06;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;457293;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-06;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;457708;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-06;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;457893;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-06;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;457895;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-05;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;447918;LTE NL - LTE Netherlands B.V.;LocomotiveType enthält Dummy. Betroffene Rohdatenzeilen: 4.;BLOCKED
+RUN_20260607_181025;2026-06-05;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;454404;LTE NL - LTE Netherlands B.V.;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-05;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;454463;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-06-05;R012;ERROR;RAW_TRANSPORT_DETAIL;457511;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-05;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;457511;Hector Rail GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-06-05;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;457877;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-05;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;457884;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-06-05;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;457888;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-05;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;457901;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-05;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;457929;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-04;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453547;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-06-04;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;456889;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-04;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;457504;Hector Rail GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 3.;BLOCKED
+RUN_20260607_181025;2026-06-04;R012;ERROR;RAW_TRANSPORT_DETAIL;457504;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-06-04;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;457568;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-04;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;457899;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-04;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;457900;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-04;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;457906;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-04;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;457914;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-06-04;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;457919;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-04;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;457928;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-03;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;447906;LTE NL - LTE Netherlands B.V.;LocomotiveType enthält Dummy. Betroffene Rohdatenzeilen: 5.;BLOCKED
+RUN_20260607_181025;2026-06-03;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;448714;LTE AT - LTE Austria GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-03;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;451895;LTE NL - LTE Netherlands B.V.;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-03;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453524;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-06-03;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453529;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-06-03;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;454417;LTE NL - LTE Netherlands B.V.;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 3.;BLOCKED
+RUN_20260607_181025;2026-06-03;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;454426;Duisport Rail GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-06-03;R012;ERROR;RAW_TRANSPORT_DETAIL;454426;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-03;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;454462;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-06-03;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;454466;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-06-03;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;454495;Railtraxx;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-06-03;R012;ERROR;RAW_TRANSPORT_DETAIL;454495;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-06-03;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;454504;Rhenus Rail St. Ingbert GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-06-03;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;454527;LTE NL - LTE Netherlands B.V.;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-03;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;454549;Duisport Rail GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-06-03;R012;ERROR;RAW_TRANSPORT_DETAIL;454549;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-03;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;456612;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-03;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;457508;Hector Rail GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-03;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;457765;LTE CH - LTE Schweiz GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-03;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;457875;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-03;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;457922;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-06-03;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;457923;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-03;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;457924;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-03;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;457925;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-02;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;454407;LTE NL - LTE Netherlands B.V.;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-02;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;454528;LTE NL - LTE Netherlands B.V.;LocomotiveType enthält Dummy. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-02;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;456254;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-02;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;456880;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-02;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;457502;Hector Rail GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 3.;BLOCKED
+RUN_20260607_181025;2026-06-02;R012;ERROR;RAW_TRANSPORT_DETAIL;457502;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-06-02;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;457707;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-02;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;457890;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-02;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;457898;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-02;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;457903;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-01;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450710;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-01;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450711;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-01;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;451482;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-01;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;454405;LTE NL - LTE Netherlands B.V.;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-01;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;454460;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-06-01;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;454543;LTE NL - LTE Netherlands B.V.;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-01;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;455286;LTE SK - LTE Slovakia s.r.o.;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-01;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;455856;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-01;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;456811;Railtraxx;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-01;R012;ERROR;RAW_TRANSPORT_DETAIL;456811;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-01;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;457894;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-01;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;457910;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-06-01;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;457913;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-31;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450596;LTE NL - LTE Netherlands B.V.;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-31;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450641;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-31;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450713;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-30;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450583;LTE NL - LTE Netherlands B.V.;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-30;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450643;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-30;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450712;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-30;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;451234;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-30;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453118;Duisport Rail GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-30;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;454325;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-30;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;454719;Rheincargo NEUSS;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-30;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;455800;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-30;R012;ERROR;RAW_TRANSPORT_DETAIL;456809;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-30;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;456809;Railtraxx;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-30;R012;ERROR;RAW_TRANSPORT_DETAIL;456810;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-30;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;456810;Railtraxx;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-29;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450581;LTE NL - LTE Netherlands B.V.;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-29;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450640;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-29;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450708;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-29;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;451134;Bahnbetrieb GERA;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 3.;BLOCKED
+RUN_20260607_181025;2026-05-29;R012;ERROR;RAW_TRANSPORT_DETAIL;451134;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-29;R012;ERROR;RAW_TRANSPORT_DETAIL;451510;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 3.;BLOCKED
+RUN_20260607_181025;2026-05-29;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453530;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-29;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;455223;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-29;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;455235;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-29;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;455244;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-29;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;455247;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-29;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;456428;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-29;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;456793;LTE CH - LTE Schweiz GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-28;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;449633;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-28;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450585;LTE NL - LTE Netherlands B.V.;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-28;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450638;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-28;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450707;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-28;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;451569;LTE NL - LTE Netherlands B.V.;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-28;R012;ERROR;RAW_TRANSPORT_DETAIL;451840;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-28;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;451840;Hector Rail GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 3.;BLOCKED
+RUN_20260607_181025;2026-05-28;R012;ERROR;RAW_TRANSPORT_DETAIL;453532;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-28;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453532;DB Cargo Belgium;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-28;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;455229;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-28;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;455230;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-28;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;455234;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-28;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;455236;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-28;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;455242;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-28;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;456759;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-28;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;456786;Hector Rail GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-28;R012;ERROR;RAW_TRANSPORT_DETAIL;456786;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-28;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;456791;LTE CH - LTE Schweiz GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-27;R012;ERROR;RAW_TRANSPORT_DETAIL;450603;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-27;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450603;Duisport Rail GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-27;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450639;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-27;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450642;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-27;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450680;Rhenus Rail St. Ingbert GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-27;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450714;Rhenus Rail St. Ingbert GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-27;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450724;Duisport Rail GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-27;R012;ERROR;RAW_TRANSPORT_DETAIL;450724;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-27;R012;ERROR;RAW_TRANSPORT_DETAIL;451842;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-27;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;451842;Hector Rail GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-27;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453539;LTE DE - LTE Germany GmbH;LocomotiveType enthält Dummy. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-27;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453945;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-27;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;455246;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-27;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;455710;Rail Time Logistics GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-27;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;455908;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-27;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;456418;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-27;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;456704;Hector Rail GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 3.;BLOCKED
+RUN_20260607_181025;2026-05-27;R012;ERROR;RAW_TRANSPORT_DETAIL;456704;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-27;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;456787;LTE CH - LTE Schweiz GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-27;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;456807;Railtraxx;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-27;R012;ERROR;RAW_TRANSPORT_DETAIL;456807;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-27;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;456918;LTE NL - LTE Netherlands B.V.;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-26;R012;ERROR;RAW_TRANSPORT_DETAIL;450434;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-26;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450434;Railtraxx;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-26;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450584;LTE NL - LTE Netherlands B.V.;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-26;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;451568;LTE NL - LTE Netherlands B.V.;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-26;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;451839;Hector Rail GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 3.;BLOCKED
+RUN_20260607_181025;2026-05-26;R012;ERROR;RAW_TRANSPORT_DETAIL;451839;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-26;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453536;DB Cargo Belgium;LocomotiveType enthält Dummy. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-26;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;455220;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-26;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;455248;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-26;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;456421;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-26;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;456758;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-26;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;456784;LTE AT - LTE Austria GmbH;Technische Dummy-Loknummer 00000000000-0 erkannt. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-26;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;457355;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-25;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;451124;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-25;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453944;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-25;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;455845;Railtraxx;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-25;R012;ERROR;RAW_TRANSPORT_DETAIL;455845;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-25;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;456430;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-25;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;457250;LTE NL - LTE Netherlands B.V.;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-25;R012;ERROR;RAW_TRANSPORT_DETAIL;457250;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-24;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;447453;LTE DE - LTE Germany GmbH;LocomotiveType enthält Dummy. Betroffene Rohdatenzeilen: 14.;BLOCKED
+RUN_20260607_181025;2026-05-23;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450547;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-23;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450548;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-23;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450556;LTE NL - LTE Netherlands B.V.;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-23;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;451309;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-23;R012;ERROR;RAW_TRANSPORT_DETAIL;451765;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-23;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;451765;Rail Force One Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-23;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;451766;Rail Force One Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-23;R012;ERROR;RAW_TRANSPORT_DETAIL;451766;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-23;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;451841;Hector Rail AB (Schweden);Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-23;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453750;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-23;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453752;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-23;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;455313;LTE DE - LTE Germany GmbH;LocomotiveType enthält Dummy. Betroffene Rohdatenzeilen: 8.;BLOCKED
+RUN_20260607_181025;2026-05-23;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;455708;LTE NL - LTE Netherlands B.V.;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-22;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450416;LTE NL - LTE Netherlands B.V.;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-22;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450474;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-22;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;451133;Bahnbetrieb GERA;LocomotiveType enthält Dummy. Betroffene Rohdatenzeilen: 3.;BLOCKED
+RUN_20260607_181025;2026-05-22;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;451843;Hector Rail GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 3.;BLOCKED
+RUN_20260607_181025;2026-05-22;R012;ERROR;RAW_TRANSPORT_DETAIL;451843;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-22;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453746;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 3.;BLOCKED
+RUN_20260607_181025;2026-05-22;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453755;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-22;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453756;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-22;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453758;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-22;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;454777;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-22;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;454787;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-22;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;455326;Hector Rail GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-22;R012;ERROR;RAW_TRANSPORT_DETAIL;455326;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-22;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;455703;LTE NL - LTE Netherlands B.V.;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-22;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;455842;Railtraxx;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-22;R012;ERROR;RAW_TRANSPORT_DETAIL;455842;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-21;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;449611;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-21;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;449632;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-21;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450420;LTE NL - LTE Netherlands B.V.;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-21;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450475;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-21;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450542;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-21;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450543;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-21;R012;ERROR;RAW_TRANSPORT_DETAIL;450558;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-21;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453534;LTE DE - LTE Germany GmbH;LocomotiveType enthält Dummy. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-21;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453759;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-21;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;454765;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-21;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;454771;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-21;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;454783;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-21;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;454788;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-21;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;455325;Hector Rail GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 3.;BLOCKED
+RUN_20260607_181025;2026-05-21;R012;ERROR;RAW_TRANSPORT_DETAIL;455325;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-21;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;456343;LTE CH - LTE Schweiz GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-20;R012;ERROR;RAW_TRANSPORT_DETAIL;450438;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-20;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450438;Duisport Rail GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-20;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450473;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-20;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450477;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-20;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450515;Rhenus Rail St. Ingbert GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-20;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450549;Rhenus Rail St. Ingbert GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-20;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450555;LTE NL - LTE Netherlands B.V.;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-20;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450558;Duisport Rail GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-20;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;451648;Hector Rail GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-20;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453122;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-20;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453133;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-20;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453504;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-20;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453942;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-20;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;454761;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-20;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;454786;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-20;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;454969;Rheincargo NEUSS;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-20;R012;ERROR;RAW_TRANSPORT_DETAIL;455785;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-20;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;455785;Railtraxx;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-20;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;456286;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 3.;BLOCKED
+RUN_20260607_181025;2026-05-19;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;449262;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-19;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450112;Railtraxx;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-19;R012;ERROR;RAW_TRANSPORT_DETAIL;450112;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-19;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450419;LTE NL - LTE Netherlands B.V.;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-19;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450544;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-19;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;451649;Hector Rail GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 3.;BLOCKED
+RUN_20260607_181025;2026-05-19;R012;ERROR;RAW_TRANSPORT_DETAIL;451649;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-19;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;454140;LTE CH - LTE Schweiz GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-19;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;454767;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-19;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;454773;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-19;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;454775;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-19;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;455311;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-19;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;455357;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-19;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;456163;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-18;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450225;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-18;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450417;LTE NL - LTE Netherlands B.V.;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-18;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450472;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-18;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;452390;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-18;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453117;Duisport Rail GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-18;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453676;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-18;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;454968;Flex Bahndienstleistungen GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-17;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;445422;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 3.;BLOCKED
+RUN_20260607_181025;2026-05-17;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450109;LTE NL - LTE Netherlands B.V.;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-17;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450154;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-17;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450228;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-17;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;451978;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-17;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;451981;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-17;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453085;Duisport Rail GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-16;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;449261;LTE DE - LTE Germany GmbH;LocomotiveType enthält Dummy. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-16;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450095;LTE NL - LTE Netherlands B.V.;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-16;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450155;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-16;R012;ERROR;RAW_TRANSPORT_DETAIL;450185;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-16;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450185;Railtraxx;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-16;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450226;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-16;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;451298;LTE CH - LTE Schweiz GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-16;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;451311;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-16;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453220;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-16;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453508;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-16;R012;ERROR;RAW_TRANSPORT_DETAIL;454250;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-16;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;454250;Railtraxx;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-15;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;449613;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-15;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450094;LTE NL - LTE Netherlands B.V.;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-15;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450153;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-15;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450223;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-15;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450234;LTE NL - LTE Netherlands B.V.;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-15;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;452966;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-15;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453246;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-15;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453250;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-15;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453515;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-14;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;449628;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-14;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450222;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-14;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;452177;Rheincargo NEUSS;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-14;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453205;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-13;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;449260;LTE DE - LTE Germany GmbH;LocomotiveType enthält Dummy. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-13;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450096;LTE NL - LTE Netherlands B.V.;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-13;R012;ERROR;RAW_TRANSPORT_DETAIL;450116;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-13;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450116;Duisport Rail GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-13;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450151;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-13;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450156;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-13;R012;ERROR;RAW_TRANSPORT_DETAIL;450184;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-13;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450184;Railtraxx;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-13;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450194;Rhenus Rail St. Ingbert GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-13;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450224;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-13;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450229;Rhenus Rail St. Ingbert GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-13;R012;ERROR;RAW_TRANSPORT_DETAIL;450240;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-13;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450240;Duisport Rail GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-13;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;451203;Hector Rail GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-13;R012;ERROR;RAW_TRANSPORT_DETAIL;451203;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-13;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;451283;LTE CH - LTE Schweiz GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-13;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453244;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-13;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453249;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-13;R012;ERROR;RAW_TRANSPORT_DETAIL;455706;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-13;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;455706;LTE NL - LTE Netherlands B.V.;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-12;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450003;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-12;R012;ERROR;RAW_TRANSPORT_DETAIL;450003;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-12;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450150;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-12;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450312;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-12;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;451199;Hector Rail GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 3.;BLOCKED
+RUN_20260607_181025;2026-05-12;R012;ERROR;RAW_TRANSPORT_DETAIL;451199;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-12;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;451562;Emsländische Eisenbahn GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-12;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;451563;Emsländische Eisenbahn GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-12;R012;ERROR;RAW_TRANSPORT_DETAIL;451744;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-12;R012;ERROR;RAW_TRANSPORT_DETAIL;452041;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-12;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;452041;Hector Rail GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-12;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453233;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-12;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453243;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-12;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453485;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-12;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453589;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-12;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453783;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-12;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453972;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-12;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;455273;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-12;R012;ERROR;RAW_TRANSPORT_DETAIL;455273;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-11;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;449931;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-11;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450001;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-11;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450097;LTE NL - LTE Netherlands B.V.;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-11;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;451744;RTB CARGO GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-11;R012;ERROR;RAW_TRANSPORT_DETAIL;452040;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-11;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;452040;Hector Rail GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 3.;BLOCKED
+RUN_20260607_181025;2026-05-11;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;452381;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-11;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;452545;LTE DE - LTE Germany GmbH;Technische Dummy-Loknummer 00000000000-0 erkannt. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-11;R012;ERROR;RAW_TRANSPORT_DETAIL;453020;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-11;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453020;Railtraxx;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-11;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453225;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-11;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453228;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-11;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453478;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-10;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;448692;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-10;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;449886;LTE NL - LTE Netherlands B.V.;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-09;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;448436;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-09;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;449873;LTE NL - LTE Netherlands B.V.;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-09;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;450002;RheinCargo GmbH & Co. KG;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-09;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;451284;LTE CH - LTE Schweiz GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-09;R012;ERROR;RAW_TRANSPORT_DETAIL;451682;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-09;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;451682;Rail Force One Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-09;R012;ERROR;RAW_TRANSPORT_DETAIL;451683;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-09;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;451683;Rail Force One Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-09;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;452005;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 2.;BLOCKED
+RUN_20260607_181025;2026-05-09;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;452010;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-09;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;452011;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-09;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;452305;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-09;R012;ERROR;RAW_TRANSPORT_DETAIL;452420;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-09;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;452420;LTE AT - LTE Austria GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-09;R012;ERROR;RAW_TRANSPORT_DETAIL;452467;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-09;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;452467;LTE NL - LTE Netherlands B.V.;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-09;R012;ERROR;RAW_TRANSPORT_DETAIL;453015;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-09;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453015;Railtraxx;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-09;R012;ERROR;RAW_TRANSPORT_DETAIL;453018;;Loknummer fehlt: DE-relevanter Train movement ohne FirstLocomotiveNo. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-09;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;453018;Railtraxx;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-08;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;451962;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED
+RUN_20260607_181025;2026-05-08;R012;ERROR;RAW_LOCOMOTIVE_MOVEMENT;452370;LTE DE - LTE Germany GmbH;Loknummer fehlt in LocomotiveMovement.csv. Betroffene Rohdatenzeilen: 1.;BLOCKED

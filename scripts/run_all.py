@@ -873,6 +873,204 @@ def build_unresolved_performing_ru_market_partner_alias(con):
             "Siehe Export dq_unresolved_performing_ru_market_partner_alias.csv"
         )
 
+
+
+
+def build_cancelled_transport_exclusions(con):
+    """
+    Stornierte Transporte zentral und auditierbar ausschließen.
+
+    Fachliche Quelle für den Status ist TransportDetail.csv. Dadurch werden
+    auch statuslose Bewegungszeilen aus LocomotiveMovement.csv über ihre
+    TransportNumber ausgeschlossen. Die Audit-Tabelle enthält zusätzlich
+    TransportLastEditDate und TransportLastEditBy aus LocomotiveMovement.csv,
+    sofern die Spalten im DataLake-Export vorhanden sind.
+
+    NETZENTGELT_CANCELLED_HOTFIX_V2_20260607
+    """
+    con.execute("""
+        create or replace table cfg_excluded_cancelled_transports (
+            transport_number varchar,
+            transport_status varchar
+        )
+    """)
+
+    con.execute("""
+        create or replace table audit_excluded_cancelled_transports (
+            source_table varchar,
+            transport_number varchar,
+            transport_status varchar,
+            affected_rows bigint,
+            first_seen_utc timestamp,
+            last_seen_utc timestamp,
+            transport_last_edit_date timestamp,
+            transport_last_edit_by varchar
+        )
+    """)
+
+    transport_detail_table = "raw_transportdetail"
+
+    if not table_exists(con, transport_detail_table):
+        print(
+            "WARNUNG: Keine raw_transportdetail-Tabelle vorhanden. "
+            "Cancelled-Transportausschluss bleibt leer."
+        )
+        return
+
+    transport_detail_columns = columns(con, transport_detail_table)
+    transport_number_expr = pick_text(
+        transport_detail_columns,
+        ["TransportNumber", "TransportNo", "TransportId", "TransportID"],
+    )
+    transport_status_expr = pick_text(
+        transport_detail_columns,
+        ["TransportStatus", "Status"],
+    )
+
+    if transport_number_expr == "NULL" or transport_status_expr == "NULL":
+        print(
+            "WARNUNG: TransportDetail.csv enthält keine auswertbare "
+            "TransportNumber- oder TransportStatus-Spalte. "
+            "Cancelled-Transportausschluss bleibt leer."
+        )
+        return
+
+    con.execute(f"""
+        create or replace table cfg_excluded_cancelled_transports as
+        with source_rows as (
+            select
+                {transport_number_expr} as transport_number,
+                {transport_status_expr} as transport_status
+            from {qident(transport_detail_table)}
+        )
+        select
+            transport_number,
+            string_agg(
+                distinct transport_status,
+                ' | '
+                order by transport_status
+            ) as transport_status
+        from source_rows
+        where transport_number is not null
+          and regexp_replace(
+                lower(coalesce(transport_status, '')),
+                '[^a-z]+',
+                '',
+                'g'
+          ) in ('cancelled', 'canceled')
+        group by transport_number
+    """)
+
+    audit_selects = []
+
+    for source_table in ["raw_transportdetail", "raw_locomotivemovement"]:
+        if not table_exists(con, source_table):
+            continue
+
+        source_columns = columns(con, source_table)
+        source_transport_number = pick_text(
+            source_columns,
+            ["TransportNumber", "TransportNo", "TransportId", "TransportID"],
+        )
+
+        if source_transport_number == "NULL":
+            continue
+
+        first_seen_source = coalesce(
+            source_columns,
+            [
+                "ActualDeparture",
+                "LocomotiveActualDeparture",
+                "ActualArrival",
+                "LocomotiveActualArrival",
+                "TransportLastEditDate",
+            ],
+        )
+        last_seen_source = coalesce(
+            source_columns,
+            [
+                "ActualArrival",
+                "LocomotiveActualArrival",
+                "ActualDeparture",
+                "LocomotiveActualDeparture",
+                "TransportLastEditDate",
+            ],
+        )
+        transport_last_edit_date = pick_text(
+            source_columns,
+            ["TransportLastEditDate"],
+        )
+        transport_last_edit_by = pick_text(
+            source_columns,
+            ["TransportLastEditBy"],
+        )
+
+        first_seen_sql = (
+            "null::timestamp"
+            if first_seen_source == "NULL"
+            else f"try_cast({first_seen_source} as timestamp)"
+        )
+        last_seen_sql = (
+            "null::timestamp"
+            if last_seen_source == "NULL"
+            else f"try_cast({last_seen_source} as timestamp)"
+        )
+        last_edit_date_sql = (
+            "null::timestamp"
+            if transport_last_edit_date == "NULL"
+            else f"max(try_cast({transport_last_edit_date} as timestamp))"
+        )
+        last_edit_by_sql = (
+            "null::varchar"
+            if transport_last_edit_by == "NULL"
+            else (
+                "string_agg("
+                f"distinct {transport_last_edit_by}, "
+                "' | ' "
+                f"order by {transport_last_edit_by}"
+                f") filter (where {transport_last_edit_by} is not null)"
+            )
+        )
+        source_table_literal = source_table.replace("'", "''")
+
+        audit_selects.append(f"""
+            select
+                '{source_table_literal}' as source_table,
+                {source_transport_number} as transport_number,
+                excluded.transport_status,
+                count(*) as affected_rows,
+                min({first_seen_sql}) as first_seen_utc,
+                max({last_seen_sql}) as last_seen_utc,
+                {last_edit_date_sql} as transport_last_edit_date,
+                {last_edit_by_sql} as transport_last_edit_by
+            from {qident(source_table)} source_rows
+            join cfg_excluded_cancelled_transports excluded
+              on excluded.transport_number = {source_transport_number}
+            group by
+                {source_transport_number},
+                excluded.transport_status
+        """)
+
+    if audit_selects:
+        con.execute(
+            "create or replace table audit_excluded_cancelled_transports as\n"
+            + "\nunion all\n".join(audit_selects)
+        )
+
+    excluded_transport_count = con.execute(
+        "select count(*) from cfg_excluded_cancelled_transports"
+    ).fetchone()[0]
+    audit_row_count = con.execute(
+        "select count(*) from audit_excluded_cancelled_transports"
+    ).fetchone()[0]
+
+    print(
+        "Cancelled-Transporte ausgeschlossen: "
+        f"{excluded_transport_count} Transporte | "
+        f"{audit_row_count} Audit-Zeilen."
+    )
+
+
 def build_loco_events(con):
     """
     Bewegungsdaten der Loks aufbereiten.
@@ -1067,6 +1265,11 @@ def build_loco_events(con):
                 {train_no} as train_no,
                 {distance} as distance
             from {qident(source)}
+            where not exists (
+                select 1
+                from cfg_excluded_cancelled_transports excluded
+                where excluded.transport_number = {transport_number}
+            )
         ),
         prepared as (
             select
@@ -1305,6 +1508,11 @@ def build_loco_events(con):
                 try_cast({actual_departure} as timestamp) as actual_departure_ts,
                 try_cast({actual_arrival} as timestamp) as actual_arrival_ts
             from {qident(source)}
+            where not exists (
+                select 1
+                from cfg_excluded_cancelled_transports excluded
+                where excluded.transport_number = {transport_number}
+            )
         ),
         prepared as (
             select
@@ -1546,6 +1754,11 @@ def build_transport_routes(con, home_country=HOME_COUNTRY_ISO):
         from {qident(source)}
         where {transport_number} is not null
           and {transport_number} <> ''
+          and not exists (
+                select 1
+                from cfg_excluded_cancelled_transports excluded
+                where excluded.transport_number = {transport_number}
+          )
     """)
 
     con.execute(f"""
@@ -2285,6 +2498,7 @@ def main():
 
         # 1. Rohdaten frisch importieren.
         run_id, imported = import_csvs(con)
+        build_cancelled_transport_exclusions(con)
 
         # 2. Fachliche Mappings und offizielle Marktpartner-Referenzdaten einlesen.
         import_mapping(con)
@@ -2311,6 +2525,7 @@ def main():
         # Bestehende Dateien gleichen Namens werden dabei überschrieben.
         for table, name in [
             ("raw_import_run", "raw_import_run.csv"),
+            ("audit_excluded_cancelled_transports", "audit_excluded_cancelled_transports.csv"),
             ("stg_loco_events", "stg_loco_events.csv"),
             ("core_loco_timeline", "core_loco_timeline.csv"),
             ("dq_findings", "dq_findings.csv"),

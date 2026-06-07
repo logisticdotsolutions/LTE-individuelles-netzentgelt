@@ -102,6 +102,7 @@ FACHLICHE_CSV_EXPORTS = [
 # Fehleranalyse und fachlichen Freigabe.
 AUDIT_CSV_EXPORTS = [
     ("raw_import_run", "raw_import_run.csv"),
+    ("audit_excluded_cancelled_transports", "audit_excluded_cancelled_transports.csv"),  # NETZENTGELT_CANCELLED_HOTFIX_V2_20260607
     ("stg_loco_events", "stg_loco_events.csv"),
     ("core_loco_timeline", "core_loco_timeline.csv"),
     ("dq_findings", "dq_findings.csv"),
