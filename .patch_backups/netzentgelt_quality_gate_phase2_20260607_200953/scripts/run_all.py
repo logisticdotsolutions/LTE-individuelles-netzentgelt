@@ -39,7 +39,6 @@ import unicodedata
 from datetime import datetime, timezone
 from error_rules import build_findings
 from export_module import build_export_tables
-from quality_gate_module import build_quality_gate_tables, refresh_reconciliation_table
 
 ROOT = Path(__file__).resolve().parents[1]
 RAW_DIR = ROOT / "data" / "00_raw"
@@ -2302,10 +2301,7 @@ def main():
 
         # 4. Findings und fachliche Exporttabellen neu berechnen.
         build_findings(con, run_id, home_country_iso=HOME_COUNTRY_ISO)
-        build_quality_gate_tables(con, run_id)
         build_exports(con)
-        refresh_reconciliation_table(con, run_id)
-        # NETZENTGELT_QUALITY_GATE_PHASE2_V1_20260607: 15-Minuten-Deckung, Export-Gate und Reconciliation
 
         # 5. Sämtliche CSV-Ausgaben neu schreiben.
         # Bestehende Dateien gleichen Namens werden dabei überschrieben.
@@ -2315,13 +2311,6 @@ def main():
             ("core_loco_timeline", "core_loco_timeline.csv"),
             ("dq_findings", "dq_findings.csv"),
             ("dq_run_metadata", "dq_run_metadata.csv"),
-            ("core_loco_day_coverage", "core_loco_day_coverage.csv"),
-            ("dq_export_gate", "dq_export_gate.csv"),
-            ("dq_export_gate_ru", "dq_export_gate_ru.csv"),
-            ("dq_global_export_blockers", "dq_global_export_blockers.csv"),
-            ("export_excluded_rows", "export_excluded_rows.csv"),
-            ("dq_reconciliation", "dq_reconciliation.csv"),
-            ("dq_operational_kpis", "dq_operational_kpis.csv"),
             ("cfg_dq_rule_catalog", "cfg_dq_rule_catalog.csv"),
             ("cfg_market_partner_role", "cfg_market_partner_role.csv"),
             ("cfg_market_partner_role_conflicts", "cfg_market_partner_role_conflicts.csv"),
@@ -2342,23 +2331,6 @@ def main():
             export_table(con, table, name)
 
         # 6. Kennzahlen des erfolgreich berechneten Laufs ermitteln.
-        quality_gate_summary = con.execute("""
-            select
-                count(*) filter (where gate_status = 'READY') as ready_days,
-                count(*) filter (where gate_status = 'WARNING') as warning_days,
-                count(*) filter (where gate_status = 'BLOCKED') as blocked_days
-            from dq_export_gate
-        """).fetchone()
-
-        print(
-            "Quality Gate Lok-Tage: "
-            f"READY={quality_gate_summary[0]} | "
-            f"WARNING={quality_gate_summary[1]} | "
-            f"BLOCKED={quality_gate_summary[2]}"
-        )
-
-        # NETZENTGELT_QUALITY_GATE_PHASE2_V1_20260607
-
         summary = con.execute("""
             select
                 (select count(*) from stg_loco_events) as stg_events,

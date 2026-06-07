@@ -106,13 +106,6 @@ AUDIT_CSV_EXPORTS = [
     ("core_loco_timeline", "core_loco_timeline.csv"),
     ("dq_findings", "dq_findings.csv"),
     ("dq_run_metadata", "dq_run_metadata.csv"),
-    ("core_loco_day_coverage", "core_loco_day_coverage.csv"),
-    ("dq_export_gate", "dq_export_gate.csv"),
-    ("dq_export_gate_ru", "dq_export_gate_ru.csv"),
-    ("dq_global_export_blockers", "dq_global_export_blockers.csv"),
-    ("export_excluded_rows", "export_excluded_rows.csv"),
-    ("dq_reconciliation", "dq_reconciliation.csv"),
-    ("dq_operational_kpis", "dq_operational_kpis.csv"),
     ("cfg_dq_rule_catalog", "cfg_dq_rule_catalog.csv"),
     ("cfg_market_partner_role", "cfg_market_partner_role.csv"),
     ("cfg_market_partner_role_conflicts", "cfg_market_partner_role_conflicts.csv"),
@@ -178,81 +171,44 @@ def table_exists(con, table_name: str) -> bool:
 
 def build_export_tables(con) -> None:
     """
-    Fachliche CSV-Exporttabellen mit zentralem Export-Gate aufbauen.
+    Bestehende fachliche CSV-Exporttabellen in DuckDB neu aufbauen.
 
-    Bewegungen werden nur exportiert, wenn die Zeile selbst exportfähig ist,
-    der zugehörige Lok-Tag nicht blockiert ist und am Kalendertag kein globaler
-    Export-Blocker wie R012 vorliegt.
+    Diese Tabellen bleiben für Audit und Rückwärtskompatibilität erhalten.
+    Der neue RU-bezogene XLSX-Export wird dynamisch über
+    ``build_nutzungsmeldung_xlsx()`` erzeugt.
     """
-    gate_filter = """
-          and not exists (
-                select 1
-                from dq_export_gate_ru g
-                where g.loco_no = c.loco_no
-                  and g.performing_ru is not distinct from c.performing_ru
-                  and g.coverage_date = cast(
-                        coalesce(
-                            c.actual_departure_ts,
-                            c.period_start_utc,
-                            c.sequence_ts,
-                            c.actual_arrival_ts,
-                            c.period_end_utc
-                        ) as date
-                  )
-                  and g.gate_status = 'BLOCKED'
-          )
-          and not exists (
-                select 1
-                from dq_global_export_blockers b
-                where b.blocker_date = cast(
-                        coalesce(
-                            c.actual_departure_ts,
-                            c.period_start_utc,
-                            c.sequence_ts,
-                            c.actual_arrival_ts,
-                            c.period_end_utc
-                        ) as date
-                )
-                  and b.gate_status = 'BLOCKED'
-          )
-    """
-
     con.execute(
-        f"""
+        """
         create or replace table export_zuordnungen as
         select
-            c.tfze_or_tens as "TfzE oder tEns*",
-            c.period_start_utc as "Beginn der Zuordnung*",
-            c.period_end_utc as "Ende der Zuordnung",
-            coalesce(nullif(c.user_vens, ''), c.performing_ru) as "Nutzer-vEns*",
-            coalesce(nullif(c.holder_market_partner_id, ''), c.holder_name) as "Marktpartner ID für Nutzungsüberlassung"
-        from core_loco_timeline c
-        where c.row_type = 'MOVEMENT'
-          and c.report_scope = 'IN_REPORT'
-          and c.export_ready = true
-          {gate_filter}
+            tfze_or_tens as "TfzE oder tEns*",
+            period_start_utc as "Beginn der Zuordnung*",
+            period_end_utc as "Ende der Zuordnung",
+            user_vens as "Nutzer-vEns*",
+            performing_ru_marktpartner_id as "Marktpartner ID für Nutzungsüberlassung"
+        from core_loco_timeline
+        where row_type = 'MOVEMENT'
+          and report_scope = 'IN_REPORT'
+          and export_ready = true
         """
     )
 
     con.execute(
-        f"""
+        """
         create or replace table export_nutzungsmeldung as
         select
-            c.tfze_or_tens as "TfzE oder tEns*",
-            c.period_start_utc as "Beginn der Nutzung*",
-            c.period_end_utc as "Ende der Nutzung",
-            coalesce(nullif(c.user_vens, ''), c.performing_ru) as "Nutzer-vEns*",
-            coalesce(nullif(c.holder_market_partner_id, ''), c.holder_name) as "Marktpartner ID für Nutzungsüberlassung*",
+            tfze_or_tens as "TfzE oder tEns*",
+            period_start_utc as "Beginn der Nutzung*",
+            period_end_utc as "Ende der Nutzung",
+            coalesce(nullif(user_vens, ''), performing_ru) as "Nutzer-vEns*",
+            coalesce(nullif(holder_market_partner_id, ''), holder_name) as "Marktpartner ID für Nutzungsüberlassung*",
             '' as "Übernahmeanfrage oder Übergabemeldung?"
-        from core_loco_timeline c
-        where c.row_type = 'MOVEMENT'
-          and c.report_scope = 'IN_REPORT'
-          and c.export_ready = true
-          {gate_filter}
+        from core_loco_timeline
+        where row_type = 'MOVEMENT'
+          and report_scope = 'IN_REPORT'
+          and export_ready = true
         """
     )
-
-    # NETZENTGELT_QUALITY_GATE_PHASE2_V1_20260607
 
 
 def export_table_to_csv(
@@ -446,90 +402,6 @@ def list_unconfigured_lte_performing_rus(db_path: Path) -> list[str]:
         con.close()
 
 
-
-def _assert_export_gate_ready(
-    con,
-    performing_ru_values: Sequence[str],
-    date_from: date,
-    date_to: date,
-) -> None:
-    """Dynamischen XLSX-Export bei blockierten Lok-Tagen sicher verhindern."""
-    required_tables = [
-        "dq_export_gate_ru",
-        "dq_global_export_blockers",
-    ]
-
-    missing_tables = [
-        table_name
-        for table_name in required_tables
-        if not table_exists(con, table_name)
-    ]
-
-    if missing_tables:
-        raise RuntimeError(
-            "Export-Gate fehlt. Pipeline mit der Phase-2-Erweiterung neu ausführen. "
-            "Fehlende Tabellen: " + ", ".join(missing_tables)
-        )
-
-    ru_values = _as_ru_tuple(performing_ru_values)
-    placeholders = _placeholders(ru_values)
-
-    local_blockers = con.execute(
-        f"""
-        select
-            count(*) as blocker_count,
-            string_agg(
-                distinct cast(coverage_date as varchar) || ': ' || loco_no,
-                ', '
-            ) as examples
-        from dq_export_gate_ru
-        where performing_ru in ({placeholders})
-          and coverage_date >= ?
-          and coverage_date <= ?
-          and gate_status = 'BLOCKED'
-        """,
-        [*ru_values, date_from, date_to],
-    ).fetchone()
-
-    global_blockers = con.execute(
-        """
-        select
-            count(*) as blocker_count,
-            string_agg(
-                distinct cast(blocker_date as varchar) || ': ' || rule_id,
-                ', '
-            ) as examples
-        from dq_global_export_blockers
-        where blocker_date >= ?
-          and blocker_date <= ?
-          and gate_status = 'BLOCKED'
-        """,
-        [date_from, date_to],
-    ).fetchone()
-
-    local_count = int(local_blockers[0] or 0)
-    global_count = int(global_blockers[0] or 0)
-
-    if local_count > 0 or global_count > 0:
-        details = []
-
-        if local_count > 0:
-            details.append(
-                f"Blockierte Lok-Tage für gewählte RU: {local_count}. "
-                f"Beispiele: {local_blockers[1] or '-'}"
-            )
-
-        if global_count > 0:
-            details.append(
-                f"Globale Blocker im Zeitraum: {global_count}. "
-                f"Beispiele: {global_blockers[1] or '-'}"
-            )
-
-        raise RuntimeError(
-            "Export ist gesperrt, bis die blockierenden Prüffälle geklärt sind. "
-            + " | ".join(details)
-        )
-
 def _fetch_usage_segments(
     con,
     performing_ru_values: Sequence[str],
@@ -546,7 +418,6 @@ def _fetch_usage_segments(
     ru_values = _as_ru_tuple(performing_ru_values)
     placeholders = _placeholders(ru_values)
     window_start, window_end_exclusive = _to_day_bounds(date_from, date_to)
-    _assert_export_gate_ready(con, ru_values, date_from, date_to)
     normalized_performing_ru_sql = _normalize_company_name_sql("s.performing_ru")
     normalized_holder_sql = _normalize_company_name_sql("s.holder_name")
 
@@ -1007,7 +878,6 @@ def _fetch_aufenthaltsereignisse(
     ru_values = _as_ru_tuple(performing_ru_values)
     placeholders = _placeholders(ru_values)
     window_start, window_end_exclusive = _to_day_bounds(date_from, date_to)
-    _assert_export_gate_ready(con, ru_values, date_from, date_to)
 
     rows = con.execute(
         f"""

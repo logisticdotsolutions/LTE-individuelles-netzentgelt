@@ -32,8 +32,6 @@ from export_module import (
     list_non_lte_performing_rus,
     list_unconfigured_lte_performing_rus,
 )
-from rest_export_module import PRIMARY_EXPORT_GROUPS, list_rest_export_overview
-from operator_ui_module import render_operator_dashboard, render_open_tasks
 # ------------------------------------------------------
 # Skripte und Datenbankpfade
 # ------------------------------------------------------
@@ -1418,13 +1416,6 @@ vens_tens_exception_path = (
 zuordnungen_path = EXPORT_DIR / "export_zuordnungen.csv"
 nutzungsmeldung_path = EXPORT_DIR / "export_nutzungsmeldung.csv"
 run_path = EXPORT_DIR / "raw_import_run.csv"
-coverage_path = EXPORT_DIR / "core_loco_day_coverage.csv"
-export_gate_path = EXPORT_DIR / "dq_export_gate.csv"
-export_gate_ru_path = EXPORT_DIR / "dq_export_gate_ru.csv"
-global_blockers_path = EXPORT_DIR / "dq_global_export_blockers.csv"
-reconciliation_path = EXPORT_DIR / "dq_reconciliation.csv"
-operational_kpis_path = EXPORT_DIR / "dq_operational_kpis.csv"
-excluded_export_rows_path = EXPORT_DIR / "export_excluded_rows.csv"
 
 timeline_raw = read_csv_safe(timeline_path)
 timeline_gap_relevance_ready = (
@@ -1450,13 +1441,6 @@ vens_tens_exception = read_csv_safe(
 zuordnungen = read_csv_safe(zuordnungen_path)
 nutzungsmeldung = read_csv_safe(nutzungsmeldung_path)
 runs = read_csv_safe(run_path)
-coverage = read_csv_safe(coverage_path)
-export_gate = read_csv_safe(export_gate_path)
-export_gate_ru = read_csv_safe(export_gate_ru_path)
-global_export_blockers = read_csv_safe(global_blockers_path)
-reconciliation = read_csv_safe(reconciliation_path)
-operational_kpis = read_csv_safe(operational_kpis_path)
-excluded_export_rows = read_csv_safe(excluded_export_rows_path)
 
 # Datenqualitätswerte direkt aus den aktuellen Rohdaten bilden.
 # Dadurch werden sie bereits nach einem Download aktualisiert,
@@ -1502,18 +1486,17 @@ except Exception as diagnostics_error:
 
     st.exception(diagnostics_error)
 
-tab_overview, tab_tasks, tab_timeline, tab_exports, tab_no_loco, tab_findings, tab_run = st.tabs([
-    "1. Tagesprüfung",
-    "2. Offene Aufgaben",
-    "3. Lok prüfen",
-    "4. Exporte erstellen",
-    "⚙️ Technik: Loknummern",
-    "⚙️ Technik: Regelqueue",
-    "⚙️ Technik: Pipeline"
+tab_overview, tab_no_loco, tab_timeline, tab_findings, tab_exports, tab_run = st.tabs([
+    "Überblick",
+    "Dummys & missing Locos",
+    "Lok-Zeitachse",
+    "Fehlerqueue",
+    "Exporte",
+    "Pipeline"
 ])
 
 with tab_overview:
-    st.subheader("Tagesprüfung")
+    st.subheader("Überblick")
 
     if not timeline_gap_relevance_ready:
         st.warning(
@@ -1563,7 +1546,7 @@ with tab_overview:
     # --------------------------------------------------
     with import_button_col:
         start_new_import = st.button(
-            "Daten aktualisieren und neu prüfen",
+            "Neuen Import starten",
             type="primary",
             use_container_width=True,
             key="overview_start_new_import",
@@ -1794,28 +1777,14 @@ with tab_overview:
     error_col, info_col = st.columns(2)
 
     with error_col:
-        st.metric("Technische ERROR-Findings", errors)
+        st.metric("Errors", errors)
 
     with info_col:
-        st.metric("Technische INFO-Hinweise", infos)
+        st.metric("Infos", infos)
 
     st.caption(
         "Errors sind DE-relevante Prüffälle, die fachlich bearbeitet werden müssen. "
         "Infos dokumentieren DE-relevante Hinweise, blockieren die weitere Verarbeitung aber nicht."
-    )
-
-    st.divider()
-
-    # ==================================================
-    # NETZENTGELT_DAU_UX_PHASE3_V1_20260607: selbsterklaerende Tagespruefung
-    # ==================================================
-    render_operator_dashboard(
-        export_gate=export_gate,
-        global_export_blockers=global_export_blockers,
-        excluded_export_rows=excluded_export_rows,
-        findings=findings,
-        operational_kpis=operational_kpis,
-        reconciliation=reconciliation,
     )
 
     st.divider()
@@ -1857,16 +1826,8 @@ with tab_overview:
     else:
         st.dataframe(timeline.head(100), use_container_width=True, hide_index=True)
 
-with tab_tasks:
-    render_open_tasks(
-        export_gate=export_gate,
-        global_export_blockers=global_export_blockers,
-        findings=findings,
-    )
-
-
 with tab_no_loco:
-    st.subheader("Technik: fehlende oder technische Loknummern")
+    st.subheader("Dummys & missing Locos")
 
     st.caption(
         "Auflistung der Transporte aus den beiden Rohdaten-Prüfungen. "
@@ -1942,7 +1903,7 @@ with tab_no_loco:
 
 
 with tab_timeline:
-    st.subheader("Lok im Detail prüfen")
+    st.subheader("Lok-Zeitachse prüfen")
 
     if timeline.empty:
         st.warning("Keine Timeline vorhanden. Bitte zuerst Pipeline ausführen.")
@@ -1996,9 +1957,9 @@ with tab_timeline:
             with filter_col_scope:
                 if report_scope_col:
                     scope_label_map = {
-                        "IN_REPORT": "DE-relevant",
-                        "NOT_IN_REPORT": "Außerhalb DE (nur Kontext)",
-                        "GAP": "Unterbrechung",
+                        "IN_REPORT": "In Report",
+                        "NOT_IN_REPORT": "Not in the Report",
+                        "GAP": "GAP",
                     }
 
                     available_scopes = (
@@ -2031,7 +1992,7 @@ with tab_timeline:
                     )
 
                     selected_report_scopes = st.multiselect(
-                        "Zeilen anzeigen",
+                        "Report Scope",
                         ordered_scopes,
                         default=ordered_scopes,
                         format_func=lambda value: scope_label_map.get(
@@ -2093,7 +2054,7 @@ with tab_timeline:
             )
 
 with tab_findings:
-    st.subheader("Technik: vollständige Regelqueue")
+    st.subheader("Fehler- und Prüfqueue")
 
     st.caption(
         "Die Queue enthält einzelne Regelverletzungen. "
@@ -2577,133 +2538,106 @@ with tab_exports:
             st.error("Das Von-Datum darf nicht nach dem Bis-Datum liegen.")
 
         else:
-            # ==================================================
-            # NETZENTGELT_REST_EXPORT_PHASE4_V1_20260607
-            # Fachlich klare Exportgruppen: LTE DE, LTE NL und Rest.
-            # ==================================================
-            st.subheader("XLSX-Exporte nach nutzendem EVU")
-            st.caption(
-                "Die beiden Hauptgruppen LTE DE und LTE NL werden gesammelt bereitgestellt. "
-                "Alle weiteren nutzenden EVU erscheinen gesammelt unter Rest. "
-                "Ein Rest-Download bleibt bewusst je PerformingRU getrennt, weil die offizielle "
-                "Vorlage pro Datei eindeutige Marktpartner-Kopfdaten erwartet."
+            unconfigured_lte_performing_rus = list_unconfigured_lte_performing_rus(
+                db_path=DB_PATH
             )
 
-            for group_key, group_config in PRIMARY_EXPORT_GROUPS.items():
-                st.divider()
-                st.markdown(f"### {group_config['title']}")
-
-                render_nutzungsmeldung_export_section(
-                    title="Nutzungsmeldung",
-                    export_label=group_config["file_label"],
-                    performing_ru_values=tuple(group_config["performing_ru_values"]),
-                    date_from_value=export_date_from,
-                    date_to_value=export_date_to,
-                    key_suffix=f"primary_nutzung_{group_key.lower()}",
+            if unconfigured_lte_performing_rus:
+                st.warning(
+                    "Folgende LTE-PerformingRUs sind noch keiner festen "
+                    "Exportsektion zugeordnet: "
+                    + ", ".join(unconfigured_lte_performing_rus)
                 )
 
-                render_aufenthaltsereignis_export_section(
-                    title="Aufenthaltsereignisse",
+            for group_key, group_config in LTE_EXPORT_GROUPS.items():
+                st.divider()
+
+                render_nutzungsmeldung_export_section(
+                    title=group_config["title"],
                     export_label=group_config["file_label"],
-                    performing_ru_values=tuple(group_config["performing_ru_values"]),
+                    performing_ru_values=tuple(
+                        group_config["performing_ru_values"]
+                    ),
                     date_from_value=export_date_from,
                     date_to_value=export_date_to,
-                    key_suffix=f"primary_aufenthalt_{group_key.lower()}",
+                    key_suffix=group_key.lower(),
                 )
 
             st.divider()
-            st.markdown("### Rest")
-            st.caption(
-                "Rest umfasst sämtliche PerformingRUs außerhalb LTE DE und LTE NL. "
-                "Die Übersicht zeigt transparent, wie viele DE-relevante Bewegungszeilen je "
-                "PerformingRU betroffen sind. Sofern OrderOwner in den importierten Daten verfügbar "
-                "ist, kann die Detailansicht zusätzlich danach aufgeteilt werden."
+            st.markdown("#### Performing RU nicht LTE")
+
+            non_lte_performing_rus = list_non_lte_performing_rus(
+                db_path=DB_PATH
             )
 
-            rest_rows = list_rest_export_overview(
-                db_path=DB_PATH,
-                date_from=export_date_from,
-                date_to=export_date_to,
-            )
-            rest_df = pd.DataFrame(rest_rows)
+            if not non_lte_performing_rus:
+                st.info(
+                    "Keine weiteren PerformingRUs mit DE-relevanten Bewegungen gefunden."
+                )
 
-            if rest_df.empty:
-                st.success("Keine Restzeilen im gewählten Zeitraum vorhanden.")
             else:
-                rest_total = int(rest_df["Betroffene Bewegungszeilen"].sum())
-                rest_blocked = int(rest_df["Davon gesperrt"].sum())
-                rest_ru_count = int(rest_df["PerformingRU"].nunique())
-
-                metric_rest_1, metric_rest_2, metric_rest_3 = st.columns(3)
-                with metric_rest_1:
-                    st.metric("Restzeilen gesamt", rest_total)
-                with metric_rest_2:
-                    st.metric("PerformingRUs im Rest", rest_ru_count)
-                with metric_rest_3:
-                    st.metric("Davon gesperrte Zeilen", rest_blocked)
-
-                rest_summary = (
-                    rest_df
-                    .groupby("PerformingRU", as_index=False, dropna=False)
-                    .agg({
-                        "Betroffene Bewegungszeilen": "sum",
-                        "Davon exportfähig": "sum",
-                        "Davon gesperrt": "sum",
-                        "Betroffene Loks": "sum",
-                        "Betroffene Transporte": "sum",
-                    })
-                    .sort_values(
-                        by=["Betroffene Bewegungszeilen", "PerformingRU"],
-                        ascending=[False, True],
-                    )
+                selected_non_lte_ru = st.selectbox(
+                    "Performing RU auswählen",
+                    non_lte_performing_rus,
+                    key="nutzungsmeldung_non_lte_performing_ru",
                 )
 
-                st.markdown("#### Restzeilen je PerformingRU")
-                st.dataframe(rest_summary, use_container_width=True, hide_index=True)
-
-                with st.expander("Restzeilen zusätzlich nach OrderOwner aufteilen", expanded=False):
-                    if (
-                        "OrderOwner" not in rest_df.columns
-                        or rest_df["OrderOwner"].fillna("").eq("Nicht verfügbar").all()
-                    ):
-                        st.info(
-                            "OrderOwner ist in den aktuell importierten Daten nicht verfügbar. "
-                            "Die Restübersicht bleibt deshalb auf PerformingRU-Ebene."
-                        )
-                    st.dataframe(rest_df, use_container_width=True, hide_index=True)
-
-                    rest_csv = rest_df.to_csv(index=False, sep=";").encode("utf-8-sig")
-                    st.download_button(
-                        "Restübersicht als CSV herunterladen",
-                        data=rest_csv,
-                        file_name="rest_export_uebersicht.csv",
-                        mime="text/csv",
-                        key="download_rest_export_overview",
-                    )
-
-                selected_rest_ru = st.selectbox(
-                    "Rest-PerformingRU für Download auswählen",
-                    rest_summary["PerformingRU"].astype(str).tolist(),
-                    key="rest_export_selected_performing_ru",
-                )
-
-                st.markdown(f"#### Einzel-Downloads für {selected_rest_ru}")
                 render_nutzungsmeldung_export_section(
-                    title="Nutzungsmeldung",
-                    export_label=f"REST_{selected_rest_ru}",
-                    performing_ru_values=(selected_rest_ru,),
+                    title=f"Export für {selected_non_lte_ru}",
+                    export_label=selected_non_lte_ru,
+                    performing_ru_values=(selected_non_lte_ru,),
                     date_from_value=export_date_from,
                     date_to_value=export_date_to,
-                    key_suffix="rest_nutzung",
+                    key_suffix="non_lte",
+                )
+
+            st.divider()
+            st.subheader("XLSX-Aufenthaltsereignisse je Performing RU")
+
+            st.caption(
+                "Der Export basiert auf Vorlage_Aufenthaltsereignis.xlsx. "
+                "TfzE oder tEns wird mit der Loknummer befüllt, vEns mit der "
+                "PerformingRU. Grenzübertritte werden als einfahrend oder "
+                "ausfahrend ausgegeben. Sonstige Bewegungen innerhalb DE sind "
+                "netzintern, sonstige Auslandsbewegungen netzextern."
+            )
+
+            for group_key, group_config in LTE_EXPORT_GROUPS.items():
+                st.divider()
+
+                render_aufenthaltsereignis_export_section(
+                    title=group_config["title"],
+                    export_label=group_config["file_label"],
+                    performing_ru_values=tuple(
+                        group_config["performing_ru_values"]
+                    ),
+                    date_from_value=export_date_from,
+                    date_to_value=export_date_to,
+                    key_suffix=group_key.lower(),
+                )
+
+            st.divider()
+            st.markdown("#### Performing RU nicht LTE")
+
+            if not non_lte_performing_rus:
+                st.info(
+                    "Keine weiteren PerformingRUs mit DE-relevanten Bewegungen gefunden."
+                )
+
+            else:
+                selected_non_lte_aufenthaltsereignis_ru = st.selectbox(
+                    "Performing RU für Aufenthaltsereignis auswählen",
+                    non_lte_performing_rus,
+                    key="aufenthaltsereignis_non_lte_performing_ru",
                 )
 
                 render_aufenthaltsereignis_export_section(
-                    title="Aufenthaltsereignisse",
-                    export_label=f"REST_{selected_rest_ru}",
-                    performing_ru_values=(selected_rest_ru,),
+                    title=f"Export für {selected_non_lte_aufenthaltsereignis_ru}",
+                    export_label=selected_non_lte_aufenthaltsereignis_ru,
+                    performing_ru_values=(selected_non_lte_aufenthaltsereignis_ru,),
                     date_from_value=export_date_from,
                     date_to_value=export_date_to,
-                    key_suffix="rest_aufenthalt",
+                    key_suffix="non_lte",
                 )
 
     st.divider()

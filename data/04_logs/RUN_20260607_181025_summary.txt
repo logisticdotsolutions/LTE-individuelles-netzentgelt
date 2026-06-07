@@ -1,0 +1,7 @@
+run_id=RUN_20260607_181025
+events=14087
+core_rows=17002
+errors=705
+warnings=0
+manual_reviews=0
+exportable_rows=0

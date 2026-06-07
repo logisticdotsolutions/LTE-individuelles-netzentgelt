@@ -32,7 +32,6 @@ from export_module import (
     list_non_lte_performing_rus,
     list_unconfigured_lte_performing_rus,
 )
-from rest_export_module import PRIMARY_EXPORT_GROUPS, list_rest_export_overview
 from operator_ui_module import render_operator_dashboard, render_open_tasks
 # ------------------------------------------------------
 # Skripte und Datenbankpfade
@@ -2577,133 +2576,106 @@ with tab_exports:
             st.error("Das Von-Datum darf nicht nach dem Bis-Datum liegen.")
 
         else:
-            # ==================================================
-            # NETZENTGELT_REST_EXPORT_PHASE4_V1_20260607
-            # Fachlich klare Exportgruppen: LTE DE, LTE NL und Rest.
-            # ==================================================
-            st.subheader("XLSX-Exporte nach nutzendem EVU")
-            st.caption(
-                "Die beiden Hauptgruppen LTE DE und LTE NL werden gesammelt bereitgestellt. "
-                "Alle weiteren nutzenden EVU erscheinen gesammelt unter Rest. "
-                "Ein Rest-Download bleibt bewusst je PerformingRU getrennt, weil die offizielle "
-                "Vorlage pro Datei eindeutige Marktpartner-Kopfdaten erwartet."
+            unconfigured_lte_performing_rus = list_unconfigured_lte_performing_rus(
+                db_path=DB_PATH
             )
 
-            for group_key, group_config in PRIMARY_EXPORT_GROUPS.items():
-                st.divider()
-                st.markdown(f"### {group_config['title']}")
-
-                render_nutzungsmeldung_export_section(
-                    title="Nutzungsmeldung",
-                    export_label=group_config["file_label"],
-                    performing_ru_values=tuple(group_config["performing_ru_values"]),
-                    date_from_value=export_date_from,
-                    date_to_value=export_date_to,
-                    key_suffix=f"primary_nutzung_{group_key.lower()}",
+            if unconfigured_lte_performing_rus:
+                st.warning(
+                    "Folgende LTE-PerformingRUs sind noch keiner festen "
+                    "Exportsektion zugeordnet: "
+                    + ", ".join(unconfigured_lte_performing_rus)
                 )
 
-                render_aufenthaltsereignis_export_section(
-                    title="Aufenthaltsereignisse",
+            for group_key, group_config in LTE_EXPORT_GROUPS.items():
+                st.divider()
+
+                render_nutzungsmeldung_export_section(
+                    title=group_config["title"],
                     export_label=group_config["file_label"],
-                    performing_ru_values=tuple(group_config["performing_ru_values"]),
+                    performing_ru_values=tuple(
+                        group_config["performing_ru_values"]
+                    ),
                     date_from_value=export_date_from,
                     date_to_value=export_date_to,
-                    key_suffix=f"primary_aufenthalt_{group_key.lower()}",
+                    key_suffix=group_key.lower(),
                 )
 
             st.divider()
-            st.markdown("### Rest")
-            st.caption(
-                "Rest umfasst sämtliche PerformingRUs außerhalb LTE DE und LTE NL. "
-                "Die Übersicht zeigt transparent, wie viele DE-relevante Bewegungszeilen je "
-                "PerformingRU betroffen sind. Sofern OrderOwner in den importierten Daten verfügbar "
-                "ist, kann die Detailansicht zusätzlich danach aufgeteilt werden."
+            st.markdown("#### Performing RU nicht LTE")
+
+            non_lte_performing_rus = list_non_lte_performing_rus(
+                db_path=DB_PATH
             )
 
-            rest_rows = list_rest_export_overview(
-                db_path=DB_PATH,
-                date_from=export_date_from,
-                date_to=export_date_to,
-            )
-            rest_df = pd.DataFrame(rest_rows)
+            if not non_lte_performing_rus:
+                st.info(
+                    "Keine weiteren PerformingRUs mit DE-relevanten Bewegungen gefunden."
+                )
 
-            if rest_df.empty:
-                st.success("Keine Restzeilen im gewählten Zeitraum vorhanden.")
             else:
-                rest_total = int(rest_df["Betroffene Bewegungszeilen"].sum())
-                rest_blocked = int(rest_df["Davon gesperrt"].sum())
-                rest_ru_count = int(rest_df["PerformingRU"].nunique())
-
-                metric_rest_1, metric_rest_2, metric_rest_3 = st.columns(3)
-                with metric_rest_1:
-                    st.metric("Restzeilen gesamt", rest_total)
-                with metric_rest_2:
-                    st.metric("PerformingRUs im Rest", rest_ru_count)
-                with metric_rest_3:
-                    st.metric("Davon gesperrte Zeilen", rest_blocked)
-
-                rest_summary = (
-                    rest_df
-                    .groupby("PerformingRU", as_index=False, dropna=False)
-                    .agg({
-                        "Betroffene Bewegungszeilen": "sum",
-                        "Davon exportfähig": "sum",
-                        "Davon gesperrt": "sum",
-                        "Betroffene Loks": "sum",
-                        "Betroffene Transporte": "sum",
-                    })
-                    .sort_values(
-                        by=["Betroffene Bewegungszeilen", "PerformingRU"],
-                        ascending=[False, True],
-                    )
+                selected_non_lte_ru = st.selectbox(
+                    "Performing RU auswählen",
+                    non_lte_performing_rus,
+                    key="nutzungsmeldung_non_lte_performing_ru",
                 )
 
-                st.markdown("#### Restzeilen je PerformingRU")
-                st.dataframe(rest_summary, use_container_width=True, hide_index=True)
-
-                with st.expander("Restzeilen zusätzlich nach OrderOwner aufteilen", expanded=False):
-                    if (
-                        "OrderOwner" not in rest_df.columns
-                        or rest_df["OrderOwner"].fillna("").eq("Nicht verfügbar").all()
-                    ):
-                        st.info(
-                            "OrderOwner ist in den aktuell importierten Daten nicht verfügbar. "
-                            "Die Restübersicht bleibt deshalb auf PerformingRU-Ebene."
-                        )
-                    st.dataframe(rest_df, use_container_width=True, hide_index=True)
-
-                    rest_csv = rest_df.to_csv(index=False, sep=";").encode("utf-8-sig")
-                    st.download_button(
-                        "Restübersicht als CSV herunterladen",
-                        data=rest_csv,
-                        file_name="rest_export_uebersicht.csv",
-                        mime="text/csv",
-                        key="download_rest_export_overview",
-                    )
-
-                selected_rest_ru = st.selectbox(
-                    "Rest-PerformingRU für Download auswählen",
-                    rest_summary["PerformingRU"].astype(str).tolist(),
-                    key="rest_export_selected_performing_ru",
-                )
-
-                st.markdown(f"#### Einzel-Downloads für {selected_rest_ru}")
                 render_nutzungsmeldung_export_section(
-                    title="Nutzungsmeldung",
-                    export_label=f"REST_{selected_rest_ru}",
-                    performing_ru_values=(selected_rest_ru,),
+                    title=f"Export für {selected_non_lte_ru}",
+                    export_label=selected_non_lte_ru,
+                    performing_ru_values=(selected_non_lte_ru,),
                     date_from_value=export_date_from,
                     date_to_value=export_date_to,
-                    key_suffix="rest_nutzung",
+                    key_suffix="non_lte",
+                )
+
+            st.divider()
+            st.subheader("XLSX-Aufenthaltsereignisse je Performing RU")
+
+            st.caption(
+                "Der Export basiert auf Vorlage_Aufenthaltsereignis.xlsx. "
+                "TfzE oder tEns wird mit der Loknummer befüllt, vEns mit der "
+                "PerformingRU. Grenzübertritte werden als einfahrend oder "
+                "ausfahrend ausgegeben. Sonstige Bewegungen innerhalb DE sind "
+                "netzintern, sonstige Auslandsbewegungen netzextern."
+            )
+
+            for group_key, group_config in LTE_EXPORT_GROUPS.items():
+                st.divider()
+
+                render_aufenthaltsereignis_export_section(
+                    title=group_config["title"],
+                    export_label=group_config["file_label"],
+                    performing_ru_values=tuple(
+                        group_config["performing_ru_values"]
+                    ),
+                    date_from_value=export_date_from,
+                    date_to_value=export_date_to,
+                    key_suffix=group_key.lower(),
+                )
+
+            st.divider()
+            st.markdown("#### Performing RU nicht LTE")
+
+            if not non_lte_performing_rus:
+                st.info(
+                    "Keine weiteren PerformingRUs mit DE-relevanten Bewegungen gefunden."
+                )
+
+            else:
+                selected_non_lte_aufenthaltsereignis_ru = st.selectbox(
+                    "Performing RU für Aufenthaltsereignis auswählen",
+                    non_lte_performing_rus,
+                    key="aufenthaltsereignis_non_lte_performing_ru",
                 )
 
                 render_aufenthaltsereignis_export_section(
-                    title="Aufenthaltsereignisse",
-                    export_label=f"REST_{selected_rest_ru}",
-                    performing_ru_values=(selected_rest_ru,),
+                    title=f"Export für {selected_non_lte_aufenthaltsereignis_ru}",
+                    export_label=selected_non_lte_aufenthaltsereignis_ru,
+                    performing_ru_values=(selected_non_lte_aufenthaltsereignis_ru,),
                     date_from_value=export_date_from,
                     date_to_value=export_date_to,
-                    key_suffix="rest_aufenthalt",
+                    key_suffix="non_lte",
                 )
 
     st.divider()
