@@ -29,6 +29,7 @@ from manual_override_module import OVERRIDE_COLUMNS
 
 
 PHASE5D_BATCH_MARKER = "NETZENTGELT_MANUAL_OVERRIDE_PHASE5D_BATCH_V1_20260608"
+# NETZENTGELT_CONTROLLER_UX_PHASE5E_V1_20260608
 DOCUMENT_ONLY_TYPES = {"CLASSIFY_GAP", "CASE_NOTE"}
 TRANSPORT_REQUIRED_TYPES = {
     "SET_LOCO_NO",
@@ -120,6 +121,8 @@ def _validate_suggestion(suggestion: dict[str, object]) -> str | None:
 
     if not suggestion_id:
         return "Vorschlag-ID fehlt."
+    if _clean(suggestion.get("confidence")).upper() == "LOW":
+        return "Vorschlag mit niedriger Sicherheit muss einzeln geprüft werden."
     if not override_type:
         return "Override-Typ fehlt."
     if override_type in TRANSPORT_REQUIRED_TYPES and not transport_number:
@@ -206,6 +209,33 @@ def create_overrides_from_selected_suggestions(
             suggestion_id = _clean(data.get("suggestion_id"))
             if suggestion_id:
                 suggestion_rows[suggestion_id] = data
+
+    # Pro Unterbrechung darf in einer Sammelübernahme nur eine primäre
+    # Klassifikation gespeichert werden. Dadurch werden widersprüchliche Aussagen
+    # wie "kalte Abstellung" und "fehlende Bewegung" nicht gleichzeitig bestätigt.
+    gap_classifications: dict[tuple[str, ...], str] = {}
+    for suggestion_id in sorted(selected_ids):
+        suggestion = suggestion_rows.get(suggestion_id)
+        if suggestion is None:
+            continue
+        if _clean(suggestion.get("override_type")).upper() != "CLASSIFY_GAP":
+            continue
+        key = (
+            _clean(suggestion.get("loco_no")),
+            _clean(suggestion.get("period_start_utc")),
+            _clean(suggestion.get("period_end_utc")),
+            _clean(suggestion.get("source_table")),
+            _clean(suggestion.get("source_row_id")),
+        )
+        classification = _clean(suggestion.get("classification_code")).upper()
+        existing = gap_classifications.get(key)
+        if existing and classification and existing != classification:
+            raise ValueError(
+                "Für dieselbe Unterbrechung wurden unterschiedliche Klassifikationen ausgewählt. "
+                "Bitte bestätige genau eine fachliche Bewertung."
+            )
+        if classification:
+            gap_classifications[key] = classification
 
     duplicate_keys = _active_duplicate_keys(base)
     created: list[BatchCreate] = []

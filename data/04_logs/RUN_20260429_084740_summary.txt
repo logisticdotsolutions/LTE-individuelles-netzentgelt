@@ -1,6 +1,0 @@
-run_id=RUN_20260429_084740
-events=195665
-core_rows=195665
-errors=607586
-warnings=0
-exportable_rows=0

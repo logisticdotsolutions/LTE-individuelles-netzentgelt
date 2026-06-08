@@ -283,3 +283,24 @@ temp/**
 # ---------------------------------------------------------
 .vscode/
 .idea/
+
+# =========================================================
+# Netzentgelt Tool - generated hotfix and local runtime files
+# =========================================================
+.netzentgelt_hotfix_backups/
+.phase5*_latest_backup.txt
+payload/
+data/04_logs/**
+01_DRY_RUN_*.bat
+02_APPLY_*.bat
+03_VERIFY_*.bat
+04_RUN_*.bat
+05_ROLLBACK_*.bat
+06_PACKAGE_SELFTEST_*.bat
+apply_*phase*.py
+README_PHASE*.md
+README_MANUAL_OVERRIDE_PHASE*.md
+TEST_REPORT_*.md
+test_phase*_logic.py
+verify_manual_override_phase*.py
+# NETZENTGELT_CONTROLLER_UX_PHASE5E_V1_20260608

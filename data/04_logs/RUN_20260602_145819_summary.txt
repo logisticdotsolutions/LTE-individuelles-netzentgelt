@@ -1,7 +1,0 @@
-run_id=RUN_20260602_145819
-events=0
-core_rows=0
-errors=0
-warnings=0
-manual_reviews=0
-exportable_rows=0

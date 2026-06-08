@@ -2,7 +2,7 @@
 Netzentgelt MVP - Operator UI fuer eine selbsterklaerende Bedienung
 =================================================================
 
-Diese UI-Schicht uebersetzt technische Quality-Gate-Tabellen in eine einfache
+Diese UI-Schicht uebersetzt technische Prüftabellen in eine einfache
 Arbeitsoberflaeche. Die fachliche Berechnung bleibt unveraendert in Phase 2.
 
 Ziele:
@@ -22,6 +22,7 @@ import streamlit as st
 
 
 DAU_UX_MARKER = "NETZENTGELT_DAU_UX_PHASE3_V1_20260607"
+# NETZENTGELT_CONTROLLER_UX_PHASE5E_V1_20260608
 
 
 RULE_TEXT = {
@@ -43,7 +44,7 @@ RULE_TEXT = {
     ),
     "R009": (
         "Nutzendes EVU fehlt",
-        "PerformingRU fachlich pruefen und ergaenzen.",
+        "Nutzendes EVU fachlich prüfen und ergänzen.",
     ),
     "R010": (
         "Ortskette ist laenger als 8 Stunden unterbrochen",
@@ -121,7 +122,7 @@ def summarize_gate(
     excluded_export_rows: pd.DataFrame,
     findings: pd.DataFrame,
 ) -> GateSummary:
-    """Kompakte operative Ampel aus den technischen Quality-Gate-Tabellen bilden."""
+    """Kompakte operative Ampel aus den technischen Prüftabellen bilden."""
     return GateSummary(
         ready_days=_count_status(export_gate, "READY"),
         warning_days=_count_status(export_gate, "WARNING"),
@@ -137,7 +138,7 @@ def _friendly_gate_reason(value: object) -> str:
     text = "" if pd.isna(value) else str(value).strip()
 
     if not text:
-        return "Automatische Pruefung ohne detaillierten Klartext. Technische Details oeffnen."
+        return "Automatische Pruefung ohne detaillierten Klartext. Weitere Details öffnen."
 
     replacements = {
         "ERROR-Findings=": "Blockierende Fehler: ",
@@ -166,7 +167,7 @@ def _friendly_rule(rule_id: object, message: object = "") -> tuple[str, str]:
     clean_message = "" if pd.isna(message) else str(message).strip()
     return (
         clean_message or "Prueffall ohne hinterlegte Klartextbeschreibung",
-        "Technische Details pruefen und fachlich bewerten.",
+        "Weitere Details prüfen und fachlich bewerten.",
     )
 
 
@@ -239,7 +240,7 @@ def _friendly_gate_table(export_gate: pd.DataFrame, only_status: str | None = No
             "WARNING": "Hinweis vor dem Export fachlich kontrollieren.",
             "BLOCKED": "Lok im Detail pruefen und Ursache bereinigen.",
         }
-    ).fillna("Technische Details pruefen.")
+    ).fillna("Weitere Details prüfen.")
 
     return result[columns].reset_index(drop=True)
 
@@ -342,19 +343,19 @@ def _friendly_findings(findings: pd.DataFrame, include_info: bool = True) -> pd.
 def _render_process_steps(summary: GateSummary) -> None:
     if summary.export_is_blocked:
         task_step = f"⛔ **3. Offene Aufgaben bearbeiten:** {summary.blocked_days + summary.global_blockers} Sperrfaelle"
-        export_step = "🔒 **4. Exporte erstellen:** derzeit gesperrt"
+        export_step = "🔒 **5. Exporte erstellen:** derzeit gesperrt"
     elif summary.warning_days > 0:
         task_step = f"⚠️ **3. Hinweise kontrollieren:** {summary.warning_days} Lok-Tage mit Hinweis"
-        export_step = "✅ **4. Exporte erstellen:** moeglich, nach fachlicher Kontrolle"
+        export_step = "✅ **5. Exporte erstellen:** möglich, nach fachlicher Kontrolle"
     else:
         task_step = "✅ **3. Offene Aufgaben:** keine blockierenden Probleme"
-        export_step = "✅ **4. Exporte erstellen:** freigegeben"
+        export_step = "✅ **5. Exporte erstellen:** freigegeben"
 
     st.markdown(
         "  \n".join(
             [
                 "✅ **1. Daten aktualisieren:** letzter vollstaendiger Import vorhanden",
-                "✅ **2. Automatische Pruefung:** Quality Gate wurde berechnet",
+                "✅ **2. Automatische Pruefung:** automatische Prüfung wurde durchgeführt",
                 task_step,
                 export_step,
             ]
@@ -416,7 +417,7 @@ def render_operator_dashboard(
     if not blocked_days.empty:
         st.markdown("#### Warum sind Lok-Tage gesperrt?")
         st.caption(
-            "Diese Probleme verhindern den Export. Nutze die Loknummer im Tab '3. Lok pruefen', "
+            "Diese Probleme verhindern den Export. Nutze die Loknummer im Tab '4. Lok prüfen', "
             "um die zugehoerige Zeitachse zu kontrollieren."
         )
         st.dataframe(blocked_days.head(100), use_container_width=True, hide_index=True)
@@ -568,5 +569,5 @@ def _render_loco_shortcut(table: pd.DataFrame, key_suffix: str = "blocked") -> N
         ):
             st.session_state["timeline_preview_loco"] = selected_loco
             st.success(
-                f"Lok {selected_loco} wurde vorgemerkt. Oeffne jetzt den Tab '3. Lok pruefen'."
+                f"Lok {selected_loco} wurde vorgemerkt. Öffne jetzt den Tab '4. Lok prüfen'."
             )

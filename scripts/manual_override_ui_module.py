@@ -40,6 +40,7 @@ from manual_override_batch_module import (
 
 
 PHASE5B_UI_MARKER = "NETZENTGELT_MANUAL_OVERRIDE_PHASE5B_UI_V1_20260607"
+# NETZENTGELT_CONTROLLER_UX_PHASE5E_V1_20260608
 PHASE5D_UI_MARKER = "NETZENTGELT_MANUAL_OVERRIDE_PHASE5D_V1_20260608"
 ROOT = Path(__file__).resolve().parents[1]
 MAP_DIR = ROOT / "data" / "01_mapping"
@@ -63,6 +64,7 @@ CLASSIFICATION_OPTIONS = {
     "WORKSHOP": "Werkstattaufenthalt",
     "OUTSIDE_DE": "Lok außerhalb Deutschlands",
     "MISSING_MOVEMENT": "Fehlende Bewegung vermutet",
+    "SAME_RU_CONTINUITY": "Gleiches nutzendes EVU vor und nach der Unterbrechung",
     "SAME_RU_CONTINUITY": "PerformingRU vor und nach GAP identisch",
     "PLAUSIBLE_SHORT_DEVIATION": "Plausible kurze Abweichung",
     "OTHER": "Sonstiger Grund",
@@ -104,11 +106,11 @@ CONFIDENCE_LABELS = {
 }
 
 SUGGESTION_TYPE_LABELS = {
-    "PERFORMING_RU_FROM_BOTH_NEIGHBOURS": "PerformingRU aus beiden Nachbarbewegungen",
-    "PERFORMING_RU_FROM_NEIGHBOURHOOD": "PerformingRU aus angrenzenden Bewegungen",
-    "GAP_PERFORMING_RU_FROM_BOTH_NEIGHBOURS": "PerformingRU fuer GAP aus beiden Nachbarbewegungen",
-    "PERFORMING_RU_CONFLICT": "PerformingRU-Konflikt prüfen",
-    "PERFORMING_RU_REVIEW": "PerformingRU manuell prüfen",
+    "PERFORMING_RU_FROM_BOTH_NEIGHBOURS": "Nutzendes EVU aus beiden Nachbarbewegungen",
+    "PERFORMING_RU_FROM_NEIGHBOURHOOD": "Nutzendes EVU aus angrenzenden Bewegungen",
+    "GAP_PERFORMING_RU_FROM_BOTH_NEIGHBOURS": "Gleiches nutzendes EVU vor und nach der Unterbrechung",
+    "PERFORMING_RU_CONFLICT": "Unterschiedliche nutzende EVU prüfen",
+    "PERFORMING_RU_REVIEW": "Nutzendes EVU manuell prüfen",
     "LOCO_NO_FROM_TRANSPORT": "Loknummer aus Transportdaten",
     "LOCO_NO_CONFLICT": "Mehrere Loknummern prüfen",
     "LOCO_NO_REVIEW": "Loknummer manuell prüfen",
@@ -346,15 +348,43 @@ def _render_active_overrides() -> None:
 
     display = active.copy()
     display["override_type"] = display["override_type"].map(OVERRIDE_TYPE_LABELS).fillna(display["override_type"])
-    st.dataframe(display, use_container_width=True, hide_index=True)
+    display = display.rename(
+        columns={
+            "override_type": "Korrektur",
+            "transport_number": "Transportnummer",
+            "target_loco_no": "Loknummer",
+            "target_actual_departure_utc": "Von",
+            "target_actual_arrival_utc": "Bis",
+            "override_value": "Neuer Wert",
+            "comment": "Begründung",
+            "created_by": "Bearbeiter",
+            "created_at_utc": "Erstellt am",
+        }
+    )
+    visible_columns = [
+        "Korrektur",
+        "Loknummer",
+        "Transportnummer",
+        "Von",
+        "Bis",
+        "Neuer Wert",
+        "Begründung",
+        "Bearbeiter",
+        "Erstellt am",
+    ]
+    st.dataframe(
+        display[[column for column in visible_columns if column in display.columns]],
+        use_container_width=True,
+        hide_index=True,
+    )
 
     options = active["override_id"].fillna("").astype(str).tolist()
-    selected = st.selectbox("Override deaktivieren", options, key="manual_override_deactivate_id")
+    selected = st.selectbox("Lokale Korrektur deaktivieren", options, key="manual_override_deactivate_id")
     deactivate_comment = st.text_input(
         "Begründung für die Deaktivierung",
         key="manual_override_deactivate_comment",
     )
-    if st.button("Ausgewählten Override deaktivieren", key="manual_override_deactivate_button"):
+    if st.button("Ausgewählte lokale Korrektur deaktivieren", key="manual_override_deactivate_button"):
         if not deactivate_comment.strip():
             st.error("Bitte eine Begründung für die Deaktivierung erfassen.")
             return
@@ -369,23 +399,20 @@ def _render_active_overrides() -> None:
             changed_by=getpass.getuser(),
             comment=deactivate_comment,
         )
-        st.success("Override wurde deaktiviert. Bitte anschließend neu berechnen.")
+        st.success("Lokale Korrektur wurde deaktiviert. Bitte anschließend neu berechnen.")
         st.rerun()
 
 
 def _suggestion_display_table(data: pd.DataFrame) -> pd.DataFrame:
+    """Controller-taugliche Vorschlagsliste ohne technische Hilfsspalten."""
     if data.empty:
         return data
     result = data.copy()
     result["confidence"] = result["confidence"].map(CONFIDENCE_LABELS).fillna(result["confidence"])
     result["suggestion_type"] = result["suggestion_type"].map(SUGGESTION_TYPE_LABELS).fillna(result["suggestion_type"])
-    result["override_type"] = result["override_type"].map(OVERRIDE_TYPE_LABELS).fillna(result["override_type"])
-    return result.rename(
+    result = result.rename(
         columns={
-            "suggestion_id": "Vorschlag-ID",
-            "suggestion_type": "Vorschlag",
-            "override_type": "Bearbeitung",
-            "classification_code": "Klassifikation",
+            "suggestion_type": "Prüfvorschlag",
             "confidence": "Sicherheit",
             "suggested_value": "Vorgeschlagener Wert",
             "transport_number": "Transportnummer",
@@ -393,10 +420,19 @@ def _suggestion_display_table(data: pd.DataFrame) -> pd.DataFrame:
             "period_start_utc": "Von",
             "period_end_utc": "Bis",
             "reason": "Begründung",
-            "evidence": "Nachweis",
         }
     )
-
+    visible_columns = [
+        "Sicherheit",
+        "Prüfvorschlag",
+        "Loknummer",
+        "Transportnummer",
+        "Von",
+        "Bis",
+        "Vorgeschlagener Wert",
+        "Begründung",
+    ]
+    return result[[column for column in visible_columns if column in result.columns]]
 
 
 def _save_selected_suggestions(
@@ -445,10 +481,10 @@ def _render_suggestions(
     findings: pd.DataFrame,
     timeline: pd.DataFrame,
 ) -> None:
-    st.markdown("#### Regelbasierte Systemvorschläge")
+    st.markdown("#### Prüfvorschläge")
     st.caption(
-        "Vorschläge reduzieren Suchaufwand, ersetzen aber keine fachliche Freigabe. "
-        "Jeder Vorschlag muss bewusst in die Bearbeitungsmaske übernommen werden."
+        "Die Anwendung schlägt nachvollziehbare Korrekturen vor. Bitte prüfe jeden Eintrag fachlich. "
+        "Die Auswahlspalte bleibt immer sichtbar. Hinweise ohne sichere Direktübernahme können einzeln geöffnet werden."
     )
     try:
         suggestions = build_suggestion_table(
@@ -457,11 +493,11 @@ def _render_suggestions(
             timeline=timeline,
         )
     except Exception as error:
-        st.error(f"Systemvorschläge konnten nicht erzeugt werden: {error}")
+        st.error(f"Prüfvorschläge konnten nicht erzeugt werden: {error}")
         return
 
     if suggestions.empty:
-        st.success("Aktuell wurden keine regelbasierten Vorschläge erzeugt.")
+        st.success("Aktuell wurden keine regelbasierten Prüfvorschläge erzeugt.")
         return
 
     high_count = int((suggestions["confidence"] == "HIGH").sum())
@@ -471,7 +507,7 @@ def _render_suggestions(
     col_all.metric("Vorschläge gesamt", len(suggestions))
     col_high.metric("Hohe Sicherheit", high_count)
     col_medium.metric("Mittlere Sicherheit", medium_count)
-    col_low.metric("Nur Prüfhinweise", low_count)
+    col_low.metric("Nur einzeln prüfen", low_count)
 
     filter_col_confidence, filter_col_type = st.columns(2)
     with filter_col_confidence:
@@ -497,32 +533,45 @@ def _render_suggestions(
         & suggestions["suggestion_type"].isin(selected_types)
     ].copy()
     st.write(f"Treffer: **{len(filtered)}**")
+    if filtered.empty:
+        st.info("Für die gesetzten Filter sind keine Prüfvorschläge vorhanden.")
+        return
 
     csv_data = _suggestion_display_table(filtered).to_csv(index=False, sep=";").encode("utf-8-sig")
     st.download_button(
         "Vorschlagsliste als CSV herunterladen",
         data=csv_data,
-        file_name="systemvorschlaege_phase5d.csv",
+        file_name="pruefvorschlaege.csv",
         mime="text/csv",
         key="download_manual_override_suggestions",
     )
 
-    selectable = filtered[
-        filtered["suggested_value"].fillna("").astype(str).str.strip().ne("")
-        | filtered["classification_code"].fillna("").astype(str).str.strip().ne("")
-    ].copy()
-    if selectable.empty:
-        st.dataframe(_suggestion_display_table(filtered), use_container_width=True, hide_index=True)
-        st.info("Die gefilterten Einträge sind reine Prüfhinweise ohne vorausgewählten Wert.")
-        return
-
-    st.markdown("##### Mehrere Vorschläge direkt übernehmen")
-    st.caption(
-        "Setze links ein Checkmark bei allen Vorschlägen, die du fachlich geprüft hast. "
-        "Erst der Speichern-Button erzeugt lokale Overrides. RailCube wird dadurch nicht geändert."
+    bulk_source = filtered.reset_index(drop=True).copy()
+    bulk_source["_actionable"] = (
+        bulk_source["suggested_value"].fillna("").astype(str).str.strip().ne("")
+        | bulk_source["classification_code"].fillna("").astype(str).str.strip().ne("")
     )
-    bulk_table = _suggestion_display_table(selectable).copy()
-    bulk_table.insert(0, "Übernehmen", False)
+    bulk_source["_bulk_allowed"] = (
+        bulk_source["_actionable"]
+        & bulk_source["confidence"].fillna("").astype(str).str.upper().isin(["HIGH", "MEDIUM"])
+    )
+    bulk_source["_bulk_status"] = "Nur Hinweis"
+    bulk_source.loc[
+        bulk_source["_actionable"]
+        & bulk_source["confidence"].fillna("").astype(str).str.upper().eq("LOW"),
+        "_bulk_status",
+    ] = "Nur einzeln prüfen"
+    bulk_source.loc[bulk_source["_bulk_allowed"], "_bulk_status"] = "Sammelübernahme möglich"
+
+    st.markdown("##### Vorschläge auswählen")
+    st.caption(
+        "Die Checkboxen sind immer sichtbar. Markiere nur fachlich geprüfte Einträge. "
+        "Hinweise mit niedriger Sicherheit oder ohne konkreten Wert können nicht gesammelt gespeichert werden."
+    )
+    bulk_table = _suggestion_display_table(bulk_source).copy()
+    bulk_table.insert(0, "_suggestion_id", bulk_source["suggestion_id"].fillna("").astype(str).tolist())
+    bulk_table.insert(1, "Übernehmen", False)
+    bulk_table.insert(2, "Sammelübernahme", bulk_source["_bulk_status"].tolist())
     bulk_table = st.data_editor(
         bulk_table,
         use_container_width=True,
@@ -530,21 +579,48 @@ def _render_suggestions(
         num_rows="fixed",
         disabled=[column for column in bulk_table.columns if column != "Übernehmen"],
         column_config={
+            "_suggestion_id": None,
             "Übernehmen": st.column_config.CheckboxColumn(
                 "Übernehmen",
                 help="Nur fachlich geprüfte Vorschläge markieren.",
                 default=False,
-            )
+            ),
         },
         key="manual_override_suggestion_bulk_editor",
     )
-    selected_ids = (
-        bulk_table.loc[bulk_table["Übernehmen"].fillna(False), "Vorschlag-ID"]
+
+    checked_mask = bulk_table["Übernehmen"].fillna(False)
+    if "_suggestion_id" in bulk_table.columns:
+        checked_ids = (
+            bulk_table.loc[checked_mask, "_suggestion_id"]
+            .fillna("")
+            .astype(str)
+            .tolist()
+        )
+    else:
+        # Defensiver Fallback für Streamlit-Versionen, die ausgeblendete Spalten
+        # nicht im Rückgabe-DataFrame behalten. Die Zeilenreihenfolge ist fix.
+        checked_ids = (
+            bulk_source.loc[checked_mask.to_numpy(), "suggestion_id"]
+            .fillna("")
+            .astype(str)
+            .tolist()
+        )
+    allowed_ids = set(
+        bulk_source.loc[bulk_source["_bulk_allowed"], "suggestion_id"]
         .fillna("")
         .astype(str)
         .tolist()
     )
-    st.write(f"Ausgewählt: **{len(selected_ids)}**")
+    selected_ids = [suggestion_id for suggestion_id in checked_ids if suggestion_id in allowed_ids]
+    blocked_ids = [suggestion_id for suggestion_id in checked_ids if suggestion_id not in allowed_ids]
+    st.write(f"Ausgewählt für Sammelübernahme: **{len(selected_ids)}**")
+    if blocked_ids:
+        st.warning(
+            f"{len(blocked_ids)} markierter Hinweis kann nicht gesammelt übernommen werden. "
+            "Öffne ihn unten für die detaillierte Einzelprüfung."
+        )
+
     bulk_created_by = st.text_input(
         "Bearbeiter für Sammelübernahme",
         value=getpass.getuser(),
@@ -561,6 +637,7 @@ def _render_suggestions(
             "Ausgewählte Vorschläge speichern",
             key="manual_override_bulk_save",
             use_container_width=True,
+            disabled=not selected_ids,
         )
     with bulk_rebuild_col:
         save_selected_and_rebuild = st.button(
@@ -568,12 +645,13 @@ def _render_suggestions(
             type="primary",
             key="manual_override_bulk_save_rebuild",
             use_container_width=True,
+            disabled=not selected_ids,
         )
 
     if save_selected or save_selected_and_rebuild:
         try:
             created, skipped = _save_selected_suggestions(
-                suggestions=selectable,
+                suggestions=bulk_source,
                 selected_suggestion_ids=selected_ids,
                 created_by=bulk_created_by,
                 comment=bulk_comment,
@@ -583,12 +661,12 @@ def _render_suggestions(
             return
 
         if created:
-            st.success(f"{len(created)} Override(s) wurden gespeichert.")
+            st.success(f"{len(created)} lokale Korrektur(en) wurden gespeichert.")
         for skipped_item in skipped:
             st.warning(f"{skipped_item.suggestion_id}: {skipped_item.reason}")
 
         if save_selected_and_rebuild and created:
-            with st.status("Werte werden mit den neuen Overrides sicher neu berechnet ...", expanded=True) as status:
+            with st.status("Werte werden mit den neuen lokalen Korrekturen sicher neu berechnet ...", expanded=True) as status:
                 result = _run_pipeline(Path(ROOT / "scripts" / "run_all.py"))
                 if result.returncode == 0:
                     status.update(label="Neuberechnung erfolgreich abgeschlossen.", state="complete", expanded=False)
@@ -596,45 +674,35 @@ def _render_suggestions(
                     st.session_state["overview_refresh_completed_at"] = datetime.now().strftime("%d.%m.%Y um %H:%M")
                     st.rerun()
                 status.update(label="Neuberechnung fehlgeschlagen.", state="error", expanded=True)
-                st.error("Der letzte produktive DuckDB-Stand bleibt erhalten.")
+                st.error("Der letzte produktive Stand bleibt erhalten.")
                 st.text_area("Fehler der Berechnung", result.stderr, height=220)
                 st.text_area("Output der Berechnung", result.stdout, height=220)
         elif created:
-            st.info("Bitte anschließend neu berechnen, damit Timeline, Quality Gate und Exporte aktualisiert werden.")
+            st.info("Bitte anschließend neu prüfen, damit Timeline, automatische Prüfung und Exporte aktualisiert werden.")
 
-    st.markdown("##### Einzelvorschlag in Bearbeitungsmaske öffnen")
-    with st.expander("Einzelvorschlag für detaillierte Prüfung auswählen", expanded=False):
-        selectable["_selection_label"] = selectable.apply(
+    st.markdown("##### Einzelvorschlag detailliert prüfen")
+    with st.expander("Einzelvorschlag öffnen", expanded=False):
+        detail_source = filtered.copy()
+        detail_source["_selection_label"] = detail_source.apply(
             lambda row: (
-                f"{row['suggestion_id']} | {SUGGESTION_TYPE_LABELS.get(_clean(row['suggestion_type']), _clean(row['suggestion_type']))} "
+                f"{SUGGESTION_TYPE_LABELS.get(_clean(row['suggestion_type']), _clean(row['suggestion_type']))} "
                 f"| Lok {_clean(row['loco_no']) or '-'} | Transport {_clean(row['transport_number']) or '-'}"
             ),
             axis=1,
         )
         selected_label = st.selectbox(
             "Vorschlag für Bearbeitung auswählen",
-            selectable["_selection_label"].tolist(),
+            detail_source["_selection_label"].tolist(),
             key="manual_override_suggestion_select",
         )
-        selected = selectable[selectable["_selection_label"].eq(selected_label)].iloc[0].to_dict()
-        if st.button("Vorschlag in Bearbeitungsmaske übernehmen", key="manual_override_suggestion_prefill_button"):
+        selected = detail_source[detail_source["_selection_label"].eq(selected_label)].iloc[0].to_dict()
+        st.caption(_clean(selected.get("reason")))
+        if _clean(selected.get("evidence")):
+            st.caption("Nachweis: " + _clean(selected.get("evidence")))
+        if st.button("Vorschlag in Bearbeitungsmaske öffnen", key="manual_override_suggestion_prefill_button"):
             st.session_state["manual_override_suggestion_prefill"] = selected
             st.success("Vorschlag wurde vorgemerkt. Öffne jetzt den Reiter 'Neue Korrektur'.")
             st.rerun()
-
-
-def _prefill_case(prefill: dict[str, object]) -> dict[str, str]:
-    return {
-        "case_label": f"Vorgemerkter Systemvorschlag {_clean(prefill.get('suggestion_id'))}",
-        "rule_id": "SYSTEM_SUGGESTION",
-        "message": _clean(prefill.get("reason")),
-        "transport_number": _clean(prefill.get("transport_number")),
-        "loco_no": _clean(prefill.get("loco_no")),
-        "period_start_utc": _clean(prefill.get("period_start_utc")),
-        "period_end_utc": _clean(prefill.get("period_end_utc")),
-        "source_table": _clean(prefill.get("source_table")),
-        "source_row_id": _clean(prefill.get("source_row_id")),
-    }
 
 
 def _render_new_override(
@@ -650,7 +718,7 @@ def _render_new_override(
     if prefill:
         cases = pd.concat([pd.DataFrame([_prefill_case(prefill)]), cases], ignore_index=True)
         st.success(
-            f"Systemvorschlag {_clean(prefill.get('suggestion_id'))} ist vorgemerkt. "
+            f"Prüfvorschlag {_clean(prefill.get('suggestion_id'))} ist vorgemerkt. "
             "Bitte Werte und Begründung fachlich prüfen."
         )
         if st.button("Vormerkung verwerfen", key="manual_override_discard_prefill"):
@@ -696,7 +764,7 @@ def _render_new_override(
     suggestion_evidence = _clean(prefill.get("evidence")) or generated.evidence
     suggestion_classification = _clean(prefill.get("classification_code")) or generated.classification_code
 
-    st.markdown("#### Systemvorschlag")
+    st.markdown("#### Prüfvorschlag")
     col_suggestion, col_confidence = st.columns([4, 1])
     with col_suggestion:
         st.write(suggestion_value or suggestion_classification or "Kein eindeutiger Vorschlag vorhanden.")
@@ -821,9 +889,9 @@ def _render_audit() -> None:
     )
     st.markdown("#### Zusammenspiel mit RailCube und neuen Importen")
     st.info(
-        "Overrides sind eine lokale, auditierbare Korrekturschicht dieses Tools. Sie werden nicht "
-        "nach RailCube zurückgeschrieben. Bei einem neuen Import bleiben aktive Overrides bestehen "
-        "und werden erneut angewandt. Nach einer Berichtigung in RailCube bitte den lokalen Override "
+        "Lokale Korrekturen gelten ausschließlich in diesem Tool. Sie werden nicht "
+        "nach RailCube zurückgeschrieben. Bei einem neuen Import bleiben aktive lokale Korrekturen bestehen "
+        "und werden erneut angewandt. Nach einer Berichtigung in RailCube bitte die lokale Korrektur "
         "deaktivieren, damit dauerhaft wieder der RailCube-Quellwert verwendet wird."
     )
     st.markdown("#### Phase-5B-Grenze")
@@ -863,7 +931,7 @@ def render_manual_override_cockpit(
         "Fachlich erforderliche Berichtigungen müssen zusätzlich in RailCube nachgezogen werden."
     )
     st.info(
-        "Aktive Overrides bleiben bei einem neuen Rohdatenimport erhalten und werden bei jedem "
+        "Aktive lokale Korrekturen bleiben bei einem neuen Rohdatenimport erhalten und werden bei jedem "
         "run_all.py erneut auf den frischen Import angewandt. Sobald RailCube korrigiert wurde, "
         "den zugehörigen Override bitte deaktivieren. Findet ein Override keinen passenden "
         "Datensatz mehr, wird dies im Audit als NO_MATCH dokumentiert."
@@ -874,7 +942,7 @@ def render_manual_override_cockpit(
     )
 
     tab_suggestions, tab_new, tab_active, tab_audit = st.tabs(
-        ["Systemvorschläge", "Neue Korrektur", "Aktive Overrides", "Audit und Hinweise"]
+        ["Systemvorschläge", "Neue Korrektur", "Aktive lokale Korrekturen", "Hinweise und Verlauf"]
     )
 
     with tab_suggestions:

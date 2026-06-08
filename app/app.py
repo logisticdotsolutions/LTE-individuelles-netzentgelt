@@ -1,4 +1,5 @@
 # NETZENTGELT_MANUAL_OVERRIDE_PHASE5A_V1_20260607
+# NETZENTGELT_CONTROLLER_UX_PHASE5E_V1_20260608
 from pathlib import Path
 from datetime import date, datetime, timedelta, timezone
 import json
@@ -100,15 +101,15 @@ DETAIL_TIMELINE_RENAME_MAP = {
 }
 
 st.set_page_config(
-    page_title="Netzentgelt MVP Tool",
+    page_title="Bahnstrom Deutschland - Tagesprüfung",
     page_icon="🚆",
     layout="wide"
 )
 
-st.title("🚆 Netzentgelt MVP Tool")
-st.markdown(
-    "<small>Entwickelt von <b>Christoph Orgl</b> · LTE-group · MVP-Prototyp für Netzentgelt-Datenprüfung</small>",
-    unsafe_allow_html=True
+st.title("🚆 Bahnstrom Deutschland - Tagesprüfung")
+st.caption(
+    "Operative Prüfung und Exportvorbereitung für das individuelle Netzentgelt. "
+    "Technische Details sind bewusst nachrangig eingeordnet."
 )
 
 def read_csv_safe(path: Path) -> pd.DataFrame:
@@ -1478,19 +1479,26 @@ def file_status_box():
         "TransportDetail.csv",
         "Locomotive.csv",
     ]
+    available = [name for name in expected_raw if (RAW_DIR / name).exists()]
 
-    for file in expected_raw:
-        path = RAW_DIR / file
-        if path.exists():
-            size_mb = path.stat().st_size / 1024 / 1024
-            st.sidebar.success(f"{file} ({size_mb:.1f} MB)")
-        else:
-            st.sidebar.warning(f"{file} fehlt")
-
-    st.sidebar.divider()
+    if len(available) == len(expected_raw):
+        st.sidebar.success("Daten vollständig geladen")
+    else:
+        st.sidebar.warning(
+            f"Daten unvollständig: {len(available)} von {len(expected_raw)} Quelldateien vorhanden"
+        )
 
     export_files = list(EXPORT_DIR.glob("*.csv"))
-    st.sidebar.write(f"Exportdateien: **{len(export_files)}**")
+    st.sidebar.write(f"Erzeugte Prüfergebnisse: **{len(export_files)}**")
+
+    with st.sidebar.expander("Technische Dateidetails", expanded=False):
+        for file in expected_raw:
+            path = RAW_DIR / file
+            if path.exists():
+                size_mb = path.stat().st_size / 1024 / 1024
+                st.success(f"{file} ({size_mb:.1f} MB)")
+            else:
+                st.warning(f"{file} fehlt")
 
 file_status_box()
 
@@ -1921,38 +1929,8 @@ with tab_overview:
 
     st.divider()
 
-    severity_col = get_col(findings, ["severity", "Severity"])
-
-    if severity_col:
-        normalized_severity = (
-            findings[severity_col]
-            .fillna("")
-            .astype(str)
-            .str.strip()
-            .str.upper()
-        )
-
-        errors = int((normalized_severity == "ERROR").sum())
-        infos = int((normalized_severity == "INFO").sum())
-
-    else:
-        errors = 0
-        infos = 0
-
-    error_col, info_col = st.columns(2)
-
-    with error_col:
-        st.metric("Technische ERROR-Findings", errors)
-
-    with info_col:
-        st.metric("Technische INFO-Hinweise", infos)
-
-    st.caption(
-        "Errors sind DE-relevante Prüffälle, die fachlich bearbeitet werden müssen. "
-        "Infos dokumentieren DE-relevante Hinweise, blockieren die weitere Verarbeitung aber nicht."
-    )
-
-    st.divider()
+    # Technische Einzelzähler sind für Fachanwender bewusst ausgeblendet.
+    # Die operative Ampel fasst die relevanten Ergebnisse verständlich zusammen.
 
     # ==================================================
     # NETZENTGELT_DAU_UX_PHASE3_V1_20260607: selbsterklaerende Tagespruefung
@@ -1968,42 +1946,22 @@ with tab_overview:
 
     st.divider()
 
-    # ==================================================
-    # Übersicht der fehlenden bzw. technischen Loknummern
-    # ==================================================
-    st.subheader(
-        "Datenqualität: fehlende oder technische Loknummern"
-    )
+    with st.expander("Weitere Datenqualitätsdetails anzeigen", expanded=False):
+        st.caption(
+            "Dieser Bereich dient der Nachvollziehbarkeit. Für den täglichen Ablauf reichen "
+            "die Ampel und der Reiter '2. Offene Aufgaben'."
+        )
+        st.markdown("#### Fehlende oder technische Loknummern")
+        for warning in no_loco_warnings:
+            st.warning(warning)
+        st.dataframe(no_loco_summary, use_container_width=True, hide_index=True)
 
-    st.caption(
-        "Diese Zähler werden direkt aus TransportDetail.csv und "
-        "LocomotiveMovement.csv gebildet. Die zusätzliche Spalte "
-        "'Betroffene Transporte' entspricht der verdichteten R012-Logik "
-        "der Fehlerqueue."
-    )
+        st.markdown("#### Letzte Importläufe")
+        if runs.empty:
+            st.info("Noch keine Importlauf-Datei gefunden.")
+        else:
+            st.dataframe(runs, use_container_width=True, hide_index=True)
 
-    for warning in no_loco_warnings:
-        st.warning(warning)
-
-    st.dataframe(
-        no_loco_summary,
-        use_container_width=True,
-        hide_index=True,
-    )
-
-    st.divider()
-
-    st.subheader("Letzte Importläufe")
-    if runs.empty:
-        st.info("Noch keine Importlauf-Datei gefunden.")
-    else:
-        st.dataframe(runs, use_container_width=True, hide_index=True)
-
-    st.subheader("Erste Timeline-Vorschau")
-    if timeline.empty:
-        st.warning("Keine core_loco_timeline.csv gefunden.")
-    else:
-        st.dataframe(timeline.head(100), use_container_width=True, hide_index=True)
 
 with tab_tasks:
     render_open_tasks(
@@ -2098,156 +2056,7 @@ with tab_no_loco:
         )
 
 
-with tab_timeline:
-    st.subheader("Lok im Detail prüfen")
 
-    if timeline.empty:
-        st.warning("Keine Timeline vorhanden. Bitte zuerst Pipeline ausführen.")
-    else:
-        loco_col = get_col(
-            timeline,
-            [
-                "loco_no",
-                "LocomotiveNo",
-                "locomotive_no",
-                "locomotiveno",
-                "loco",
-                "tfze_or_tens",
-            ],
-        )
-
-        report_scope_col = get_col(
-            timeline,
-            [
-                "report_scope",
-            ],
-        )
-
-        if loco_col:
-            filter_col_loco, filter_col_scope = st.columns(2)
-
-            with filter_col_loco:
-                locos = sorted(
-                    timeline[loco_col]
-                    .dropna()
-                    .astype(str)
-                    .unique()
-                    .tolist()
-                )
-
-                selected_loco = st.selectbox(
-                    "Lok auswählen",
-                    ["Alle"] + locos,
-                    key="timeline_preview_loco",
-                )
-
-            filtered = timeline.copy()
-
-            if selected_loco != "Alle":
-                filtered = filtered[
-                    filtered[loco_col]
-                    .astype(str)
-                    .eq(selected_loco)
-                ]
-
-            with filter_col_scope:
-                if report_scope_col:
-                    scope_label_map = {
-                        "IN_REPORT": "DE-relevant",
-                        "NOT_IN_REPORT": "Außerhalb DE (nur Kontext)",
-                        "GAP": "Unterbrechung",
-                    }
-
-                    available_scopes = (
-                        timeline[report_scope_col]
-                        .dropna()
-                        .astype(str)
-                        .str.strip()
-                        .unique()
-                        .tolist()
-                    )
-
-                    preferred_scope_order = [
-                        "IN_REPORT",
-                        "NOT_IN_REPORT",
-                        "GAP",
-                    ]
-
-                    ordered_scopes = [
-                        scope
-                        for scope in preferred_scope_order
-                        if scope in available_scopes
-                    ]
-
-                    ordered_scopes.extend(
-                        sorted(
-                            scope
-                            for scope in available_scopes
-                            if scope not in ordered_scopes
-                        )
-                    )
-
-                    selected_report_scopes = st.multiselect(
-                        "Zeilen anzeigen",
-                        ordered_scopes,
-                        default=ordered_scopes,
-                        format_func=lambda value: scope_label_map.get(
-                            str(value),
-                            str(value),
-                        ),
-                        key="timeline_preview_report_scope",
-                    )
-
-                    filtered = filtered[
-                        filtered[report_scope_col]
-                        .fillna("")
-                        .astype(str)
-                        .isin(selected_report_scopes)
-                    ]
-
-                else:
-                    st.caption(
-                        "Report-Scope-Filter nicht verfügbar: "
-                        "Spalte report_scope fehlt."
-                    )
-
-            st.write(f"Treffer: **{len(filtered)}**")
-
-            filtered_display = filtered.drop(
-                columns=TIMELINE_HIDDEN_COLUMNS,
-                errors="ignore",
-            )
-
-            st.dataframe(
-                filtered_display,
-                use_container_width=True,
-                hide_index=True,
-            )
-
-            csv = (
-                filtered_display
-                .to_csv(
-                    index=False,
-                    sep=";",
-                )
-                .encode("utf-8-sig")
-            )
-
-            st.download_button(
-                "Gefilterte Timeline herunterladen",
-                data=csv,
-                file_name="timeline_gefiltert.csv",
-                mime="text/csv",
-            )
-
-        else:
-            st.warning("Keine Lok-Spalte erkannt. Verfügbare Spalten:")
-            st.write(list(timeline.columns))
-            st.dataframe(
-                timeline,
-                use_container_width=True,
-                hide_index=True,
-            )
 
 with tab_findings:
     st.subheader("Technik: vollständige Regelqueue")
@@ -2692,7 +2501,7 @@ with tab_findings:
         )
 
 with tab_exports:
-    st.subheader("XLSX-Nutzungsmeldungen je Performing RU")
+    st.subheader("XLSX-Nutzungsmeldungen je nutzendem EVU")
 
     st.caption(
         "Der Export basiert auf der UKL-Vorlage. Eine Exportzeile entspricht "
@@ -2709,24 +2518,26 @@ with tab_exports:
     else:
         today = datetime.now().date()
         first_allowed_day = today - timedelta(days=29)
+        export_min_day = min(first_allowed_day, operational_day_from)
+        export_max_day = max(today, operational_day_to)
 
         date_col_1, date_col_2 = st.columns(2)
 
         with date_col_1:
             export_date_from = st.date_input(
                 "Von",
-                value=first_allowed_day,
-                min_value=first_allowed_day,
-                max_value=today,
+                value=operational_day_from,
+                min_value=export_min_day,
+                max_value=export_max_day,
                 key="nutzungsmeldung_export_date_from",
             )
 
         with date_col_2:
             export_date_to = st.date_input(
                 "Bis",
-                value=today,
-                min_value=first_allowed_day,
-                max_value=today,
+                value=operational_day_to,
+                min_value=export_min_day,
+                max_value=export_max_day,
                 key="nutzungsmeldung_export_date_to",
             )
 
@@ -2734,6 +2545,15 @@ with tab_exports:
             st.error("Das Von-Datum darf nicht nach dem Bis-Datum liegen.")
 
         else:
+            if (
+                export_date_from != operational_day_from
+                or export_date_to != operational_day_to
+            ):
+                st.warning(
+                    "Der Exportzeitraum weicht vom aktuell geprüften Arbeitszeitraum ab. "
+                    "Bitte kontrolliere die Auswahl vor dem Download."
+                )
+
             # ==================================================
             # NETZENTGELT_REST_EXPORT_PHASE4_V1_20260607
             # Fachlich klare Exportgruppen: LTE DE, LTE NL und Rest.
@@ -2793,9 +2613,9 @@ with tab_exports:
 
                 metric_rest_1, metric_rest_2, metric_rest_3 = st.columns(3)
                 with metric_rest_1:
-                    st.metric("Restzeilen gesamt", rest_total)
+                    st.metric("Weitere Bewegungszeilen", rest_total)
                 with metric_rest_2:
-                    st.metric("PerformingRUs im Rest", rest_ru_count)
+                    st.metric("Weitere EVU", rest_ru_count)
                 with metric_rest_3:
                     st.metric("Davon gesperrte Zeilen", rest_blocked)
 
@@ -2815,7 +2635,7 @@ with tab_exports:
                     )
                 )
 
-                st.markdown("#### Restzeilen je PerformingRU")
+                st.markdown("#### Weitere EVU im Überblick")
                 st.dataframe(rest_summary, use_container_width=True, hide_index=True)
 
                 with st.expander("Restzeilen zusätzlich nach OrderOwner aufteilen", expanded=False):
@@ -2839,7 +2659,7 @@ with tab_exports:
                     )
 
                 selected_rest_ru = st.selectbox(
-                    "Rest-PerformingRU für Download auswählen",
+                    "Weiteres nutzendes EVU für Download auswählen",
                     rest_summary["PerformingRU"].astype(str).tolist(),
                     key="rest_export_selected_performing_ru",
                 )
@@ -2951,6 +2771,12 @@ with tab_timeline:
     route_detail_path = EXPORT_DIR / "stg_transport_details_enriched.csv"
 
     core_raw = read_csv_safe(core_path)
+    core_raw = filter_by_operational_days(
+        core_raw,
+        date_from=operational_day_from,
+        date_to=operational_day_to,
+        timestamp_candidates=["actual_departure_ts", "ActualDeparture", "period_start_utc"],
+    )
     core_gap_relevance_ready = (
         core_raw.empty
         or "gap_relevant_de" in core_raw.columns
@@ -2960,6 +2786,12 @@ with tab_timeline:
         core_raw
     )
     dq = read_csv_safe(dq_path)
+    dq = filter_by_operational_days(
+        dq,
+        date_from=operational_day_from,
+        date_to=operational_day_to,
+        timestamp_candidates=["actual_departure_ts", "ActualDeparture", "period_start_utc"],
+    )
     route_details = read_csv_safe(route_detail_path)
 
     if core.empty:
@@ -3001,40 +2833,10 @@ with tab_timeline:
 
         loco_df = core[core["loco_no"].astype(str) == str(selected_loco)].copy()
 
-        # Lok-Detailprüfung: immer nur die letzten 30 Tage anzeigen
-        if not loco_df.empty:
-            detail_filter_ts = pd.Series(pd.NaT, index=loco_df.index)
-
-            # Bei GAP-Zeilen ist gap_to_utc der beste Anker.
-            if "gap_to_utc" in loco_df.columns:
-                detail_filter_ts = detail_filter_ts.fillna(loco_df["gap_to_utc"])
-
-            # Bei normalen Bewegungen ist period_end_utc primär relevant.
-            if "period_end_utc" in loco_df.columns:
-                detail_filter_ts = detail_filter_ts.fillna(loco_df["period_end_utc"])
-
-            if "period_start_utc" in loco_df.columns:
-                detail_filter_ts = detail_filter_ts.fillna(loco_df["period_start_utc"])
-
-            if "sequence_ts" in loco_df.columns:
-                detail_filter_ts = detail_filter_ts.fillna(loco_df["sequence_ts"])
-
-            max_ts = detail_filter_ts.max()
-
-            if pd.notna(max_ts):
-                cutoff_ts = max_ts - pd.Timedelta(days=DETAIL_LOOKBACK_DAYS)
-
-                loco_df = loco_df[
-                    detail_filter_ts >= cutoff_ts
-                ].copy()
-
-                st.caption(
-                    f"Anzeigezeitraum Lok-Detailprüfung: letzte {DETAIL_LOOKBACK_DAYS} Tage "
-                    f"bezogen auf den aktuellsten Datensatz dieser Lok "
-                    f"({cutoff_ts:%d.%m.%Y %H:%M} bis {max_ts:%d.%m.%Y %H:%M})."
-                )
-            else:
-                st.caption("Für diese Lok konnte kein gültiger Anzeigezeitraum ermittelt werden.")
+        st.caption(
+            f"Arbeitszeitraum: {operational_day_from:%d.%m.%Y} bis {operational_day_to:%d.%m.%Y}. "
+            "Es werden vollständige Kalendertage betrachtet; Uhrzeiten im Filter werden ignoriert."
+        )
 
         if loco_df.empty:
             st.info("Für diese Lok wurden keine Bewegungen im Anzeigezeitraum gefunden.")
