@@ -1,4 +1,4 @@
-# NETZENTGELT_MANUAL_OVERRIDE_PHASE5A_V1_20260607
+﻿# NETZENTGELT_MANUAL_OVERRIDE_PHASE5A_V1_20260607
 # NETZENTGELT_CONTROLLER_UX_PHASE5E_V1_20260608
 from pathlib import Path
 from datetime import date, datetime, timedelta, timezone
@@ -117,7 +117,7 @@ st.markdown(
     """
     <div style="margin-top: 0.35rem; margin-bottom: 0.85rem; padding: 0.65rem 0.85rem; border-left: 4px solid #4f81bd; background: rgba(79, 129, 189, 0.08); border-radius: 0.25rem;">
         <strong>Konzeption, Fachlogik &amp; Umsetzung: Christoph Orgl</strong><br>
-        <span style="font-size: 0.88rem; opacity: 0.85;">LTE-group · KI-gestützte Entwicklung mit OpenAI ChatGPT als Engineering-Copilot</span>
+        <span style="font-size: 0.88rem; opacity: 0.85;">LTE-group</span>
     </div>
     """,
     unsafe_allow_html=True,
@@ -1516,7 +1516,6 @@ file_status_box()
 with st.sidebar.expander("Über dieses Tool", expanded=False):
     st.markdown("**Konzeption, Fachlogik & Umsetzung**")
     st.write("Christoph Orgl · LTE-group")
-    st.caption("KI-gestützte Entwicklung mit OpenAI ChatGPT als Engineering-Copilot.")
     st.caption("MVP für die operative Prüfung und Exportvorbereitung im individuellen Netzentgelt.")
 
 timeline_path = EXPORT_DIR / "core_loco_timeline.csv"
