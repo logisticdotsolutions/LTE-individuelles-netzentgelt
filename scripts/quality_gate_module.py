@@ -319,17 +319,56 @@ def build_quality_gate_tables(con, run_id: str) -> None:
         """
     )
 
+    # NETZENTGELT_QG_ACTUAL_OVERLAP_HOTFIX_V1_20260608
+    # Überschneidungen dürfen nicht allein daraus abgeleitet werden, dass zwei
+    # Bewegungen denselben 15-Minuten-Slot berühren. Direkt aneinandergrenzende
+    # Intervalle sind fachlich zulässig. Deshalb werden zuerst echte zeitliche
+    # Schnittmengen gebildet und erst danach auf 15-Minuten-Slots verdichtet.
     con.execute(
         """
         create or replace temp table tmp_qg_day_overlap as
-        with duplicate_slots as (
+        with movement_intervals as (
             select
+                row_number() over () as overlap_row_no,
                 loco_no,
-                coverage_date,
-                slot_start_utc
-            from tmp_qg_movement_slots
-            group by loco_no, coverage_date, slot_start_utc
-            having count(distinct source_table || ':' || cast(source_row_id as varchar)) > 1
+                period_start_utc,
+                period_end_utc
+            from core_loco_timeline
+            where row_type = 'MOVEMENT'
+              and report_scope = 'IN_REPORT'
+              and nullif(trim(loco_no), '') is not null
+              and period_start_utc is not null
+              and period_end_utc is not null
+              and period_end_utc > period_start_utc
+        ),
+        actual_overlap_intervals as (
+            select
+                a.loco_no,
+                greatest(a.period_start_utc, b.period_start_utc) as overlap_start_utc,
+                least(a.period_end_utc, b.period_end_utc) as overlap_end_utc
+            from movement_intervals a
+            join movement_intervals b
+              on b.loco_no = a.loco_no
+             and b.overlap_row_no > a.overlap_row_no
+             and a.period_start_utc < b.period_end_utc
+             and b.period_start_utc < a.period_end_utc
+        ),
+        duplicate_slots as (
+            select distinct
+                o.loco_no,
+                cast(slots.slot_start_utc as date) as coverage_date,
+                slots.slot_start_utc
+            from actual_overlap_intervals o
+            cross join unnest(
+                generate_series(
+                    date_trunc('hour', o.overlap_start_utc)
+                        + cast(floor(date_part('minute', o.overlap_start_utc) / 15) as bigint)
+                          * interval '15 minutes',
+                    o.overlap_end_utc - interval '1 microsecond',
+                    interval '15 minutes'
+                )
+            ) as slots(slot_start_utc)
+            where o.overlap_end_utc > o.overlap_start_utc
         )
         select
             loco_no,
