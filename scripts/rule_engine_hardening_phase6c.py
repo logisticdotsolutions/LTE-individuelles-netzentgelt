@@ -15,7 +15,7 @@ from typing import Iterable
 
 from rule_engine_hardening_phase6b import _cutoff_utc, _refresh_core_quality_flags
 
-PHASE_ID = "NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6C_V1_20260608"
+PHASE_ID = "NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6C_ADJACENCY_HOTFIX_V1_20260608"
 
 
 def qident(value: str) -> str:
@@ -178,26 +178,42 @@ def prepare_timeline_context_phase6c(con, run_id: str) -> None:
     con.execute(
         f"""
         create or replace temp table tmp_phase6c_adjacency as
-        with ordered as (
+        with movements as (
+            select *
+            from core_loco_timeline
+            where row_type = 'MOVEMENT'
+        ), ordered as (
             select
                 c.*,
-                lead(movement_sequence_no) over w as next_movement_sequence_no,
-                lead(transport_number) over w as next_transport_number,
-                lead(actual_departure_ts) over w as next_actual_departure_ts,
-                lead(period_start_utc) over w as next_period_start_utc,
-                lead(sequence_ts) over w as next_sequence_ts,
-                lead(origin_name) over w as next_origin_name,
-                lead(origin_country_iso) over w as next_origin_country_iso,
-                lead(report_scope) over w as next_report_scope,
-                lead(de_event_label) over w as next_de_event_label,
-                lead(source_table) over w as next_source_table,
-                lead(source_row_id) over w as next_source_row_id
-            from core_loco_timeline c
-            where row_type = 'MOVEMENT'
-            window w as (
-                partition by loco_no
-                order by movement_sequence_no asc, source_row_id asc
-            )
+                n.movement_sequence_no as next_movement_sequence_no,
+                n.transport_number as next_transport_number,
+                n.actual_departure_ts as next_actual_departure_ts,
+                n.period_start_utc as next_period_start_utc,
+                n.sequence_ts as next_sequence_ts,
+                n.origin_name as next_origin_name,
+                n.origin_country_iso as next_origin_country_iso,
+                n.report_scope as next_report_scope,
+                n.de_event_label as next_de_event_label,
+                n.source_table as next_source_table,
+                n.source_row_id as next_source_row_id
+            from movements c
+            left join lateral (
+                select candidate.*
+                from movements candidate
+                where candidate.loco_no is not distinct from c.loco_no
+                  and candidate.movement_sequence_no > c.movement_sequence_no
+                  and (
+                        c.actual_arrival_ts is null
+                     or candidate.actual_departure_ts is null
+                     or candidate.actual_departure_ts >= c.actual_arrival_ts
+                  )
+                order by
+                    case when candidate.actual_departure_ts is null then 1 else 0 end,
+                    candidate.actual_departure_ts asc nulls last,
+                    candidate.movement_sequence_no asc,
+                    candidate.source_row_id asc
+                limit 1
+            ) n on true
         )
         select
             *,
@@ -217,6 +233,45 @@ def prepare_timeline_context_phase6c(con, run_id: str) -> None:
             end as actual_gap_minutes
         from ordered
         where next_movement_sequence_no is not null
+        """
+    )
+
+    con.execute(
+        """
+        create or replace table dq_phase6c_nested_event_skips as
+        with ordered as (
+            select
+                c.*,
+                lead(transport_number) over w as skipped_transport_number,
+                lead(actual_departure_ts) over w as skipped_actual_departure_ts,
+                lead(actual_arrival_ts) over w as skipped_actual_arrival_ts,
+                lead(source_table) over w as skipped_source_table,
+                lead(source_row_id) over w as skipped_source_row_id
+            from core_loco_timeline c
+            where row_type = 'MOVEMENT'
+            window w as (
+                partition by loco_no
+                order by movement_sequence_no asc, source_row_id asc
+            )
+        )
+        select
+            loco_no,
+            transport_number,
+            actual_departure_ts,
+            actual_arrival_ts,
+            skipped_transport_number,
+            skipped_actual_departure_ts,
+            skipped_actual_arrival_ts,
+            'TEMPORAL_NESTING_OR_OVERLAP_SKIPPED_FOR_GAP_ADJACENCY'::varchar as audit_reason,
+            source_table,
+            source_row_id,
+            skipped_source_table,
+            skipped_source_row_id
+        from ordered
+        where actual_arrival_ts is not null
+          and skipped_actual_departure_ts is not null
+          and skipped_actual_departure_ts < actual_arrival_ts
+        order by loco_no, actual_arrival_ts, source_row_id
         """
     )
 
@@ -351,6 +406,13 @@ def prepare_timeline_context_phase6c(con, run_id: str) -> None:
         [str(run_id)],
     )
 
+    _audit(
+        con,
+        run_id,
+        "nested_event_skips_for_gap_adjacency",
+        int(con.execute("select count(*) from dq_phase6c_nested_event_skips").fetchone()[0]),
+        "Zeitlich verschachtelte operative Ereignisse werden fuer die GAP-Nachbarschaft uebersprungen und separat auditiert.",
+    )
     _audit(
         con,
         run_id,
