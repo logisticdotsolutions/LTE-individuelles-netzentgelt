@@ -2,6 +2,8 @@ from __future__ import annotations
 
 """
 Netzentgelt MVP - Rule Engine Diagnostic Phase 6A
+NETZENTGELT_PHASE6D_VERIFY_HOTFIX_V1_20260608
+NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6D_V1_20260608
 =================================================
 
 Read-only diagnostic for the current productive DuckDB database.
@@ -462,48 +464,18 @@ def check_uncertain_gap_duration(ctx: DiagnosticContext) -> None:
     run_sql_check(
         ctx,
         check_id="D008",
-        priority="P0",
-        title="GAP-Dauer wird aus unsicheren Ersatzzeitpunkten abgeleitet",
+        priority="P1",
+        title="Unsichere Unterbrechungen ohne belastbare Zeitgrenzen",
         description=(
-            "Ein hartes GAP darf nur anhand von vorherigem ActualArrival und nächstem ActualDeparture bewertet werden. "
-            "Bei diesen gebrochenen Ortsketten fehlt mindestens eine belastbare Zeitgrenze."
+            "Phase 6C bewertet diese Faelle bewusst nicht automatisch. Sie bleiben als R015-Pruefliste sichtbar, "
+            "bis fehlende Zeitwerte in RailCube ergaenzt oder fachlich bewertet wurden."
         ),
-        required_tables=["core_loco_timeline"],
+        required_tables=["dq_phase6c_uncertain_gaps"],
+        status_if_rows="REVIEW",
         sql="""
-            with ordered as (
-                select
-                    *,
-                    lead(actual_departure_ts) over (
-                        partition by loco_no order by sort_sequence, source_row_id
-                    ) as next_actual_departure_ts,
-                    lead(origin_name) over (
-                        partition by loco_no order by sort_sequence, source_row_id
-                    ) as next_origin_name,
-                    lead(transport_number) over (
-                        partition by loco_no order by sort_sequence, source_row_id
-                    ) as next_transport_number
-                from core_loco_timeline
-                where row_type = 'MOVEMENT'
-            )
-            select
-                loco_no,
-                transport_number,
-                next_transport_number,
-                destination_name,
-                next_origin_name,
-                actual_arrival_ts,
-                next_actual_departure_ts,
-                period_end_utc,
-                sequence_ts,
-                date_diff('minute', coalesce(period_end_utc, sequence_ts), next_actual_departure_ts) as fallback_gap_minutes,
-                source_table,
-                source_row_id
-            from ordered
-            where destination_name is not null
-              and next_origin_name is not null
-              and lower(trim(destination_name)) <> lower(trim(next_origin_name))
-              and (actual_arrival_ts is null or next_actual_departure_ts is null)
-            order by loco_no, coalesce(actual_arrival_ts, period_end_utc, sequence_ts)
+            select *
+            from dq_phase6c_uncertain_gaps
+            order by loco_no, approximate_gap_start_utc, source_row_id
         """,
     )
 
@@ -685,45 +657,17 @@ def check_invisible_same_place_stands(ctx: DiagnosticContext) -> None:
         ctx,
         check_id="D013",
         priority="P1",
-        title="Lange Standzeiten am selben Ort bleiben als GAP unsichtbar",
+        title="Mögliche kalte Abstellungen zur fachlichen Sichtung",
         description=(
-            "GAPs entstehen nur bei gebrochener Ortskette. Lange Zeiträume mit gleicher Destination und nächstem "
-            "Origin werden nicht als GAP modelliert und sollten als mögliche kalte Abstellung geprüft werden."
+            "Phase 6C stellt lange Standzeiten am selben DE-Ort strukturiert bereit. Die Liste ist eine fachliche "
+            "Pruefqueue und kein Fehler der Regelengine."
         ),
-        required_tables=["core_loco_timeline"],
+        required_tables=["core_loco_stand_candidates"],
+        status_if_rows="REVIEW",
         sql="""
-            with ordered as (
-                select
-                    *,
-                    lead(actual_departure_ts) over (partition by loco_no order by sort_sequence, source_row_id) as next_actual_departure_ts,
-                    lead(origin_name) over (partition by loco_no order by sort_sequence, source_row_id) as next_origin_name,
-                    lead(report_scope) over (partition by loco_no order by sort_sequence, source_row_id) as next_report_scope,
-                    lead(transport_number) over (partition by loco_no order by sort_sequence, source_row_id) as next_transport_number
-                from core_loco_timeline
-                where row_type = 'MOVEMENT'
-            )
-            select
-                loco_no,
-                transport_number,
-                next_transport_number,
-                destination_name,
-                next_origin_name,
-                actual_arrival_ts,
-                next_actual_departure_ts,
-                date_diff('minute', actual_arrival_ts, next_actual_departure_ts) as stand_minutes,
-                report_scope,
-                next_report_scope,
-                source_table,
-                source_row_id
-            from ordered
-            where actual_arrival_ts is not null
-              and next_actual_departure_ts is not null
-              and destination_name is not null
-              and next_origin_name is not null
-              and lower(trim(destination_name)) = lower(trim(next_origin_name))
-              and date_diff('minute', actual_arrival_ts, next_actual_departure_ts) > 480
-              and (report_scope = 'IN_REPORT' or next_report_scope = 'IN_REPORT')
-            order by stand_minutes desc, loco_no, actual_arrival_ts
+            select *
+            from core_loco_stand_candidates
+            order by stand_duration_minutes desc, loco_no, stand_from_utc
         """,
     )
 
@@ -733,54 +677,17 @@ def check_unsupported_gap_transitions(ctx: DiagnosticContext) -> None:
         ctx,
         check_id="D014",
         priority="P1",
-        title="Gebrochene DE-Ortsketten fallen aus der GAP-Relevanzmatrix",
+        title="Grenzkontext-Fälle zur fachlichen Sichtung",
         description=(
-            "Die GAP-Relevanz ist als fest verdrahtete Übergangsmatrix implementiert. Diese gebrochenen Ortsketten "
-            "berühren DE, werden aber nicht als DE-relevantes GAP markiert."
+            "Phase 6C klassifiziert diese gebrochenen Ortsketten auditierbar als Grenzkontext. Sie werden nicht "
+            "automatisch als DE-interner GAP-Fehler bewertet."
         ),
-        required_tables=["core_loco_timeline"],
+        required_tables=["dq_phase6c_gap_context_review"],
+        status_if_rows="REVIEW",
         sql="""
-            with ordered as (
-                select
-                    *,
-                    lead(period_start_utc) over (partition by loco_no order by sort_sequence, source_row_id) as next_period_start_utc,
-                    lead(origin_name) over (partition by loco_no order by sort_sequence, source_row_id) as next_origin_name,
-                    lead(de_event_label) over (partition by loco_no order by sort_sequence, source_row_id) as next_de_event_label,
-                    lead(report_scope) over (partition by loco_no order by sort_sequence, source_row_id) as next_report_scope,
-                    lead(transport_number) over (partition by loco_no order by sort_sequence, source_row_id) as next_transport_number
-                from core_loco_timeline
-                where row_type = 'MOVEMENT'
-            )
-            select
-                loco_no,
-                transport_number,
-                next_transport_number,
-                destination_name,
-                next_origin_name,
-                de_event_label,
-                next_de_event_label,
-                report_scope,
-                next_report_scope,
-                period_end_utc,
-                next_period_start_utc,
-                date_diff('minute', period_end_utc, next_period_start_utc) as gap_minutes,
-                source_table,
-                source_row_id
-            from ordered
-            where destination_name is not null
-              and next_origin_name is not null
-              and lower(trim(destination_name)) <> lower(trim(next_origin_name))
-              and period_end_utc is not null
-              and next_period_start_utc is not null
-              and date_diff('minute', period_end_utc, next_period_start_utc) > 15
-              and (report_scope = 'IN_REPORT' or next_report_scope = 'IN_REPORT')
-              and not (
-                    (upper(coalesce(de_event_label, '')) = 'IN DE' and upper(coalesce(next_de_event_label, '')) = 'IN DE')
-                 or (upper(coalesce(de_event_label, '')) = 'EINFAHRT' and upper(coalesce(next_de_event_label, '')) = 'AUSFAHRT')
-                 or (upper(coalesce(de_event_label, '')) = 'EINFAHRT' and upper(coalesce(next_de_event_label, '')) = 'IN DE')
-                 or (upper(coalesce(de_event_label, '')) = 'IN DE' and upper(coalesce(next_de_event_label, '')) = 'AUSFAHRT')
-              )
-            order by loco_no, period_end_utc
+            select *
+            from dq_phase6c_gap_context_review
+            order by loco_no, actual_arrival_ts, source_row_id
         """,
     )
 
@@ -914,55 +821,39 @@ def check_global_blocker_scope(ctx: DiagnosticContext) -> None:
 
 
 def check_exact_overlap_rounding(ctx: DiagnosticContext) -> None:
+    check_id = "D019"
+    title = "Exakte Überschneidungsminuten zusätzlich zu Viertelstunden-Slots vorhanden"
+    if not require(ctx, check_id, "P2", title, ["dq_export_gate"]):
+        return
+    available = {column.lower() for column in columns(ctx.con, "dq_export_gate")}
+    if "exact_overlap_minutes" not in available or "exact_overlap_seconds" not in available:
+        detail = ctx.write_detail(check_id, ["missing_columns"], [("exact_overlap_seconds | exact_overlap_minutes",)])
+        ctx.add_result(
+            check_id=check_id,
+            priority="P2",
+            title=title,
+            status="FINDING",
+            row_count=1,
+            description="Phase-6D-Spalten fuer die exakte Ueberschneidungsdauer fehlen im Quality Gate.",
+            detail_file=detail,
+        )
+        return
     run_sql_check(
         ctx,
-        check_id="D019",
+        check_id=check_id,
         priority="P2",
-        title="Angezeigte Überschneidungsminuten sind Viertelstunden-Slots",
+        title=title,
         description=(
-            "Das Quality Gate weist overlap_slot_count * 15 als Minuten aus. Diese echten Überschneidungen dauern nicht "
-            "exakt ein Vielfaches von 15 Minuten und sollten später mit tatsächlicher Dauer und Slot-Anzahl getrennt angezeigt werden."
+            "Die konservative Slotzahl bleibt erhalten. Zusaetzlich muss fuer jeden Overlap-Lok-Tag eine exakte "
+            "Dauer in Sekunden und Minuten vorliegen."
         ),
-        required_tables=["core_loco_timeline"],
-        status_if_rows="REVIEW",
+        required_tables=["dq_export_gate"],
         sql="""
-            with movements as (
-                select
-                    row_number() over () as movement_row_no,
-                    loco_no,
-                    transport_number,
-                    period_start_utc,
-                    period_end_utc
-                from core_loco_timeline
-                where row_type = 'MOVEMENT'
-                  and report_scope = 'IN_REPORT'
-                  and period_start_utc is not null
-                  and period_end_utc is not null
-                  and period_end_utc > period_start_utc
-            )
-            select
-                a.loco_no,
-                a.transport_number as transport_a,
-                b.transport_number as transport_b,
-                greatest(a.period_start_utc, b.period_start_utc) as overlap_start_utc,
-                least(a.period_end_utc, b.period_end_utc) as overlap_end_utc,
-                date_diff(
-                    'second',
-                    greatest(a.period_start_utc, b.period_start_utc),
-                    least(a.period_end_utc, b.period_end_utc)
-                ) as actual_overlap_seconds
-            from movements a
-            join movements b
-              on b.loco_no = a.loco_no
-             and b.movement_row_no > a.movement_row_no
-             and a.period_start_utc < b.period_end_utc
-             and b.period_start_utc < a.period_end_utc
-            where date_diff(
-                    'second',
-                    greatest(a.period_start_utc, b.period_start_utc),
-                    least(a.period_end_utc, b.period_end_utc)
-                  ) % 900 <> 0
-            order by a.loco_no, overlap_start_utc
+            select *
+            from dq_export_gate
+            where coalesce(overlap_minutes, 0) > 0
+              and exact_overlap_minutes is null
+            order by coverage_date desc, loco_no
         """,
     )
 

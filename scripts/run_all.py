@@ -55,6 +55,11 @@ from rule_engine_hardening_phase6c import (
     harden_findings_and_segments_phase6c,
     prepare_timeline_context_phase6c,
 )
+# NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6D_V1_20260608
+from rule_engine_hardening_phase6d import (
+    finalize_quality_gate_phase6d,
+    insert_gap_only_day_findings_phase6d,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 RAW_DIR = ROOT / "data" / "00_raw"
@@ -2546,6 +2551,12 @@ def main():
         harden_findings_and_export_policy(con, run_id)
         harden_findings_and_segments_phase6c(con, run_id)
         build_quality_gate_tables(con, run_id)
+        # NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6D_V1_20260608
+        # Zuerst GAP-only-Lok-Tage als sichtbare R016-Faelle dokumentieren,
+        # danach das Gate einmal neu aufbauen und exakte Overlap-Dauern ergaenzen.
+        insert_gap_only_day_findings_phase6d(con, run_id)
+        build_quality_gate_tables(con, run_id)
+        finalize_quality_gate_phase6d(con, run_id)
         build_exports(con)
         refresh_reconciliation_table(con, run_id)
         # NETZENTGELT_QUALITY_GATE_PHASE2_V1_20260607: 15-Minuten-Deckung, Export-Gate und Reconciliation
@@ -2562,6 +2573,8 @@ def main():
             ("dq_rule_engine_hardening_audit", "dq_rule_engine_hardening_audit.csv"),
             ("dq_rule_engine_hardening_blockers", "dq_rule_engine_hardening_blockers.csv"),
             ("dq_rule_engine_hardening_phase6c_audit", "dq_rule_engine_hardening_phase6c_audit.csv"),
+            ("dq_rule_engine_hardening_phase6d_audit", "dq_rule_engine_hardening_phase6d_audit.csv"),
+            ("dq_phase6d_exact_overlap_days", "dq_phase6d_exact_overlap_days.csv"),
             ("dq_phase6c_uncertain_gaps", "dq_phase6c_uncertain_gaps.csv"),
             ("dq_phase6c_gap_context_review", "dq_phase6c_gap_context_review.csv"),
             ("core_loco_stand_candidates", "core_loco_stand_candidates.csv"),

@@ -43,6 +43,8 @@ from operational_day_filter_module import (
     summarize_no_loco_cases,
 )
 # NETZENTGELT_OPERATIONAL_DAY_FILTER_PHASE5C_V1_20260608
+from phase6d_controller_review_ui import render_phase6d_review_lists
+# NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6D_V1_20260608
 # ------------------------------------------------------
 # Skripte und Datenbankpfade
 # ------------------------------------------------------
@@ -1537,6 +1539,9 @@ global_blockers_path = EXPORT_DIR / "dq_global_export_blockers.csv"
 reconciliation_path = EXPORT_DIR / "dq_reconciliation.csv"
 operational_kpis_path = EXPORT_DIR / "dq_operational_kpis.csv"
 excluded_export_rows_path = EXPORT_DIR / "export_excluded_rows.csv"
+stand_candidates_path = EXPORT_DIR / "core_loco_stand_candidates.csv"
+gap_context_review_path = EXPORT_DIR / "dq_phase6c_gap_context_review.csv"
+uncertain_gaps_path = EXPORT_DIR / "dq_phase6c_uncertain_gaps.csv"
 
 timeline_raw = read_csv_safe(timeline_path)
 timeline_gap_relevance_ready = (
@@ -1569,6 +1574,9 @@ global_export_blockers = read_csv_safe(global_blockers_path)
 reconciliation = read_csv_safe(reconciliation_path)
 operational_kpis = read_csv_safe(operational_kpis_path)
 excluded_export_rows = read_csv_safe(excluded_export_rows_path)
+stand_candidates = read_csv_safe(stand_candidates_path)
+gap_context_review = read_csv_safe(gap_context_review_path)
+uncertain_gaps = read_csv_safe(uncertain_gaps_path)
 
 # Datenqualitätswerte direkt aus den aktuellen Rohdaten bilden.
 # Dadurch werden sie bereits nach einem Download aktualisiert,
@@ -1672,13 +1680,32 @@ no_loco_cases = filter_by_operational_days(
     timestamp_candidates=["Erstes Datum"],
 )
 no_loco_summary = summarize_no_loco_cases(no_loco_cases, no_loco_summary)
+stand_candidates = filter_by_operational_days(
+    stand_candidates,
+    date_from=operational_day_from,
+    date_to=operational_day_to,
+    timestamp_candidates=["stand_from_utc", "stand_to_utc"],
+)
+gap_context_review = filter_by_operational_days(
+    gap_context_review,
+    date_from=operational_day_from,
+    date_to=operational_day_to,
+    timestamp_candidates=["actual_arrival_ts", "next_actual_departure_ts"],
+)
+uncertain_gaps = filter_by_operational_days(
+    uncertain_gaps,
+    date_from=operational_day_from,
+    date_to=operational_day_to,
+    timestamp_candidates=["approximate_gap_start_utc", "approximate_gap_end_utc"],
+)
 
-tab_overview, tab_tasks, tab_override, tab_timeline, tab_exports, tab_no_loco, tab_findings, tab_run = st.tabs([
+tab_overview, tab_tasks, tab_override, tab_timeline, tab_exports, tab_review, tab_no_loco, tab_findings, tab_run = st.tabs([
     "1. Tagesprüfung",
     "2. Offene Aufgaben",
     "3. Fall bearbeiten",
     "4. Lok prüfen",
     "5. Exporte erstellen",
+    "6. Weitere Prüfungen",
     "⚙️ Technik: Loknummern",
     "⚙️ Technik: Regelqueue",
     "⚙️ Technik: Pipeline"
@@ -1995,6 +2022,14 @@ with tab_override:
         run_all_script=SCRIPT_RUN_ALL,
         findings=findings,
         timeline=timeline_raw,
+    )
+
+
+with tab_review:
+    render_phase6d_review_lists(
+        stand_candidates=stand_candidates,
+        gap_context_review=gap_context_review,
+        uncertain_gaps=uncertain_gaps,
     )
 
 
