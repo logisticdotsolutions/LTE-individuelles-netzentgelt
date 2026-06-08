@@ -288,9 +288,22 @@ def _build_case_table(findings: pd.DataFrame, timeline: pd.DataFrame) -> pd.Data
             )
 
     if timeline is not None and not timeline.empty and "row_type" in timeline.columns:
-        gap_rows = timeline[
-            timeline["row_type"].fillna("").astype(str).str.upper().eq("GAP")
-        ]
+        # NETZENTGELT_GAP_SCOPE_UI_HOTFIX_V1_20260608
+        # Im Korrektur-Cockpit dürfen nur fachlich DE-relevante Unterbrechungen
+        # als auswählbare Prüffälle erscheinen. Nicht DE-relevante GAP-Zeilen
+        # bleiben intern für Audit und Zeitachsenkontext erhalten, werden hier
+        # aber bewusst nicht zur manuellen Bearbeitung angeboten.
+        gap_mask = timeline["row_type"].fillna("").astype(str).str.upper().eq("GAP")
+        if "gap_relevant_de" in timeline.columns:
+            gap_mask = gap_mask & (
+                timeline["gap_relevant_de"]
+                .fillna(False)
+                .astype(str)
+                .str.strip()
+                .str.lower()
+                .isin(["true", "1", "yes", "y", "ja"])
+            )
+        gap_rows = timeline[gap_mask]
         for _, row in gap_rows.iterrows():
             loco = _clean(row.get("loco_no"))
             start = _clean(row.get("period_start_utc"))
