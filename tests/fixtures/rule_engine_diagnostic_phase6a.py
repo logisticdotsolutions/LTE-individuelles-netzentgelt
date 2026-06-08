@@ -6,8 +6,6 @@ Netzentgelt MVP - Rule Engine Diagnostic Phase 6A
 
 Read-only diagnostic for the current productive DuckDB database.
 
-NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6B_V1_20260608
-
 The script does not alter the database, raw CSV files, mappings or exports. It
 connects to DuckDB with read_only=True and writes a timestamped report folder
 below data/04_logs.
@@ -452,7 +450,7 @@ def check_actual_overlap_without_r011(ctx: DiagnosticContext) -> None:
                   and period_start_utc is not null
                   and period_end_utc is not null
                   and period_end_utc > period_start_utc
-            ), actual_overlaps as (
+            ), overlaps as (
                 select
                     a.loco_no,
                     a.transport_number as transport_a,
@@ -480,7 +478,7 @@ def check_actual_overlap_without_r011(ctx: DiagnosticContext) -> None:
                  and b.period_start_utc < a.period_end_utc
             )
             select *
-            from actual_overlaps o
+            from overlaps o
             where not exists (
                 select 1
                 from dq_findings f
@@ -635,32 +633,38 @@ def check_gap_cockpit_duplicates(ctx: DiagnosticContext) -> None:
         ctx,
         check_id="D010",
         priority="P1",
-        title="Mehrfach erzeugte GAP-Findings",
+        title="GAPs erscheinen potenziell doppelt im Korrektur-Cockpit",
         description=(
-            "Phase 6B dedupliziert die Cockpit-Anzeige. Verbleibende Treffer bedeuten, dass fuer dieselbe "
-            "fachliche Unterbrechung mehrfach atomare GAP-Findings erzeugt wurden."
+            "Das Cockpit ergänzt Timeline-GAPs zusätzlich zu Findings. Diese GAPs besitzen bereits ein Finding und "
+            "können dadurch doppelt angeboten werden, wenn die UI nicht fachlich dedupliziert."
         ),
-        required_tables=["dq_findings"],
+        required_tables=["core_loco_timeline", "dq_findings"],
         sql="""
             select
-                loco_no,
-                transport_number,
-                period_start_utc,
-                period_end_utc,
-                source_table,
-                source_row_id,
-                count(*) as duplicate_finding_rows,
-                string_agg(distinct rule_id, ' | ' order by rule_id) as rule_ids
-            from dq_findings
-            where row_type = 'GAP'
-            group by
-                loco_no, transport_number, period_start_utc, period_end_utc,
-                source_table, source_row_id
-            having count(*) > 1
-            order by duplicate_finding_rows desc, loco_no, period_start_utc
+                c.loco_no,
+                c.transport_number,
+                c.period_start_utc,
+                c.period_end_utc,
+                c.gap_duration_minutes,
+                c.gap_relevant_de,
+                f.rule_id,
+                f.severity,
+                f.message,
+                c.source_table,
+                c.source_row_id
+            from core_loco_timeline c
+            join dq_findings f
+              on f.row_type = 'GAP'
+             and f.loco_no is not distinct from c.loco_no
+             and f.source_table is not distinct from c.source_table
+             and f.source_row_id is not distinct from c.source_row_id
+             and f.period_start_utc is not distinct from c.period_start_utc
+             and f.period_end_utc is not distinct from c.period_end_utc
+            where c.row_type = 'GAP'
+              and coalesce(c.gap_relevant_de, false) = true
+            order by c.loco_no, c.period_start_utc
         """,
     )
-
 
 
 def _count_csv_rows(path: Path) -> tuple[int | None, str]:

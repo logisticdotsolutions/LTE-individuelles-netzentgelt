@@ -287,6 +287,20 @@ def _build_case_table(findings: pd.DataFrame, timeline: pd.DataFrame) -> pd.Data
                 }
             )
 
+    # NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6B_V1_20260608
+    # Findings besitzen Vorrang. Eine passende generische GAP-Zeile darf nicht
+    # als zweiter scheinbar separater Korrekturfall auftauchen.
+    existing_case_keys = {
+        (
+            _clean(item.get("loco_no")),
+            _clean(item.get("period_start_utc")),
+            _clean(item.get("period_end_utc")),
+            _clean(item.get("source_table")),
+            _clean(item.get("source_row_id")),
+        )
+        for item in rows
+    }
+
     if timeline is not None and not timeline.empty and "row_type" in timeline.columns:
         # NETZENTGELT_GAP_SCOPE_UI_HOTFIX_V1_20260608
         # Im Korrektur-Cockpit dürfen nur fachlich DE-relevante Unterbrechungen
@@ -308,6 +322,16 @@ def _build_case_table(findings: pd.DataFrame, timeline: pd.DataFrame) -> pd.Data
             loco = _clean(row.get("loco_no"))
             start = _clean(row.get("period_start_utc"))
             end = _clean(row.get("period_end_utc"))
+            case_key = (
+                loco,
+                start,
+                end,
+                _clean(row.get("source_table")),
+                _clean(row.get("source_row_id")),
+            )
+            if case_key in existing_case_keys:
+                continue
+            existing_case_keys.add(case_key)
             rows.append(
                 {
                     "case_label": f"GAP | Lok {loco or '-'} | {start or '-'} bis {end or '-'}",

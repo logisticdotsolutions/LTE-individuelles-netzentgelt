@@ -633,7 +633,8 @@ def _fetch_usage_segments(
                     case
                         when row_type = 'MOVEMENT'
                          and report_scope = 'IN_REPORT'
-                         and coalesce(export_ready, false) = false
+                         -- NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6B_V1_20260608
+                         and coalesce(export_blocking, false) = true
                             then 1
                         else 0
                     end

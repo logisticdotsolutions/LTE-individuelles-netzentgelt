@@ -163,7 +163,11 @@ def build_quality_gate_tables(con, run_id: str) -> None:
             count(*) filter (
                 where row_type = 'MOVEMENT'
                   and report_scope = 'IN_REPORT'
-                  and coalesce(export_ready, false) = false
+                  -- NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6B_V1_20260608
+                  -- Nur fachlich blockierende Bewegungen zaehlen. Frische
+                  -- unvollstaendige Daten innerhalb der 24h-Toleranz bleiben
+                  -- sichtbar, sperren den Lok-Tag aber noch nicht.
+                  and coalesce(export_blocking, false) = true
             ) as not_export_ready_movement_rows
         from segmented
         group by
@@ -416,7 +420,7 @@ def build_quality_gate_tables(con, run_id: str) -> None:
             count(*) as in_report_movement_rows,
             count(*) filter (where coalesce(export_ready, false) = true)
                 as export_ready_movement_rows,
-            count(*) filter (where coalesce(export_ready, false) = false)
+            count(*) filter (where coalesce(export_blocking, false) = true)
                 as not_export_ready_movement_rows
         from core_loco_timeline
         where row_type = 'MOVEMENT'

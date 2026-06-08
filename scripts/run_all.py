@@ -46,6 +46,10 @@ from manual_override_module import (
     apply_staging_manual_overrides,
     import_manual_overrides,
 )
+from rule_engine_hardening_phase6b import (
+    apply_core_assignment_fallbacks,
+    harden_findings_and_export_policy,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 RAW_DIR = ROOT / "data" / "00_raw"
@@ -2234,8 +2238,12 @@ left join core_transport_route r
         gap_pre as (
             select
                 *,
-                coalesce(period_end_utc, sequence_ts) as gap_from,
-                coalesce(next_period_start_utc, next_sequence_ts) as gap_to
+                -- NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6B_V1_20260608
+                -- Harte GAP-Dauern nur aus belastbaren fachlichen Grenzen bilden.
+                -- Fehlende Zeitwerte bleiben ueber R002/R003 sichtbar, erzeugen
+                -- aber keine kuenstlich aufgeblasene GAP-Dauer mehr.
+                period_end_utc as gap_from,
+                next_period_start_utc as gap_to
             from ordered_movements
             where next_origin_name is not null
               and destination_name is not null
@@ -2524,10 +2532,12 @@ def main():
         apply_staging_manual_overrides(con, run_id)
         build_transport_routes(con)
         build_core(con, run_id)
+        apply_core_assignment_fallbacks(con, run_id)
         build_unresolved_performing_ru_market_partner_alias(con)
 
         # 4. Findings und fachliche Exporttabellen neu berechnen.
         build_findings(con, run_id, home_country_iso=HOME_COUNTRY_ISO)
+        harden_findings_and_export_policy(con, run_id)
         build_quality_gate_tables(con, run_id)
         build_exports(con)
         refresh_reconciliation_table(con, run_id)
@@ -2542,6 +2552,8 @@ def main():
             ("cfg_manual_overrides_effective", "cfg_manual_overrides_effective.csv"),
             ("dq_manual_override_conflicts", "dq_manual_override_conflicts.csv"),
             ("audit_manual_override_application", "audit_manual_override_application.csv"),
+            ("dq_rule_engine_hardening_audit", "dq_rule_engine_hardening_audit.csv"),
+            ("dq_rule_engine_hardening_blockers", "dq_rule_engine_hardening_blockers.csv"),
             ("stg_loco_events", "stg_loco_events.csv"),
             ("core_loco_timeline", "core_loco_timeline.csv"),
             ("dq_findings", "dq_findings.csv"),
