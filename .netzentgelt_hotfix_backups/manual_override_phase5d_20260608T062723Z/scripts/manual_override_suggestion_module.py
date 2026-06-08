@@ -13,7 +13,6 @@ Vorschlagsarten
 - Loknummer aus TransportDetail / LocomotiveMovement
 - Grenzzeitanker als kontrollierter Viertelstunden-Prüfvorschlag
 - gebrochene Ortskette als vermutete fehlende Bewegung
-- PerformingRU eines GAPs aus identischen direkten Nachbarbewegungen
 - längere Standzeit am selben Ort als mögliche kalte Abstellung
 """
 
@@ -31,7 +30,6 @@ import pandas as pd
 
 
 PHASE5B_SUGGESTION_MARKER = "NETZENTGELT_MANUAL_OVERRIDE_PHASE5B_SUGGESTIONS_V1_20260607"
-PHASE5D_SUGGESTION_MARKER = "NETZENTGELT_MANUAL_OVERRIDE_PHASE5D_V1_20260608"
 COLD_STAND_MIN_MINUTES = 480
 BORDER_SLOT_MINUTES = 15
 PERFORMING_RU_NEIGHBOUR_WINDOW_HOURS = 48
@@ -625,102 +623,6 @@ def _suggest_cold_stands(timeline: pd.DataFrame) -> list[Suggestion]:
     return suggestions
 
 
-
-def _bool_flag(value: object) -> bool:
-    return _clean(value).lower() in {"true", "1", "yes", "y", "ja"}
-
-
-def _suggest_gap_performing_ru_from_neighbours(timeline: pd.DataFrame) -> list[Suggestion]:
-    """
-    PerformingRU fuer eine DE-relevante GAP-Zeile nur dann vorschlagen, wenn
-    die unmittelbar vorherige und die unmittelbar nachfolgende Bewegung
-    derselben Lok eindeutig dieselbe PerformingRU enthalten.
-
-    Der Vorschlag dokumentiert eine lokale GAP-Klassifikation. Er schreibt
-    keine Quelldaten um und hebt keine Exportsperre automatisch auf.
-    """
-    if timeline is None or timeline.empty or "row_type" not in timeline.columns:
-        return []
-
-    work = timeline.copy()
-    work["_phase5d_sort_sequence"] = pd.to_numeric(
-        work.get("sort_sequence", pd.Series(index=work.index, dtype="object")),
-        errors="coerce",
-    )
-    work["_phase5d_sort_ts"] = pd.to_datetime(
-        work.get("period_start_utc", pd.Series(index=work.index, dtype="object")),
-        errors="coerce",
-    )
-    work["_phase5d_source_row_id"] = pd.to_numeric(
-        work.get("source_row_id", pd.Series(index=work.index, dtype="object")),
-        errors="coerce",
-    )
-
-    suggestions: list[Suggestion] = []
-    for loco_no, group in work.groupby("loco_no", dropna=False):
-        ordered = group.sort_values(
-            ["_phase5d_sort_sequence", "_phase5d_sort_ts", "_phase5d_source_row_id"],
-            na_position="last",
-        ).reset_index(drop=True)
-
-        for index, gap in ordered.iterrows():
-            if _clean(gap.get("row_type")).upper() != "GAP":
-                continue
-            if not _bool_flag(gap.get("gap_relevant_de")):
-                continue
-
-            previous = None
-            for previous_index in range(index - 1, -1, -1):
-                candidate = ordered.iloc[previous_index]
-                if _clean(candidate.get("row_type")).upper() == "MOVEMENT":
-                    previous = candidate
-                    break
-
-            following = None
-            for following_index in range(index + 1, len(ordered)):
-                candidate = ordered.iloc[following_index]
-                if _clean(candidate.get("row_type")).upper() == "MOVEMENT":
-                    following = candidate
-                    break
-
-            if previous is None or following is None:
-                continue
-
-            previous_ru = _clean(previous.get("performing_ru"))
-            following_ru = _clean(following.get("performing_ru"))
-            if not previous_ru or previous_ru != following_ru:
-                continue
-
-            suggestions.append(
-                _new_suggestion(
-                    suggestion_type="GAP_PERFORMING_RU_FROM_BOTH_NEIGHBOURS",
-                    override_type="CLASSIFY_GAP",
-                    classification_code="SAME_RU_CONTINUITY",
-                    confidence="HIGH",
-                    suggested_value=previous_ru,
-                    loco_no=_clean(loco_no),
-                    transport_number=_clean(gap.get("transport_number")) or _clean(previous.get("transport_number")),
-                    period_start_utc=_timestamp_text(gap.get("period_start_utc")),
-                    period_end_utc=_timestamp_text(gap.get("period_end_utc")),
-                    source_table=_clean(gap.get("source_table")),
-                    source_row_id=_clean(gap.get("source_row_id")),
-                    reason=(
-                        "Vor und nach der DE-relevanten GAP-Zeile ist dieselbe PerformingRU vorhanden. "
-                        "Lokale GAP-Klassifikation fachlich bestaetigen."
-                    ),
-                    evidence=(
-                        f"Vorherige Bewegung: Transport {_clean(previous.get('transport_number')) or '-'}, "
-                        f"PerformingRU {previous_ru}, Beginn {_timestamp_text(previous.get('period_start_utc')) or '-'}; "
-                        f"nachfolgende Bewegung: Transport {_clean(following.get('transport_number')) or '-'}, "
-                        f"PerformingRU {following_ru}, Beginn {_timestamp_text(following.get('period_start_utc')) or '-'}; "
-                        "beide direkten Nachbarn stimmen ueberein."
-                    ),
-                )
-            )
-
-    return suggestions
-
-
 def _suggest_broken_chain_gaps(timeline: pd.DataFrame) -> list[Suggestion]:
     gaps = _gap_rows(timeline)
     if gaps.empty:
@@ -852,7 +754,6 @@ def build_suggestion_table(
         finally:
             con.close()
     suggestions.extend(_suggest_broken_chain_gaps(timeline))
-    suggestions.extend(_suggest_gap_performing_ru_from_neighbours(timeline))
     suggestions.extend(_suggest_cold_stands(timeline))
     suggestions.extend(_suggest_border_slot_reviews(timeline))
 
