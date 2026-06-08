@@ -1,9 +1,9 @@
 """
-Streamlit-Cockpit für kontrollierte manuelle Overrides.
+Streamlit-Cockpit für kontrollierte manuelle Overrides und Systemvorschläge.
 
-Die Oberfläche ist bewusst fachanwenderorientiert. Original-CSVs bleiben
-unverändert. Änderungen werden ausschließlich in manual_overrides.csv erfasst
-und anschließend durch den sicheren Pipeline-Neuaufbau verarbeitet.
+Original-CSVs bleiben unverändert. Phase 5B ergänzt nachvollziehbare, regelbasierte
+Vorschläge mit Sicherheitsstufe und Begründung. Kein Vorschlag wird automatisch
+übernommen. Fachanwender bestätigen jede Korrektur ausdrücklich.
 """
 
 from __future__ import annotations
@@ -17,9 +17,7 @@ import sys
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Iterable
 
-import duckdb
 import pandas as pd
 import streamlit as st
 
@@ -29,13 +27,20 @@ from manual_override_module import (
     ensure_manual_override_csv,
     utc_now_text,
 )
+from manual_override_suggestion_module import (
+    PHASE5B_SUGGESTION_MARKER,
+    SUGGESTION_COLUMNS,
+    build_suggestion_table,
+    suggestion_for_case,
+)
 
 
-PHASE5A_UI_MARKER = "NETZENTGELT_MANUAL_OVERRIDE_PHASE5A_UI_V1_20260607"
+PHASE5B_UI_MARKER = "NETZENTGELT_MANUAL_OVERRIDE_PHASE5B_UI_V1_20260607"
 ROOT = Path(__file__).resolve().parents[1]
 MAP_DIR = ROOT / "data" / "01_mapping"
 BACKUP_DIR = ROOT / ".manual_override_backups"
 CHANGE_LOG_PATH = MAP_DIR / "manual_override_change_log.csv"
+SUGGESTION_ACCEPTANCE_LOG_PATH = MAP_DIR / "manual_override_suggestion_acceptance_log.csv"
 
 OVERRIDE_TYPE_LABELS = {
     "SET_PERFORMING_RU": "Nutzendes EVU ergänzen oder korrigieren",
@@ -66,10 +71,59 @@ CHANGE_LOG_COLUMNS = (
     "comment",
 )
 
+SUGGESTION_ACCEPTANCE_COLUMNS = (
+    "accepted_at_utc",
+    "suggestion_id",
+    "override_id",
+    "suggestion_type",
+    "override_type",
+    "confidence",
+    "suggested_value",
+    "accepted_value",
+    "classification_code",
+    "transport_number",
+    "loco_no",
+    "period_start_utc",
+    "period_end_utc",
+    "accepted_by",
+    "reason",
+    "evidence",
+    "comment",
+)
+
+CONFIDENCE_LABELS = {
+    "HIGH": "🟢 Hoch",
+    "MEDIUM": "🟡 Mittel",
+    "LOW": "⚪ Niedrig",
+}
+
+SUGGESTION_TYPE_LABELS = {
+    "PERFORMING_RU_FROM_BOTH_NEIGHBOURS": "PerformingRU aus beiden Nachbarbewegungen",
+    "PERFORMING_RU_FROM_NEIGHBOURHOOD": "PerformingRU aus angrenzenden Bewegungen",
+    "PERFORMING_RU_CONFLICT": "PerformingRU-Konflikt prüfen",
+    "PERFORMING_RU_REVIEW": "PerformingRU manuell prüfen",
+    "LOCO_NO_FROM_TRANSPORT": "Loknummer aus Transportdaten",
+    "LOCO_NO_CONFLICT": "Mehrere Loknummern prüfen",
+    "LOCO_NO_REVIEW": "Loknummer manuell prüfen",
+    "SEQUENCE_TS_FROM_DIRECTION": "Grenzzeitanker aus Richtungslogik",
+    "SEQUENCE_TS_REVIEW": "Grenzzeitanker manuell prüfen",
+    "BORDER_QUARTER_HOUR_REVIEW": "Grenzereignis am Viertelstundenraster prüfen",
+    "BROKEN_LOCATION_CHAIN": "Unterbrochene Ortskette prüfen",
+    "POSSIBLE_COLD_STAND_SAME_LOCATION": "Mögliche kalte Abstellung prüfen",
+    "ACTUAL_DEPARTURE_REVIEW": "Abfahrtszeit prüfen",
+    "ACTUAL_ARRIVAL_REVIEW": "Ankunftszeit prüfen",
+    "DOCUMENTATION_REVIEW": "Dokumentationsfall prüfen",
+}
+
 
 def _clean(value: object) -> str:
-    if value is None or pd.isna(value):
+    if value is None:
         return ""
+    try:
+        if pd.isna(value):
+            return ""
+    except (TypeError, ValueError):
+        pass
     return str(value).strip()
 
 
@@ -114,6 +168,16 @@ def _write_overrides_atomic(data: pd.DataFrame) -> None:
     os.replace(temporary, MANUAL_OVERRIDE_PATH)
 
 
+def _append_csv_row(path: Path, fieldnames: tuple[str, ...], row: dict[str, object]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    exists = path.exists()
+    with path.open("a", encoding="utf-8-sig", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames, delimiter=";")
+        if not exists:
+            writer.writeheader()
+        writer.writerow({field: _clean(row.get(field)) for field in fieldnames})
+
+
 def _append_change_log(
     *,
     action: str,
@@ -122,129 +186,62 @@ def _append_change_log(
     changed_by: str,
     comment: str,
 ) -> None:
-    MAP_DIR.mkdir(parents=True, exist_ok=True)
-    exists = CHANGE_LOG_PATH.exists()
-    with CHANGE_LOG_PATH.open("a", encoding="utf-8-sig", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=CHANGE_LOG_COLUMNS, delimiter=";")
-        if not exists:
-            writer.writeheader()
-        writer.writerow(
-            {
-                "changed_at_utc": utc_now_text(),
-                "action": action,
-                "override_id": override_id,
-                "override_type": override_type,
-                "changed_by": changed_by,
-                "comment": comment,
-            }
-        )
-
-
-def _table_exists(con, table_name: str) -> bool:
-    return (
-        con.execute(
-            """
-            select count(*)
-            from information_schema.tables
-            where lower(table_name) = lower(?)
-            """,
-            [table_name],
-        ).fetchone()[0]
-        > 0
+    _append_csv_row(
+        CHANGE_LOG_PATH,
+        CHANGE_LOG_COLUMNS,
+        {
+            "changed_at_utc": utc_now_text(),
+            "action": action,
+            "override_id": override_id,
+            "override_type": override_type,
+            "changed_by": changed_by,
+            "comment": comment,
+        },
     )
 
 
-def _columns(con, table_name: str) -> list[str]:
-    return [row[0] for row in con.execute(f'describe "{table_name}"').fetchall()]
+def _append_suggestion_acceptance_log(
+    *,
+    suggestion: dict[str, object],
+    override_id: str,
+    accepted_value: str,
+    accepted_by: str,
+    comment: str,
+) -> None:
+    if not _clean(suggestion.get("suggestion_id")):
+        return
+    _append_csv_row(
+        SUGGESTION_ACCEPTANCE_LOG_PATH,
+        SUGGESTION_ACCEPTANCE_COLUMNS,
+        {
+            "accepted_at_utc": utc_now_text(),
+            "suggestion_id": suggestion.get("suggestion_id"),
+            "override_id": override_id,
+            "suggestion_type": suggestion.get("suggestion_type"),
+            "override_type": suggestion.get("override_type"),
+            "confidence": suggestion.get("confidence"),
+            "suggested_value": suggestion.get("suggested_value"),
+            "accepted_value": accepted_value,
+            "classification_code": suggestion.get("classification_code"),
+            "transport_number": suggestion.get("transport_number"),
+            "loco_no": suggestion.get("loco_no"),
+            "period_start_utc": suggestion.get("period_start_utc"),
+            "period_end_utc": suggestion.get("period_end_utc"),
+            "accepted_by": accepted_by,
+            "reason": suggestion.get("reason"),
+            "evidence": suggestion.get("evidence"),
+            "comment": comment,
+        },
+    )
 
 
-def _pick(columns: Iterable[str], candidates: Iterable[str]) -> str | None:
-    by_lower = {str(column).lower(): str(column) for column in columns}
-    for candidate in candidates:
-        if str(candidate).lower() in by_lower:
-            return by_lower[str(candidate).lower()]
-    return None
-
-
-def _valid_loco(value: object) -> bool:
-    text = _clean(value)
-    return bool(text and text != "00000000000-0" and "dummy" not in text.lower())
-
-
-def _suggest_performing_ru(db_path: Path, loco_no: str, period_start: str) -> tuple[str, str, str]:
-    if not db_path.exists() or not loco_no:
-        return "", "LOW", "Kein belastbarer Vorschlag ableitbar."
-
-    con = duckdb.connect(str(db_path), read_only=True)
+def _read_csv_safe(path: Path, columns: tuple[str, ...]) -> pd.DataFrame:
+    if not path.exists():
+        return pd.DataFrame(columns=columns)
     try:
-        if not _table_exists(con, "core_loco_timeline"):
-            return "", "LOW", "Timeline fehlt."
-
-        rows = con.execute(
-            """
-            select performing_ru, period_start_utc
-            from core_loco_timeline
-            where row_type = 'MOVEMENT'
-              and loco_no = ?
-              and nullif(trim(performing_ru), '') is not null
-            order by abs(epoch(period_start_utc - try_cast(? as timestamp))) asc nulls last
-            limit 4
-            """,
-            [loco_no, period_start or None],
-        ).fetchall()
-        values = []
-        for row in rows:
-            value = _clean(row[0])
-            if value and value not in values:
-                values.append(value)
-
-        if len(values) == 1:
-            return values[0], "MEDIUM", "Angrenzende Bewegungen derselben Lok zeigen eindeutig dieselbe PerformingRU."
-        if len(values) > 1:
-            return "", "LOW", "Angrenzende Bewegungen enthalten unterschiedliche PerformingRUs. Manuelle Auswahl erforderlich."
-        return "", "LOW", "Keine angrenzende PerformingRU gefunden."
-    finally:
-        con.close()
-
-
-def _suggest_loco_no(db_path: Path, transport_number: str) -> tuple[str, str, str]:
-    if not db_path.exists() or not transport_number:
-        return "", "LOW", "Kein belastbarer Vorschlag ableitbar."
-
-    con = duckdb.connect(str(db_path), read_only=True)
-    try:
-        candidates: list[str] = []
-        for table_name, loco_candidates in [
-            ("raw_transportdetail", ["FirstLocomotiveNo"]),
-            ("raw_locomotivemovement", ["LocomotiveNo", "FirstLocomotiveNo", "Alias"]),
-        ]:
-            if not _table_exists(con, table_name):
-                continue
-            cols = _columns(con, table_name)
-            transport_col = _pick(cols, ["TransportNumber", "TransportNo", "TransportId", "TransportID"])
-            loco_col = _pick(cols, loco_candidates)
-            if not transport_col or not loco_col:
-                continue
-            rows = con.execute(
-                f"""
-                select distinct trim(cast("{loco_col}" as varchar))
-                from "{table_name}"
-                where trim(cast("{transport_col}" as varchar)) = ?
-                """,
-                [transport_number],
-            ).fetchall()
-            for row in rows:
-                value = _clean(row[0])
-                if _valid_loco(value) and value not in candidates:
-                    candidates.append(value)
-
-        if len(candidates) == 1:
-            return candidates[0], "MEDIUM", "Für den Transport wurde genau eine plausible Loknummer in den vorhandenen Daten gefunden."
-        if len(candidates) > 1:
-            return "", "LOW", "Mehrere plausible Loknummern gefunden. Manuelle Auswahl erforderlich."
-        return "", "LOW", "Keine plausible Loknummer in den vorhandenen Daten gefunden."
-    finally:
-        con.close()
+        return pd.read_csv(path, sep=";", dtype=str, encoding="utf-8-sig").fillna("")
+    except Exception:
+        return pd.DataFrame(columns=columns)
 
 
 def _build_case_table(findings: pd.DataFrame, timeline: pd.DataFrame) -> pd.DataFrame:
@@ -267,12 +264,11 @@ def _build_case_table(findings: pd.DataFrame, timeline: pd.DataFrame) -> pd.Data
             transport = _clean(row.get("transport_number"))
             loco = _clean(row.get("loco_no"))
             start = _clean(row.get("period_start_utc"))
-            message = _clean(row.get("message"))
             rows.append(
                 {
                     "case_label": f"{rule_id or 'Finding'} | Transport {transport or '-'} | Lok {loco or '-'} | {start or '-'}",
                     "rule_id": rule_id,
-                    "message": message,
+                    "message": _clean(row.get("message")),
                     "transport_number": transport,
                     "loco_no": loco,
                     "period_start_utc": start,
@@ -304,61 +300,18 @@ def _build_case_table(findings: pd.DataFrame, timeline: pd.DataFrame) -> pd.Data
                 }
             )
 
-    result = pd.DataFrame(rows, columns=columns)
-    if result.empty:
-        return pd.DataFrame(
-            [
-                {
-                    "case_label": "Freie manuelle Erfassung",
-                    "rule_id": "",
-                    "message": "",
-                    "transport_number": "",
-                    "loco_no": "",
-                    "period_start_utc": "",
-                    "period_end_utc": "",
-                    "source_table": "",
-                    "source_row_id": "",
-                }
-            ]
-        )
-
-    free_row = pd.DataFrame(
-        [
-            {
-                "case_label": "Freie manuelle Erfassung",
-                "rule_id": "",
-                "message": "",
-                "transport_number": "",
-                "loco_no": "",
-                "period_start_utc": "",
-                "period_end_utc": "",
-                "source_table": "",
-                "source_row_id": "",
-            }
-        ]
-    )
-    return pd.concat([free_row, result], ignore_index=True)
-
-
-def _suggestion_for_type(
-    *,
-    override_type: str,
-    db_path: Path,
-    transport_number: str,
-    loco_no: str,
-    period_start: str,
-) -> tuple[str, str, str]:
-    if override_type == "SET_PERFORMING_RU":
-        return _suggest_performing_ru(db_path, loco_no, period_start)
-    if override_type == "SET_LOCO_NO":
-        return _suggest_loco_no(db_path, transport_number)
-    if override_type == "SET_SEQUENCE_TS":
-        return period_start, "LOW", "Als Startwert wird der vorhandene Zeitanker angezeigt. Grenzstations- und GPS-Abweichung fachlich prüfen."
-    if override_type == "SET_ACTUAL_DEPARTURE":
-        return period_start, "LOW", "Als Startwert wird die bisherige Abfahrtszeit angezeigt."
-    if override_type == "SET_ACTUAL_ARRIVAL":
-        return "", "LOW", "Ankunftszeit bitte anhand der verfügbaren Daten fachlich ergänzen."
-    return "", "LOW", "Dokumentation ohne automatische fachliche Wirkung in Phase 5A."
+    free_row = {
+        "case_label": "Freie manuelle Erfassung",
+        "rule_id": "",
+        "message": "",
+        "transport_number": "",
+        "loco_no": "",
+        "period_start_utc": "",
+        "period_end_utc": "",
+        "source_table": "",
+        "source_row_id": "",
+    }
+    return pd.DataFrame([free_row, *rows], columns=columns)
 
 
 def _run_pipeline(run_all_script: Path) -> subprocess.CompletedProcess[str]:
@@ -413,6 +366,346 @@ def _render_active_overrides() -> None:
         st.rerun()
 
 
+def _suggestion_display_table(data: pd.DataFrame) -> pd.DataFrame:
+    if data.empty:
+        return data
+    result = data.copy()
+    result["confidence"] = result["confidence"].map(CONFIDENCE_LABELS).fillna(result["confidence"])
+    result["suggestion_type"] = result["suggestion_type"].map(SUGGESTION_TYPE_LABELS).fillna(result["suggestion_type"])
+    result["override_type"] = result["override_type"].map(OVERRIDE_TYPE_LABELS).fillna(result["override_type"])
+    return result.rename(
+        columns={
+            "suggestion_id": "Vorschlag-ID",
+            "suggestion_type": "Vorschlag",
+            "override_type": "Bearbeitung",
+            "classification_code": "Klassifikation",
+            "confidence": "Sicherheit",
+            "suggested_value": "Vorgeschlagener Wert",
+            "transport_number": "Transportnummer",
+            "loco_no": "Loknummer",
+            "period_start_utc": "Von",
+            "period_end_utc": "Bis",
+            "reason": "Begründung",
+            "evidence": "Nachweis",
+        }
+    )
+
+
+def _render_suggestions(
+    *,
+    db_path: Path,
+    findings: pd.DataFrame,
+    timeline: pd.DataFrame,
+) -> None:
+    st.markdown("#### Regelbasierte Systemvorschläge")
+    st.caption(
+        "Vorschläge reduzieren Suchaufwand, ersetzen aber keine fachliche Freigabe. "
+        "Jeder Vorschlag muss bewusst in die Bearbeitungsmaske übernommen werden."
+    )
+    try:
+        suggestions = build_suggestion_table(
+            db_path=Path(db_path),
+            findings=findings,
+            timeline=timeline,
+        )
+    except Exception as error:
+        st.error(f"Systemvorschläge konnten nicht erzeugt werden: {error}")
+        return
+
+    if suggestions.empty:
+        st.success("Aktuell wurden keine regelbasierten Vorschläge erzeugt.")
+        return
+
+    high_count = int((suggestions["confidence"] == "HIGH").sum())
+    medium_count = int((suggestions["confidence"] == "MEDIUM").sum())
+    low_count = int((suggestions["confidence"] == "LOW").sum())
+    col_all, col_high, col_medium, col_low = st.columns(4)
+    col_all.metric("Vorschläge gesamt", len(suggestions))
+    col_high.metric("Hohe Sicherheit", high_count)
+    col_medium.metric("Mittlere Sicherheit", medium_count)
+    col_low.metric("Nur Prüfhinweise", low_count)
+
+    filter_col_confidence, filter_col_type = st.columns(2)
+    with filter_col_confidence:
+        selected_confidences = st.multiselect(
+            "Sicherheitsstufen",
+            ["HIGH", "MEDIUM", "LOW"],
+            default=["HIGH", "MEDIUM", "LOW"],
+            format_func=lambda value: CONFIDENCE_LABELS[value],
+            key="manual_override_suggestion_confidence_filter",
+        )
+    with filter_col_type:
+        suggestion_types = sorted(suggestions["suggestion_type"].dropna().astype(str).unique().tolist())
+        selected_types = st.multiselect(
+            "Vorschlagsarten",
+            suggestion_types,
+            default=suggestion_types,
+            format_func=lambda value: SUGGESTION_TYPE_LABELS.get(value, value),
+            key="manual_override_suggestion_type_filter",
+        )
+
+    filtered = suggestions[
+        suggestions["confidence"].isin(selected_confidences)
+        & suggestions["suggestion_type"].isin(selected_types)
+    ].copy()
+    st.write(f"Treffer: **{len(filtered)}**")
+    st.dataframe(_suggestion_display_table(filtered), use_container_width=True, hide_index=True)
+
+    csv_data = _suggestion_display_table(filtered).to_csv(index=False, sep=";").encode("utf-8-sig")
+    st.download_button(
+        "Vorschlagsliste als CSV herunterladen",
+        data=csv_data,
+        file_name="systemvorschlaege_phase5b.csv",
+        mime="text/csv",
+        key="download_manual_override_suggestions",
+    )
+
+    selectable = filtered[
+        filtered["suggested_value"].fillna("").astype(str).str.strip().ne("")
+        | filtered["classification_code"].fillna("").astype(str).str.strip().ne("")
+    ].copy()
+    if selectable.empty:
+        st.info("Die gefilterten Einträge sind reine Prüfhinweise ohne vorausgewählten Wert.")
+        return
+
+    selectable["_selection_label"] = selectable.apply(
+        lambda row: (
+            f"{row['suggestion_id']} | {SUGGESTION_TYPE_LABELS.get(_clean(row['suggestion_type']), _clean(row['suggestion_type']))} "
+            f"| Lok {_clean(row['loco_no']) or '-'} | Transport {_clean(row['transport_number']) or '-'}"
+        ),
+        axis=1,
+    )
+    selected_label = st.selectbox(
+        "Vorschlag für Bearbeitung auswählen",
+        selectable["_selection_label"].tolist(),
+        key="manual_override_suggestion_select",
+    )
+    selected = selectable[selectable["_selection_label"].eq(selected_label)].iloc[0].to_dict()
+    if st.button("Vorschlag in Bearbeitungsmaske übernehmen", type="primary", key="manual_override_suggestion_prefill_button"):
+        st.session_state["manual_override_suggestion_prefill"] = selected
+        st.success("Vorschlag wurde vorgemerkt. Öffne jetzt den Reiter 'Neue Korrektur'.")
+        st.rerun()
+
+
+def _prefill_case(prefill: dict[str, object]) -> dict[str, str]:
+    return {
+        "case_label": f"Vorgemerkter Systemvorschlag {_clean(prefill.get('suggestion_id'))}",
+        "rule_id": "SYSTEM_SUGGESTION",
+        "message": _clean(prefill.get("reason")),
+        "transport_number": _clean(prefill.get("transport_number")),
+        "loco_no": _clean(prefill.get("loco_no")),
+        "period_start_utc": _clean(prefill.get("period_start_utc")),
+        "period_end_utc": _clean(prefill.get("period_end_utc")),
+        "source_table": _clean(prefill.get("source_table")),
+        "source_row_id": _clean(prefill.get("source_row_id")),
+    }
+
+
+def _render_new_override(
+    *,
+    db_path: Path,
+    run_all_script: Path,
+    findings: pd.DataFrame,
+    timeline: pd.DataFrame,
+) -> None:
+    prefill = st.session_state.get("manual_override_suggestion_prefill")
+    prefill = prefill if isinstance(prefill, dict) else {}
+    cases = _build_case_table(findings=findings, timeline=timeline)
+    if prefill:
+        cases = pd.concat([pd.DataFrame([_prefill_case(prefill)]), cases], ignore_index=True)
+        st.success(
+            f"Systemvorschlag {_clean(prefill.get('suggestion_id'))} ist vorgemerkt. "
+            "Bitte Werte und Begründung fachlich prüfen."
+        )
+        if st.button("Vormerkung verwerfen", key="manual_override_discard_prefill"):
+            st.session_state.pop("manual_override_suggestion_prefill", None)
+            st.rerun()
+
+    selected_label = st.selectbox(
+        "Prüffall auswählen",
+        cases["case_label"].tolist(),
+        key=f"manual_override_case_select_{_clean(prefill.get('suggestion_id')) or 'manual'}",
+    )
+    case = cases[cases["case_label"].eq(selected_label)].iloc[0]
+
+    type_options = list(OVERRIDE_TYPE_LABELS.keys())
+    prefill_type = _clean(prefill.get("override_type"))
+    default_type_index = type_options.index(prefill_type) if prefill_type in type_options else 0
+    override_type = st.selectbox(
+        "Art der Bearbeitung",
+        type_options,
+        index=default_type_index,
+        format_func=lambda value: OVERRIDE_TYPE_LABELS[value],
+        key=f"manual_override_type_select_{_clean(prefill.get('suggestion_id')) or 'manual'}",
+    )
+
+    default_transport = _clean(prefill.get("transport_number")) or _clean(case.get("transport_number"))
+    default_loco = _clean(prefill.get("loco_no")) or _clean(case.get("loco_no"))
+    default_start = _clean(prefill.get("period_start_utc")) or _clean(case.get("period_start_utc"))
+    default_end = _clean(prefill.get("period_end_utc")) or _clean(case.get("period_end_utc"))
+
+    generated = suggestion_for_case(
+        db_path=Path(db_path),
+        override_type=override_type,
+        transport_number=default_transport,
+        loco_no=default_loco,
+        period_start_utc=default_start,
+        period_end_utc=default_end,
+        source_table=_clean(prefill.get("source_table")) or _clean(case.get("source_table")),
+        source_row_id=_clean(prefill.get("source_row_id")) or _clean(case.get("source_row_id")),
+    )
+    suggestion_value = _clean(prefill.get("suggested_value")) or generated.suggested_value
+    suggestion_confidence = _clean(prefill.get("confidence")) or generated.confidence
+    suggestion_reason = _clean(prefill.get("reason")) or generated.reason
+    suggestion_evidence = _clean(prefill.get("evidence")) or generated.evidence
+    suggestion_classification = _clean(prefill.get("classification_code")) or generated.classification_code
+
+    st.markdown("#### Systemvorschlag")
+    col_suggestion, col_confidence = st.columns([4, 1])
+    with col_suggestion:
+        st.write(suggestion_value or suggestion_classification or "Kein eindeutiger Vorschlag vorhanden.")
+        st.caption(suggestion_reason)
+        if suggestion_evidence:
+            st.caption("Nachweis: " + suggestion_evidence)
+    with col_confidence:
+        st.metric("Sicherheit", CONFIDENCE_LABELS.get(suggestion_confidence, suggestion_confidence or "LOW"))
+
+    form_key = f"manual_override_form_{override_type}_{abs(hash(selected_label))}_{_clean(prefill.get('suggestion_id'))}"
+    with st.form(form_key):
+        transport_number = st.text_input("Transportnummer", value=default_transport)
+        target_loco_no = st.text_input("Betroffene Loknummer", value=default_loco)
+        target_actual_departure = st.text_input(
+            "Bisherige Abfahrtszeit zur Eingrenzung",
+            value=default_start,
+            help="Optional. Sinnvoll, wenn ein Transport mehrere Bewegungszeilen enthält.",
+        )
+        target_actual_arrival = st.text_input(
+            "Bisherige Ankunftszeit zur Dokumentation",
+            value=default_end,
+        )
+        override_value = st.text_input(
+            "Neuer Wert",
+            value=suggestion_value,
+            help="Bei Klassifikation oder reiner Notiz kann dieses Feld leer bleiben.",
+        )
+        classification_values = list(CLASSIFICATION_OPTIONS.keys())
+        classification_index = classification_values.index(suggestion_classification) if suggestion_classification in classification_values else 0
+        classification_code = st.selectbox(
+            "Fachliche Klassifikation",
+            classification_values,
+            index=classification_index,
+            format_func=lambda value: CLASSIFICATION_OPTIONS[value],
+        )
+        created_by = st.text_input("Bearbeiter", value=getpass.getuser())
+        comment = st.text_area(
+            "Begründung / Kommentar",
+            placeholder="Warum ist diese Korrektur fachlich zulässig?",
+        )
+        save_only = st.form_submit_button("Override speichern")
+        save_and_rebuild = st.form_submit_button("Speichern und neu prüfen", type="primary")
+
+    if not (save_only or save_and_rebuild):
+        return
+    if not comment.strip():
+        st.error("Bitte eine nachvollziehbare Begründung erfassen.")
+        return
+    if override_type not in {"CLASSIFY_GAP", "CASE_NOTE"} and not override_value.strip():
+        st.error("Für diese Korrektur ist ein neuer Wert erforderlich.")
+        return
+    if override_type == "CLASSIFY_GAP" and not classification_code:
+        st.error("Bitte eine fachliche Klassifikation auswählen.")
+        return
+    if override_type in {"SET_LOCO_NO", "SET_PERFORMING_RU", "SET_ACTUAL_DEPARTURE", "SET_ACTUAL_ARRIVAL"} and not transport_number.strip():
+        st.error("Für diese Korrektur ist mindestens eine Transportnummer erforderlich.")
+        return
+
+    now = utc_now_text()
+    override_id = "OVR_" + uuid.uuid4().hex[:12].upper()
+    new_row = {
+        "override_id": override_id,
+        "active_flag": "Y",
+        "override_type": override_type,
+        "transport_number": transport_number.strip(),
+        "target_loco_no": target_loco_no.strip(),
+        "target_actual_departure_utc": target_actual_departure.strip(),
+        "target_actual_arrival_utc": target_actual_arrival.strip(),
+        "target_source_table": _clean(prefill.get("source_table")) or _clean(case.get("source_table")),
+        "target_source_row_id": _clean(prefill.get("source_row_id")) or _clean(case.get("source_row_id")),
+        "override_value": override_value.strip(),
+        "classification_code": classification_code,
+        "comment": comment.strip(),
+        "created_by": created_by.strip() or getpass.getuser(),
+        "created_at_utc": now,
+        "updated_at_utc": now,
+    }
+
+    overrides = _read_overrides()
+    overrides = pd.concat([overrides, pd.DataFrame([new_row])], ignore_index=True)
+    _write_overrides_atomic(overrides)
+    _append_change_log(
+        action="CREATE",
+        override_id=override_id,
+        override_type=override_type,
+        changed_by=new_row["created_by"],
+        comment=new_row["comment"],
+    )
+    if prefill:
+        _append_suggestion_acceptance_log(
+            suggestion=prefill,
+            override_id=override_id,
+            accepted_value=override_value.strip(),
+            accepted_by=new_row["created_by"],
+            comment=new_row["comment"],
+        )
+        st.session_state.pop("manual_override_suggestion_prefill", None)
+    st.success(f"Override {override_id} wurde gespeichert.")
+
+    if save_and_rebuild:
+        with st.status("Werte werden mit dem neuen Override sicher neu berechnet ...", expanded=True) as status:
+            result = _run_pipeline(Path(run_all_script))
+            if result.returncode == 0:
+                status.update(label="Neuberechnung erfolgreich abgeschlossen.", state="complete", expanded=False)
+                st.session_state["overview_refresh_completed"] = True
+                st.session_state["overview_refresh_completed_at"] = datetime.now().strftime("%d.%m.%Y um %H:%M")
+                st.rerun()
+            status.update(label="Neuberechnung fehlgeschlagen.", state="error", expanded=True)
+            st.error("Der letzte produktive DuckDB-Stand bleibt erhalten.")
+            st.text_area("Fehler der Berechnung", result.stderr, height=220)
+            st.text_area("Output der Berechnung", result.stdout, height=220)
+    else:
+        st.info("Bitte anschließend neu berechnen, damit Timeline, Quality Gate und Exporte aktualisiert werden.")
+
+
+def _render_audit() -> None:
+    st.markdown("#### Sicherheitsprinzip")
+    st.write(
+        "Die Original-CSVs werden nicht verändert. Vorschläge werden niemals automatisch übernommen. "
+        "Jede bestätigte Korrektur besitzt eine ID, Bearbeiter, Zeitstempel und Kommentar. "
+        "Widersprüchliche aktive Overrides stoppen die Pipeline."
+    )
+    st.markdown("#### Phase-5B-Grenze")
+    st.info(
+        "Mögliche kalte Abstellungen und Grenzzeitabweichungen werden als nachvollziehbare Prüfvorschläge angezeigt. "
+        "Sie verändern das Export-Gate nicht automatisch. Eine spätere Teilautomatisierung benötigt verbindlich "
+        "freigegebene fachliche Grenzwerte."
+    )
+
+    if CHANGE_LOG_PATH.exists():
+        st.markdown("#### Änderungen an Overrides")
+        st.dataframe(
+            _read_csv_safe(CHANGE_LOG_PATH, CHANGE_LOG_COLUMNS),
+            use_container_width=True,
+            hide_index=True,
+        )
+    if SUGGESTION_ACCEPTANCE_LOG_PATH.exists():
+        st.markdown("#### Übernommene Systemvorschläge")
+        st.dataframe(
+            _read_csv_safe(SUGGESTION_ACCEPTANCE_LOG_PATH, SUGGESTION_ACCEPTANCE_COLUMNS),
+            use_container_width=True,
+            hide_index=True,
+        )
+
+
 def render_manual_override_cockpit(
     *,
     db_path: Path,
@@ -420,164 +713,30 @@ def render_manual_override_cockpit(
     findings: pd.DataFrame,
     timeline: pd.DataFrame,
 ) -> None:
-    """Fachanwendertaugliches Cockpit zum Erfassen und Prüfen von Overrides."""
+    """Fachanwendertaugliches Cockpit für Vorschläge und kontrollierte Overrides."""
     st.subheader("Fall bearbeiten")
     st.caption(
-        "Originaldaten bleiben unverändert. Bestätigte Korrekturen werden separat protokolliert "
-        "und beim sicheren Neuaufbau der Tagesdaten angewandt."
+        "Originaldaten bleiben unverändert. Das Tool schlägt nachvollziehbare Werte vor; "
+        "eine fachliche Entscheidung und bewusste Bestätigung bleiben erforderlich."
     )
 
-    tab_new, tab_active, tab_audit = st.tabs(
-        ["Neue Korrektur", "Aktive Overrides", "Audit und Hinweise"]
+    tab_suggestions, tab_new, tab_active, tab_audit = st.tabs(
+        ["Systemvorschläge", "Neue Korrektur", "Aktive Overrides", "Audit und Hinweise"]
     )
+
+    with tab_suggestions:
+        _render_suggestions(db_path=Path(db_path), findings=findings, timeline=timeline)
 
     with tab_new:
-        cases = _build_case_table(findings=findings, timeline=timeline)
-        selected_label = st.selectbox(
-            "Prüffall auswählen",
-            cases["case_label"].tolist(),
-            key="manual_override_case_select",
-        )
-        case = cases[cases["case_label"].eq(selected_label)].iloc[0]
-
-        override_type = st.selectbox(
-            "Art der Bearbeitung",
-            list(OVERRIDE_TYPE_LABELS.keys()),
-            format_func=lambda value: OVERRIDE_TYPE_LABELS[value],
-            key="manual_override_type_select",
-        )
-
-        default_transport = _clean(case.get("transport_number"))
-        default_loco = _clean(case.get("loco_no"))
-        default_start = _clean(case.get("period_start_utc"))
-        default_end = _clean(case.get("period_end_utc"))
-        suggestion, confidence, reason = _suggestion_for_type(
-            override_type=override_type,
+        _render_new_override(
             db_path=Path(db_path),
-            transport_number=default_transport,
-            loco_no=default_loco,
-            period_start=default_start,
+            run_all_script=Path(run_all_script),
+            findings=findings,
+            timeline=timeline,
         )
-
-        st.markdown("#### Systemvorschlag")
-        col_suggestion, col_confidence = st.columns([4, 1])
-        with col_suggestion:
-            st.write(suggestion or "Kein eindeutiger Vorschlag vorhanden.")
-            st.caption(reason)
-        with col_confidence:
-            st.metric("Sicherheit", confidence)
-
-        form_key = f"manual_override_form_{override_type}_{abs(hash(selected_label))}"
-        with st.form(form_key):
-            transport_number = st.text_input("Transportnummer", value=default_transport)
-            target_loco_no = st.text_input("Betroffene Loknummer", value=default_loco)
-            target_actual_departure = st.text_input(
-                "Bisherige Abfahrtszeit zur Eingrenzung",
-                value=default_start,
-                help="Optional. Sinnvoll, wenn ein Transport mehrere Bewegungszeilen enthält.",
-            )
-            target_actual_arrival = st.text_input(
-                "Bisherige Ankunftszeit zur Dokumentation",
-                value=default_end,
-            )
-            override_value = st.text_input(
-                "Neuer Wert",
-                value=suggestion,
-                help="Bei Klassifikation oder reiner Notiz kann dieses Feld leer bleiben.",
-            )
-            classification_code = st.selectbox(
-                "Fachliche Klassifikation",
-                list(CLASSIFICATION_OPTIONS.keys()),
-                format_func=lambda value: CLASSIFICATION_OPTIONS[value],
-            )
-            created_by = st.text_input("Bearbeiter", value=getpass.getuser())
-            comment = st.text_area(
-                "Begründung / Kommentar",
-                placeholder="Warum ist diese Korrektur fachlich zulässig?",
-            )
-            save_only = st.form_submit_button("Override speichern")
-            save_and_rebuild = st.form_submit_button("Speichern und neu prüfen", type="primary")
-
-        if save_only or save_and_rebuild:
-            if not comment.strip():
-                st.error("Bitte eine nachvollziehbare Begründung erfassen.")
-                return
-            if override_type not in {"CLASSIFY_GAP", "CASE_NOTE"} and not override_value.strip():
-                st.error("Für diese Korrektur ist ein neuer Wert erforderlich.")
-                return
-            if override_type == "CLASSIFY_GAP" and not classification_code:
-                st.error("Bitte eine fachliche Klassifikation auswählen.")
-                return
-            if override_type in {"SET_LOCO_NO", "SET_PERFORMING_RU", "SET_ACTUAL_DEPARTURE", "SET_ACTUAL_ARRIVAL"} and not transport_number.strip():
-                st.error("Für diese Korrektur ist mindestens eine Transportnummer erforderlich.")
-                return
-
-            now = utc_now_text()
-            override_id = "OVR_" + uuid.uuid4().hex[:12].upper()
-            new_row = {
-                "override_id": override_id,
-                "active_flag": "Y",
-                "override_type": override_type,
-                "transport_number": transport_number.strip(),
-                "target_loco_no": target_loco_no.strip(),
-                "target_actual_departure_utc": target_actual_departure.strip(),
-                "target_actual_arrival_utc": target_actual_arrival.strip(),
-                "target_source_table": _clean(case.get("source_table")),
-                "target_source_row_id": _clean(case.get("source_row_id")),
-                "override_value": override_value.strip(),
-                "classification_code": classification_code,
-                "comment": comment.strip(),
-                "created_by": created_by.strip() or getpass.getuser(),
-                "created_at_utc": now,
-                "updated_at_utc": now,
-            }
-
-            overrides = _read_overrides()
-            overrides = pd.concat([overrides, pd.DataFrame([new_row])], ignore_index=True)
-            _write_overrides_atomic(overrides)
-            _append_change_log(
-                action="CREATE",
-                override_id=override_id,
-                override_type=override_type,
-                changed_by=new_row["created_by"],
-                comment=new_row["comment"],
-            )
-            st.success(f"Override {override_id} wurde gespeichert.")
-
-            if save_and_rebuild:
-                with st.status("Werte werden mit dem neuen Override sicher neu berechnet ...", expanded=True) as status:
-                    result = _run_pipeline(Path(run_all_script))
-                    if result.returncode == 0:
-                        status.update(label="Neuberechnung erfolgreich abgeschlossen.", state="complete", expanded=False)
-                        st.session_state["overview_refresh_completed"] = True
-                        st.session_state["overview_refresh_completed_at"] = datetime.now().strftime("%d.%m.%Y um %H:%M")
-                        st.rerun()
-                    status.update(label="Neuberechnung fehlgeschlagen.", state="error", expanded=True)
-                    st.error("Der letzte produktive DuckDB-Stand bleibt erhalten.")
-                    st.text_area("Fehler der Berechnung", result.stderr, height=220)
-                    st.text_area("Output der Berechnung", result.stdout, height=220)
-            else:
-                st.info("Bitte anschließend neu berechnen, damit Timeline, Quality Gate und Exporte aktualisiert werden.")
 
     with tab_active:
         _render_active_overrides()
 
     with tab_audit:
-        st.markdown("#### Sicherheitsprinzip")
-        st.write(
-            "Die Original-CSVs werden nicht verändert. Jede Korrektur besitzt eine ID, Bearbeiter, "
-            "Zeitstempel und Kommentar. Widersprüchliche aktive Overrides stoppen die Pipeline, statt "
-            "unbemerkt einen unsicheren Datenstand zu erzeugen."
-        )
-        st.markdown("#### Phase-5A-Grenze")
-        st.info(
-            "Klassifikationen wie 'mögliche kalte Abstellung' werden bereits dokumentiert. "
-            "Sie verändern das Export-Gate noch nicht automatisch. Dafür müssen zuerst verbindliche "
-            "fachliche Grenzwerte festgelegt werden."
-        )
-        if CHANGE_LOG_PATH.exists():
-            try:
-                change_log = pd.read_csv(CHANGE_LOG_PATH, sep=";", dtype=str, encoding="utf-8-sig").fillna("")
-                st.dataframe(change_log, use_container_width=True, hide_index=True)
-            except Exception as error:
-                st.warning(f"Änderungsprotokoll konnte nicht gelesen werden: {error}")
+        _render_audit()

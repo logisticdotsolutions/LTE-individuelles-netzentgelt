@@ -1,0 +1,15 @@
+{
+  "phase_id": "NETZENTGELT_MANUAL_OVERRIDE_PHASE5B_V1_20260607",
+  "created_at_utc": "20260608T054346Z",
+  "files": [
+    {
+      "relative": "scripts/manual_override_ui_module.py",
+      "existed": true,
+      "sha256": "42b41627cfff7ed87669cf60867c4ef0b95b23071be6178f44d66a6104489877"
+    },
+    {
+      "relative": "scripts/manual_override_suggestion_module.py",
+      "existed": false
+    }
+  ]
+}
