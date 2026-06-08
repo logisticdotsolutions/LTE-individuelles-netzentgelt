@@ -112,6 +112,17 @@ st.caption(
     "Technische Details sind bewusst nachrangig eingeordnet."
 )
 
+# NETZENTGELT_ATTRIBUTION_TIMEZONE_HOTFIX_V1_20260608
+st.markdown(
+    """
+    <div style="margin-top: 0.35rem; margin-bottom: 0.85rem; padding: 0.65rem 0.85rem; border-left: 4px solid #4f81bd; background: rgba(79, 129, 189, 0.08); border-radius: 0.25rem;">
+        <strong>Konzeption, Fachlogik &amp; Umsetzung: Christoph Orgl</strong><br>
+        <span style="font-size: 0.88rem; opacity: 0.85;">LTE-group · KI-gestützte Entwicklung mit OpenAI ChatGPT als Engineering-Copilot</span>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
 def read_csv_safe(path: Path) -> pd.DataFrame:
     if not path.exists():
         return pd.DataFrame()
@@ -1502,6 +1513,12 @@ def file_status_box():
 
 file_status_box()
 
+with st.sidebar.expander("Über dieses Tool", expanded=False):
+    st.markdown("**Konzeption, Fachlogik & Umsetzung**")
+    st.write("Christoph Orgl · LTE-group")
+    st.caption("KI-gestützte Entwicklung mit OpenAI ChatGPT als Engineering-Copilot.")
+    st.caption("MVP für die operative Prüfung und Exportvorbereitung im individuellen Netzentgelt.")
+
 timeline_path = EXPORT_DIR / "core_loco_timeline.csv"
 findings_path = EXPORT_DIR / "dq_findings.csv"
 rule_catalog_path = EXPORT_DIR / "cfg_dq_rule_catalog.csv"
@@ -1701,14 +1718,16 @@ with tab_overview:
     # Zeitpunkt des letzten Imports anzeigen
     # --------------------------------------------------
     with import_info_col:
-        last_import = get_last_raw_import_datetime()
+        last_import_utc = get_last_raw_import_datetime()
+        last_import_local = last_import_utc.astimezone() if last_import_utc else None
 
-        if last_import:
+        if last_import_local:
             st.markdown(
                 f"### Letzter Import am "
-                f"{last_import:%d.%m.%Y} "
-                f"um {last_import:%H:%M}"
+                f"{last_import_local:%d.%m.%Y} "
+                f"um {last_import_local:%H:%M}"
             )
+            st.caption("Anzeige in lokaler Systemzeit.")
         else:
             st.markdown(
                 "### Letzter Import: noch nicht vorhanden"

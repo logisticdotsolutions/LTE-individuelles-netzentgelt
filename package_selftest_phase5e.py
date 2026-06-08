@@ -311,9 +311,12 @@ def selftest_installer() -> None:
         for rel in originals:
             raw = (root / rel).read_bytes()
             assert b"\r\n" in raw, f"CRLF lost in {rel}"
-            assert b"NETZENTGELT_CONTROLLER_UX_PHASE5E_V1_20260608" in raw
+            assert b"NETZENTGELT_CONTROLLER_UX_PHASE5E_V2_20260608" in raw
         app = (root / "app/app.py").read_text(encoding="utf-8")
         assert "Bahnstrom Deutschland - Tagesprüfung" in app
+        assert "Konzeption, Fachlogik &amp; Umsetzung: Christoph Orgl" in app
+        assert "OpenAI ChatGPT als Engineering-Copilot" in app
+        assert 'with st.sidebar.expander("Über dieses Tool", expanded=False):' in app
         assert "duplicate_quick_preview" not in app
         assert "value=operational_day_from" in app and "value=operational_day_to" in app
         manual = (root / "scripts/manual_override_ui_module.py").read_text(encoding="utf-8")
