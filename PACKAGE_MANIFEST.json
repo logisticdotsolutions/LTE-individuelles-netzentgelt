@@ -1,0 +1,31 @@
+{
+  "package_id": "NETZENTGELT_TEST_SUITE_FIXTURE_HOTFIX_PHASE7A_V1_2_20260608",
+  "built_at_utc": "2026-06-08T13:45:00Z",
+  "repository": "logisticdotsolutions/LTE-individuelles-netzentgelt",
+  "reviewed_branch": "main",
+  "reviewed_github_file_shas": {
+    "scripts/rule_engine_hardening_phase6c.py": "f79c759eeb4f5fbcb83ad0ec0278e2518b0f4d63",
+    "scripts/export_module.py": "809d6d0863a0c7ca633cf35387efb0dbadde7084"
+  },
+  "mode": "tests-only fixture hotfix plus PowerShell UTF-8 console fix; expected v1.1 hashes required; backup and rollback included; no push",
+  "updated_files": [
+    {
+      "path": "tests/test_exports_csv_xlsx.py",
+      "sha256_before": "ebebea08d2829a40231c4cfa7db0b5025f4c30049a6cfdc1c17d2ec4f83a8f10",
+      "sha256_after": "ac48fdf238e30d63d8f00dabdce0f12c8363f513663ab486ac744a65e2c3959a",
+      "bytes": 6174
+    },
+    {
+      "path": "tests/test_phase6c_context_and_segments.py",
+      "sha256_before": "5f467c5a4a1da79d6203debdebdaccf1d024586724f5095b18687c1ad4e58631",
+      "sha256_after": "19fa3171df1dc8daa0a619397c583892c8eba5570287192ff40e300333ba666f",
+      "bytes": 8157
+    },
+    {
+      "path": "RUN_TESTS.ps1",
+      "sha256_before": "3695679bdf05be1f35a75af7be8394697f973cce89c51b538530f130f8f514b2",
+      "sha256_after": "5b7ad92259b5034ab854cd30c9fe5b8d97249778301c800435cf06b90872464b",
+      "bytes": 3497
+    }
+  ]
+}
