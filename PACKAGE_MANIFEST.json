@@ -1,31 +1,53 @@
 {
-  "package_id": "NETZENTGELT_TEST_SUITE_FIXTURE_HOTFIX_PHASE7A_V1_2_20260608",
-  "built_at_utc": "2026-06-08T13:45:00Z",
-  "repository": "logisticdotsolutions/LTE-individuelles-netzentgelt",
-  "reviewed_branch": "main",
-  "reviewed_github_file_shas": {
-    "scripts/rule_engine_hardening_phase6c.py": "f79c759eeb4f5fbcb83ad0ec0278e2518b0f4d63",
-    "scripts/export_module.py": "809d6d0863a0c7ca633cf35387efb0dbadde7084"
-  },
-  "mode": "tests-only fixture hotfix plus PowerShell UTF-8 console fix; expected v1.1 hashes required; backup and rollback included; no push",
+  "package_id": "NETZENTGELT_PIPELINE_TEST_UI_PHASE7B_V1_20260608",
+  "github_base_commit": "866d98c652fe1ad17e0c231c8708c58735a3d66d",
   "updated_files": [
     {
+      "path": "RUN_TESTS.ps1",
+      "sha256_after": "5b7ad92259b5034ab854cd30c9fe5b8d97249778301c800435cf06b90872464b",
+      "canonical_sha256_after": "24a5e34c2599119134ca66fe9e6e44e8a8187614c89a28a05937b275db8c85d1",
+      "canonical_sha256_before_allowed": [
+        "3a747a901de1dd79a35e4c8809dbbde167903b0bc01af91d5b470a2b7130e6a9",
+        "24a5e34c2599119134ca66fe9e6e44e8a8187614c89a28a05937b275db8c85d1"
+      ]
+    },
+    {
       "path": "tests/test_exports_csv_xlsx.py",
-      "sha256_before": "ebebea08d2829a40231c4cfa7db0b5025f4c30049a6cfdc1c17d2ec4f83a8f10",
       "sha256_after": "ac48fdf238e30d63d8f00dabdce0f12c8363f513663ab486ac744a65e2c3959a",
-      "bytes": 6174
+      "canonical_sha256_after": "e5a934f72d703a22fe1b7e96f9911503291239a956244588a8a30fd02e973139",
+      "canonical_sha256_before_allowed": [
+        "7c6fb70b41f826e98f2b22e9049553516ef07a920f9bc9811b91085858cc386a",
+        "e5a934f72d703a22fe1b7e96f9911503291239a956244588a8a30fd02e973139"
+      ]
     },
     {
       "path": "tests/test_phase6c_context_and_segments.py",
-      "sha256_before": "5f467c5a4a1da79d6203debdebdaccf1d024586724f5095b18687c1ad4e58631",
       "sha256_after": "19fa3171df1dc8daa0a619397c583892c8eba5570287192ff40e300333ba666f",
-      "bytes": 8157
+      "canonical_sha256_after": "fa8c3eab74e2b6a5d77c603320ad8976c03a8b3aec574ff397e991e88857a47c",
+      "canonical_sha256_before_allowed": [
+        "6445163fe885c2876c929e4e5ff4cdde792f54580704c65217392c249edb22c1",
+        "fa8c3eab74e2b6a5d77c603320ad8976c03a8b3aec574ff397e991e88857a47c"
+      ]
+    }
+  ],
+  "added_files": [
+    {
+      "path": "scripts/pipeline_test_ui_module.py",
+      "sha256_after": "044fec382555c52bb36ae6849c9ff7b0a1e31a74c2e85cb7a61cb83007e1fe79",
+      "canonical_sha256_after": "334e5e3679467b4dbf8616da0e36a8d10859615b31c61ab15476998075841a29"
     },
     {
-      "path": "RUN_TESTS.ps1",
-      "sha256_before": "3695679bdf05be1f35a75af7be8394697f973cce89c51b538530f130f8f514b2",
-      "sha256_after": "5b7ad92259b5034ab854cd30c9fe5b8d97249778301c800435cf06b90872464b",
-      "bytes": 3497
+      "path": "tests/test_pipeline_test_ui_module.py",
+      "sha256_after": "0e31f4c0b098620e8ad5431578a329084ddf63e286beda390b508ca29626fe11",
+      "canonical_sha256_after": "80c707a1a35190a241b842153208d2bbff2c1b588079c56faeb5604365ce8958"
+    },
+    {
+      "path": "docs/PHASE7B_PIPELINE_TEST_UI.md",
+      "sha256_after": "0fcedd9d3e5df4825c8a9ef94b7741b314fb3d9ad3d7912ed420f3d4d27b48f8",
+      "canonical_sha256_after": "c823bb4ff004e4fbd696c517d61660d1648a3a5a576cfb65d914bf6af90c83a6"
     }
+  ],
+  "patched_files": [
+    "app/app.py"
   ]
 }

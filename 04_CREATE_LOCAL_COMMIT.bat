@@ -1,4 +1,4 @@
 @echo off
 setlocal
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0install_phase7a_fixture_hotfix.ps1" -Mode Commit -TargetRoot "%CD%"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0install_phase7b_pipeline_test_ui.ps1" -Mode Commit -TargetRoot "%CD%"
 exit /b %ERRORLEVEL%

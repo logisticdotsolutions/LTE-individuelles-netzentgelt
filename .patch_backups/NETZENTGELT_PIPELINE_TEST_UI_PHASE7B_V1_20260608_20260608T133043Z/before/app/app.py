@@ -45,8 +45,6 @@ from operational_day_filter_module import (
 # NETZENTGELT_OPERATIONAL_DAY_FILTER_PHASE5C_V1_20260608
 from phase6d_controller_review_ui import render_phase6d_review_lists
 # NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6D_V1_20260608
-from pipeline_test_ui_module import render_pipeline_test_controller
-# NETZENTGELT_PIPELINE_TEST_UI_PHASE7B_V1_20260608
 # ------------------------------------------------------
 # Skripte und Datenbankpfade
 # ------------------------------------------------------
@@ -2785,10 +2783,37 @@ with tab_exports:
         st.info("Keine export_nutzungsmeldung.csv vorhanden.")
 
 with tab_run:
-    render_pipeline_test_controller(
-        base_dir=BASE_DIR,
-        script_download_blob=SCRIPT_DOWNLOAD_BLOB,
-        script_run_all=SCRIPT_RUN_ALL,
+    st.subheader("Pipeline ausführen")
+
+    st.write("Hier kannst du den bestehenden Datenlauf neu starten.")
+    st.code("python scripts/run_all.py", language="powershell")
+
+    if st.button("Pipeline jetzt starten", type="primary"):
+        if not SCRIPT_RUN_ALL.exists():
+            st.error(f"Skript nicht gefunden: {SCRIPT_RUN_ALL}")
+        else:
+            with st.spinner("Pipeline läuft..."):
+                result = subprocess.run(
+                    [sys.executable, str(SCRIPT_RUN_ALL)],
+                    cwd=str(BASE_DIR),
+                    capture_output=True,
+                    text=True
+                )
+
+            if result.returncode == 0:
+                st.success("Pipeline erfolgreich abgeschlossen. Seite bitte neu laden.")
+                st.text_area("Output", result.stdout, height=250)
+            else:
+                st.error("Pipeline ist fehlgeschlagen.")
+                st.text_area("Fehler", result.stderr, height=250)
+                st.text_area("Output", result.stdout, height=250)
+
+    st.divider()
+
+    st.subheader("Nächster fachlicher Schritt")
+    st.write(
+        "Bitte 3 bis 5 konkrete Loks auswählen und anhand der Timeline prüfen, "
+        "ob Zeitraum, Halter, vEns und Fehlerstatus fachlich plausibel sind."
     )
 
 with tab_timeline:
