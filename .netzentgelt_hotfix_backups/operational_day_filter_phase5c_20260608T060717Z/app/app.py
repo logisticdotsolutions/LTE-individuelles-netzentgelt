@@ -36,12 +36,6 @@ from export_module import (
 from rest_export_module import PRIMARY_EXPORT_GROUPS, list_rest_export_overview
 from operator_ui_module import render_operator_dashboard, render_open_tasks
 from manual_override_ui_module import render_manual_override_cockpit
-from operational_day_filter_module import (
-    filter_by_operational_days,
-    render_sidebar_operational_day_filter,
-    summarize_no_loco_cases,
-)
-# NETZENTGELT_OPERATIONAL_DAY_FILTER_PHASE5C_V1_20260608
 # ------------------------------------------------------
 # Skripte und Datenbankpfade
 # ------------------------------------------------------
@@ -1590,65 +1584,6 @@ except Exception as diagnostics_error:
 
     st.exception(diagnostics_error)
 
-# ==================================================
-# NETZENTGELT_OPERATIONAL_DAY_FILTER_PHASE5C_V1_20260608
-# Einheitlicher operativer Tagesfilter. Die Uhrzeit wird bewusst ignoriert.
-# Fuer Movements ist ActualDeparture massgeblich; GAPs verwenden ihren
-# fachlich abgeleiteten Periodenbeginn als defensiven Fallback.
-# ==================================================
-operational_day_from, operational_day_to = render_sidebar_operational_day_filter()
-
-timeline_raw = filter_by_operational_days(
-    timeline_raw,
-    date_from=operational_day_from,
-    date_to=operational_day_to,
-    timestamp_candidates=["actual_departure_ts", "ActualDeparture", "period_start_utc"],
-)
-timeline = hide_non_relevant_gap_rows(timeline_raw)
-findings = filter_by_operational_days(
-    findings,
-    date_from=operational_day_from,
-    date_to=operational_day_to,
-    timestamp_candidates=["actual_departure_ts", "ActualDeparture", "period_start_utc"],
-)
-coverage = filter_by_operational_days(
-    coverage,
-    date_from=operational_day_from,
-    date_to=operational_day_to,
-    timestamp_candidates=["coverage_date"],
-)
-export_gate = filter_by_operational_days(
-    export_gate,
-    date_from=operational_day_from,
-    date_to=operational_day_to,
-    timestamp_candidates=["coverage_date"],
-)
-export_gate_ru = filter_by_operational_days(
-    export_gate_ru,
-    date_from=operational_day_from,
-    date_to=operational_day_to,
-    timestamp_candidates=["coverage_date"],
-)
-global_export_blockers = filter_by_operational_days(
-    global_export_blockers,
-    date_from=operational_day_from,
-    date_to=operational_day_to,
-    timestamp_candidates=["blocker_date", "period_start_utc"],
-)
-excluded_export_rows = filter_by_operational_days(
-    excluded_export_rows,
-    date_from=operational_day_from,
-    date_to=operational_day_to,
-    timestamp_candidates=["actual_departure_ts", "ActualDeparture", "period_start_utc", "coverage_date"],
-)
-no_loco_cases = filter_by_operational_days(
-    no_loco_cases,
-    date_from=operational_day_from,
-    date_to=operational_day_to,
-    timestamp_candidates=["Erstes Datum"],
-)
-no_loco_summary = summarize_no_loco_cases(no_loco_cases, no_loco_summary)
-
 tab_overview, tab_tasks, tab_override, tab_timeline, tab_exports, tab_no_loco, tab_findings, tab_run = st.tabs([
     "1. Tagesprüfung",
     "2. Offene Aufgaben",
@@ -2473,7 +2408,7 @@ with tab_findings:
             st.caption(
                 "Die Legende bleibt unabhängig von den gesetzten Filtern "
                 "vollständig sichtbar. Die Spalte 'Anzahl' bezieht sich "
-                "auf den aktuell gewaehlten Arbeitszeitraum vor Anwendung der weiteren Filter."
+                "auf den aktuellen Datenlauf vor Anwendung der Filter."
             )
 
             legend_df = pd.DataFrame()

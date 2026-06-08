@@ -683,13 +683,6 @@ def _render_audit() -> None:
         "Jede bestätigte Korrektur besitzt eine ID, Bearbeiter, Zeitstempel und Kommentar. "
         "Widersprüchliche aktive Overrides stoppen die Pipeline."
     )
-    st.markdown("#### Zusammenspiel mit RailCube und neuen Importen")
-    st.info(
-        "Overrides sind eine lokale, auditierbare Korrekturschicht dieses Tools. Sie werden nicht "
-        "nach RailCube zurückgeschrieben. Bei einem neuen Import bleiben aktive Overrides bestehen "
-        "und werden erneut angewandt. Nach einer Berichtigung in RailCube bitte den lokalen Override "
-        "deaktivieren, damit dauerhaft wieder der RailCube-Quellwert verwendet wird."
-    )
     st.markdown("#### Phase-5B-Grenze")
     st.info(
         "Mögliche kalte Abstellungen und Grenzzeitabweichungen werden als nachvollziehbare Prüfvorschläge angezeigt. "
@@ -722,16 +715,6 @@ def render_manual_override_cockpit(
 ) -> None:
     """Fachanwendertaugliches Cockpit für Vorschläge und kontrollierte Overrides."""
     st.subheader("Fall bearbeiten")
-    st.warning(
-        "Wichtig: Eine Korrektur in diesem Tool ändert keine Daten in RailCube. "
-        "Fachlich erforderliche Berichtigungen müssen zusätzlich in RailCube nachgezogen werden."
-    )
-    st.info(
-        "Aktive Overrides bleiben bei einem neuen Rohdatenimport erhalten und werden bei jedem "
-        "run_all.py erneut auf den frischen Import angewandt. Sobald RailCube korrigiert wurde, "
-        "den zugehörigen Override bitte deaktivieren. Findet ein Override keinen passenden "
-        "Datensatz mehr, wird dies im Audit als NO_MATCH dokumentiert."
-    )
     st.caption(
         "Originaldaten bleiben unverändert. Das Tool schlägt nachvollziehbare Werte vor; "
         "eine fachliche Entscheidung und bewusste Bestätigung bleiben erforderlich."
