@@ -1,4 +1,0 @@
-run_id;imported_at_utc;source_snapshot_at_utc;source_file;target_table;source_hash;row_count;status;error_message
-RUN_20260607_181025;2026-06-07T18:10:29Z;2026-06-07T18:10:04Z;Locomotive.csv;raw_locomotive;4191c0fcc2bb79f730bd17400937c5c1ca830f868169211798b4282e63526362;1891;imported;
-RUN_20260607_181025;2026-06-07T18:10:30Z;2026-06-07T18:10:04Z;LocomotiveMovement.csv;raw_locomotivemovement;6a8fd12822fb9db2689204c75d8003528f6f7a42341e917949588f436599d3ac;21310;imported;
-RUN_20260607_181025;2026-06-07T18:10:32Z;2026-06-07T18:10:04Z;TransportDetail.csv;raw_transportdetail;58a7477ca4a83dd8aee37fa8852bf81248733cc5af3b4e8a9c0f64dc8e6d1cc7;19602;imported;
