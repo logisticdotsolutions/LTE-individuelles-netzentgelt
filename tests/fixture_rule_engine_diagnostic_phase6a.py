@@ -7,7 +7,6 @@ Netzentgelt MVP - Rule Engine Diagnostic Phase 6A
 Read-only diagnostic for the current productive DuckDB database.
 
 NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6B_V1_20260608
-NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6C_V1_20260608
 
 The script does not alter the database, raw CSV files, mappings or exports. It
 connects to DuckDB with read_only=True and writes a timestamped report folder
@@ -333,18 +332,47 @@ def check_hidden_blocked_days(ctx: DiagnosticContext) -> None:
 
 
 def check_export_false_without_findings(ctx: DiagnosticContext) -> None:
-    run_sql_check(ctx, check_id="D004", priority="P0",
-        title="Blockierende Bewegungen ohne nachvollziehbares Finding",
-        description="Nur export_blocking=true ist ein harter Sperrfall. Junge tolerierte INFO-Zeilen werden nicht mehr fälschlich gemeldet.",
-        required_tables=["core_loco_timeline", "dq_findings"], sql="""
-            select c.* from core_loco_timeline c
-            where c.row_type='MOVEMENT' and c.report_scope='IN_REPORT'
-              and coalesce(c.export_blocking,false)=true
-              and not exists (select 1 from dq_findings f where f.severity in ('ERROR','MANUAL_REVIEW')
-                and f.source_table is not distinct from c.source_table and f.source_row_id is not distinct from c.source_row_id)
-            order by c.loco_no, c.period_start_utc
-        """)
-
+    run_sql_check(
+        ctx,
+        check_id="D004",
+        priority="P0",
+        title="Nicht exportfähige Bewegungen ohne nachvollziehbares Finding",
+        description=(
+            "export_ready=false darf eine Bewegung nicht unsichtbar sperren. Diese Zeilen besitzen kein zuordenbares "
+            "ERROR- oder MANUAL_REVIEW-Finding."
+        ),
+        required_tables=["core_loco_timeline", "dq_findings"],
+        sql="""
+            select
+                c.loco_no,
+                c.transport_number,
+                c.performing_ru,
+                c.period_start_utc,
+                c.period_end_utc,
+                c.user_vens,
+                c.performing_ru_marktpartner_id,
+                c.holder_name,
+                c.holder_market_partner_id,
+                c.dq_severity,
+                c.dq_message,
+                c.source_table,
+                c.source_row_id
+            from core_loco_timeline c
+            where c.row_type = 'MOVEMENT'
+              and c.report_scope = 'IN_REPORT'
+              and coalesce(c.export_ready, false) = false
+              and not exists (
+                    select 1
+                    from dq_findings f
+                    where f.severity in ('ERROR', 'MANUAL_REVIEW')
+                      and f.row_type = 'MOVEMENT'
+                      and f.loco_no is not distinct from c.loco_no
+                      and f.source_table is not distinct from c.source_table
+                      and f.source_row_id is not distinct from c.source_row_id
+              )
+            order by c.loco_no, c.period_start_utc, c.source_row_id
+        """,
+    )
 
 
 def check_holder_mapping_mismatch(ctx: DiagnosticContext) -> None:
@@ -397,19 +425,75 @@ def check_holder_mapping_mismatch(ctx: DiagnosticContext) -> None:
 
 
 def check_actual_overlap_without_r011(ctx: DiagnosticContext) -> None:
-    run_sql_check(ctx, check_id="D006", priority="P0", title="Alte echte Überschneidungen ohne R011-Finding",
-        description="Nur Überschneidungen vor dem 24h-Cutoff müssen bereits als R011 sichtbar sein.",
-        required_tables=["core_loco_timeline","dq_findings","dq_run_metadata"], sql="""
-            with m as (select row_number() over () rn,* from core_loco_timeline
-                where row_type='MOVEMENT' and report_scope='IN_REPORT' and period_start_utc is not null and period_end_utc is not null
-                  and period_end_utc>period_start_utc and period_start_utc <= (select max(error_cutoff_utc) from dq_run_metadata)),
-            p as (select a.loco_no,a.source_table sta,a.source_row_id sra,b.source_table stb,b.source_row_id srb
-                from m a join m b on b.loco_no=a.loco_no and b.rn>a.rn and a.period_start_utc<b.period_end_utc and b.period_start_utc<a.period_end_utc)
-            select * from p where not exists (select 1 from dq_findings f where f.rule_id='R011' and f.loco_no=p.loco_no
-              and ((f.source_table is not distinct from p.sta and f.source_row_id is not distinct from p.sra)
-                or (f.source_table is not distinct from p.stb and f.source_row_id is not distinct from p.srb)))
-        """)
-
+    run_sql_check(
+        ctx,
+        check_id="D006",
+        priority="P0",
+        title="Echte Überschneidungen ohne R011-Finding",
+        description=(
+            "R011 darf nicht nur mit der unmittelbar vorherigen Zeile vergleichen. Diese echten Intervallschnittmengen "
+            "werden aktuell nicht durch ein R011-Finding abgedeckt."
+        ),
+        required_tables=["core_loco_timeline", "dq_findings"],
+        sql="""
+            with movements as (
+                select
+                    row_number() over () as movement_row_no,
+                    loco_no,
+                    transport_number,
+                    period_start_utc,
+                    period_end_utc,
+                    source_table,
+                    source_row_id
+                from core_loco_timeline
+                where row_type = 'MOVEMENT'
+                  and report_scope = 'IN_REPORT'
+                  and nullif(trim(loco_no), '') is not null
+                  and period_start_utc is not null
+                  and period_end_utc is not null
+                  and period_end_utc > period_start_utc
+            ), actual_overlaps as (
+                select
+                    a.loco_no,
+                    a.transport_number as transport_a,
+                    b.transport_number as transport_b,
+                    a.period_start_utc as start_a,
+                    a.period_end_utc as end_a,
+                    b.period_start_utc as start_b,
+                    b.period_end_utc as end_b,
+                    greatest(a.period_start_utc, b.period_start_utc) as overlap_start_utc,
+                    least(a.period_end_utc, b.period_end_utc) as overlap_end_utc,
+                    date_diff(
+                        'second',
+                        greatest(a.period_start_utc, b.period_start_utc),
+                        least(a.period_end_utc, b.period_end_utc)
+                    ) as actual_overlap_seconds,
+                    a.source_table as source_table_a,
+                    a.source_row_id as source_row_id_a,
+                    b.source_table as source_table_b,
+                    b.source_row_id as source_row_id_b
+                from movements a
+                join movements b
+                  on b.loco_no = a.loco_no
+                 and b.movement_row_no > a.movement_row_no
+                 and a.period_start_utc < b.period_end_utc
+                 and b.period_start_utc < a.period_end_utc
+            )
+            select *
+            from actual_overlaps o
+            where not exists (
+                select 1
+                from dq_findings f
+                where f.rule_id = 'R011'
+                  and f.loco_no = o.loco_no
+                  and (
+                        (f.source_table is not distinct from o.source_table_a and f.source_row_id is not distinct from o.source_row_id_a)
+                     or (f.source_table is not distinct from o.source_table_b and f.source_row_id is not distinct from o.source_row_id_b)
+                  )
+            )
+            order by loco_no, overlap_start_utc
+        """,
+    )
 
 
 def check_r011_without_actual_overlap(ctx: DiagnosticContext) -> None:
@@ -668,16 +752,73 @@ def check_raw_import_row_counts(ctx: DiagnosticContext) -> None:
 
 
 def check_foreign_segment_expansion(ctx: DiagnosticContext) -> None:
-    run_sql_check(ctx, check_id="D012", priority="P1", title="Zentrale Segmente reichen über ihre DE-Grenzen hinaus",
-        description="Phase 6C verwendet core_usage_assignment_segments als zentrale DE-begrenzte Wahrheit.",
-        required_tables=["core_usage_assignment_segments","core_usage_assignment_segment_movements"], sql="""
-            select s.* from core_usage_assignment_segments s join (
-              select usage_segment_id,min(de_period_start_utc) min_de,max(de_period_end_utc) max_de
-              from core_usage_assignment_segment_movements group by usage_segment_id
-            ) m using(usage_segment_id)
-            where s.segment_start_utc is distinct from m.min_de or s.segment_end_utc is distinct from m.max_de
-        """)
-
+    run_sql_check(
+        ctx,
+        check_id="D012",
+        priority="P1",
+        title="Nutzungssegmente reichen über den DE-relevanten Zeitraum hinaus",
+        description=(
+            "Quality Gate und XLSX-Export segmentieren derzeit entlang der gesamten Lok-Zeitachse. Diese Segmente "
+            "beginnen vor der ersten oder enden nach der letzten DE-relevanten Bewegung."
+        ),
+        required_tables=["core_loco_timeline"],
+        sql="""
+            with ordered as (
+                select
+                    c.*,
+                    lag(row_type) over (
+                        partition by loco_no order by sort_sequence, case when row_type = 'MOVEMENT' then 0 else 1 end, source_row_id
+                    ) as previous_row_type,
+                    lag(performing_ru) over (
+                        partition by loco_no order by sort_sequence, case when row_type = 'MOVEMENT' then 0 else 1 end, source_row_id
+                    ) as previous_performing_ru
+                from core_loco_timeline c
+                where nullif(trim(loco_no), '') is not null
+            ), marked as (
+                select
+                    *,
+                    case
+                        when row_type <> 'MOVEMENT' then 0
+                        when previous_row_type is null then 1
+                        when previous_row_type = 'GAP' then 1
+                        when previous_performing_ru is distinct from performing_ru then 1
+                        else 0
+                    end as starts_new_usage_segment
+                from ordered
+            ), segmented as (
+                select
+                    *,
+                    sum(starts_new_usage_segment) over (
+                        partition by loco_no
+                        order by sort_sequence, case when row_type = 'MOVEMENT' then 0 else 1 end, source_row_id
+                        rows between unbounded preceding and current row
+                    ) as usage_segment_no
+                from marked
+            ), summary as (
+                select
+                    loco_no,
+                    performing_ru,
+                    usage_segment_no,
+                    min(actual_departure_ts) filter (where row_type = 'MOVEMENT') as all_start,
+                    max(actual_arrival_ts) filter (where row_type = 'MOVEMENT') as all_end,
+                    min(actual_departure_ts) filter (where row_type = 'MOVEMENT' and report_scope = 'IN_REPORT') as de_start,
+                    max(actual_arrival_ts) filter (where row_type = 'MOVEMENT' and report_scope = 'IN_REPORT') as de_end,
+                    count(*) filter (where row_type = 'MOVEMENT' and report_scope = 'IN_REPORT') as de_movement_rows,
+                    count(*) filter (where row_type = 'MOVEMENT' and report_scope = 'NOT_IN_REPORT') as foreign_movement_rows
+                from segmented
+                group by loco_no, performing_ru, usage_segment_no
+            )
+            select
+                *,
+                date_diff('minute', all_start, de_start) as minutes_before_de_scope,
+                date_diff('minute', de_end, all_end) as minutes_after_de_scope
+            from summary
+            where de_movement_rows > 0
+              and foreign_movement_rows > 0
+              and (all_start < de_start or all_end > de_end)
+            order by loco_no, all_start
+        """,
+    )
 
 
 def check_invisible_same_place_stands(ctx: DiagnosticContext) -> None:
@@ -786,14 +927,42 @@ def check_unsupported_gap_transitions(ctx: DiagnosticContext) -> None:
 
 
 def check_cutoff_bypass(ctx: DiagnosticContext) -> None:
-    run_sql_check(ctx, check_id="D015", priority="P0", title="24h-Cutoff wird durch harte Sperren umgangen",
-        description="Junge unvollständige Bewegungen dürfen export_ready=false sein, aber noch nicht export_blocking=true.",
-        required_tables=["core_loco_timeline","dq_run_metadata"], sql="""
-          select c.* from core_loco_timeline c cross join (select max(error_cutoff_utc) cutoff from dq_run_metadata) x
-          where c.row_type='MOVEMENT' and c.report_scope='IN_REPORT' and coalesce(c.export_blocking,false)=true
-            and coalesce(c.period_start_utc,c.period_end_utc,c.sequence_ts)>x.cutoff
-        """)
-
+    run_sql_check(
+        ctx,
+        check_id="D015",
+        priority="P0",
+        title="24h-Cutoff wird durch export_ready-Sperren umgangen",
+        description=(
+            "Diese Bewegungen liegen nach dem fachlichen Cutoff, sind aber export_ready=false und können den Lok-Tag "
+            "bereits sperren, obwohl noch kein harter Prüffall erzeugt werden soll."
+        ),
+        required_tables=["core_loco_timeline", "dq_run_metadata"],
+        sql="""
+            with cutoff as (
+                select max(error_cutoff_utc) as error_cutoff_utc
+                from dq_run_metadata
+            )
+            select
+                c.loco_no,
+                c.transport_number,
+                c.performing_ru,
+                c.period_start_utc,
+                c.period_end_utc,
+                c.export_ready,
+                c.dq_severity,
+                c.dq_message,
+                cutoff.error_cutoff_utc,
+                c.source_table,
+                c.source_row_id
+            from core_loco_timeline c
+            cross join cutoff
+            where c.row_type = 'MOVEMENT'
+              and c.report_scope = 'IN_REPORT'
+              and coalesce(c.export_ready, false) = false
+              and coalesce(c.period_start_utc, c.period_end_utc) > cutoff.error_cutoff_utc
+            order by c.period_start_utc, c.loco_no
+        """,
+    )
 
 
 def check_r012_transportdetail_asymmetry(ctx: DiagnosticContext) -> None:
@@ -846,12 +1015,6 @@ def check_r012_transportdetail_asymmetry(ctx: DiagnosticContext) -> None:
               and (
                     trim(cast({qident(loco_col)} as varchar)) = '00000000000-0'
                  or upper(trim(cast({qident(loco_col)} as varchar))) like '%DUMMY%'
-              )
-              and not exists (
-                    select 1 from dq_findings f
-                    where f.rule_id = 'R012'
-                      and f.source_table = 'raw_transportdetail'
-                      and f.transport_number is not distinct from nullif(trim(cast({qident(transport_col)} as varchar)), '')
               )
             order by transport_number
         """,
@@ -968,15 +1131,43 @@ def check_exact_overlap_rounding(ctx: DiagnosticContext) -> None:
 
 
 def check_info_blocking_movements(ctx: DiagnosticContext) -> None:
-    run_sql_check(ctx, check_id="D020", priority="P0", title="INFO-Sachverhalte blockieren indirekt den Export",
-        description="Nur harte export_blocking-Zeilen ohne ERROR oder MANUAL_REVIEW sind inkonsistent.",
-        required_tables=["core_loco_timeline","dq_findings"], sql="""
-          select c.* from core_loco_timeline c
-          where c.row_type='MOVEMENT' and c.report_scope='IN_REPORT' and coalesce(c.export_blocking,false)=true
-            and not exists (select 1 from dq_findings f where f.severity in ('ERROR','MANUAL_REVIEW')
-              and f.source_table is not distinct from c.source_table and f.source_row_id is not distinct from c.source_row_id)
-        """)
-
+    run_sql_check(
+        ctx,
+        check_id="D020",
+        priority="P0",
+        title="INFO-Sachverhalte blockieren indirekt den Export",
+        description=(
+            "INFO soll laut Regelwerk nicht blockieren. Diese Bewegungen besitzen nur INFO oder keinen sichtbaren Finding-Grund, "
+            "sind aber export_ready=false und sperren dadurch den Lok-Tag."
+        ),
+        required_tables=["core_loco_timeline", "dq_findings"],
+        sql="""
+            select
+                c.loco_no,
+                c.transport_number,
+                c.period_start_utc,
+                c.period_end_utc,
+                c.dq_severity as core_dq_severity,
+                c.dq_message as core_dq_message,
+                string_agg(distinct f.rule_id || ':' || f.severity, ' | ' order by f.rule_id || ':' || f.severity) as findings,
+                c.source_table,
+                c.source_row_id
+            from core_loco_timeline c
+            left join dq_findings f
+              on f.row_type = 'MOVEMENT'
+             and f.loco_no is not distinct from c.loco_no
+             and f.source_table is not distinct from c.source_table
+             and f.source_row_id is not distinct from c.source_row_id
+            where c.row_type = 'MOVEMENT'
+              and c.report_scope = 'IN_REPORT'
+              and coalesce(c.export_ready, false) = false
+            group by
+                c.loco_no, c.transport_number, c.period_start_utc, c.period_end_utc,
+                c.dq_severity, c.dq_message, c.source_table, c.source_row_id
+            having count(*) filter (where f.severity in ('ERROR', 'MANUAL_REVIEW')) = 0
+            order by c.loco_no, c.period_start_utc
+        """,
+    )
 
 
 def write_inventory(ctx: DiagnosticContext) -> None:
@@ -1103,14 +1294,15 @@ def run_diagnostics(db_path: Path, raw_dir: Path, output_dir: Path) -> Path:
         check_global_blocker_scope(ctx)
         check_exact_overlap_rounding(ctx)
         check_info_blocking_movements(ctx)
-        run_sql_check(
+        run_static_risk(
             ctx,
             check_id="D021",
             priority="P1",
-            title="Zentrale Segmenttabelle für CSV und XLSX vorhanden",
-            description="Phase 6C verwendet core_usage_assignment_segments als gemeinsame fachliche Wahrheit.",
-            required_tables=["core_usage_assignment_segments", "core_usage_assignment_segment_movements"],
-            sql="""select * from core_usage_assignment_segments where segment_end_utc <= segment_start_utc""",
+            title="CSV- und XLSX-Export besitzen unterschiedliche Aggregationsniveaus",
+            description=(
+                "Die CSV-Exporte verwenden Movement-Zeilen, der dynamische XLSX-Export verdichtet Nutzungssegmente. "
+                "Phase 6B sollte eine zentrale Segmenttabelle als einzige fachliche Wahrheit einführen."
+            ),
         )
         metadata = {
             "phase_id": PHASE_ID,

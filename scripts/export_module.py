@@ -105,6 +105,12 @@ AUDIT_CSV_EXPORTS = [
     ("audit_excluded_cancelled_transports", "audit_excluded_cancelled_transports.csv"),  # NETZENTGELT_CANCELLED_HOTFIX_V2_20260607
     ("stg_loco_events", "stg_loco_events.csv"),
     ("core_loco_timeline", "core_loco_timeline.csv"),
+    ("core_usage_assignment_segment_movements", "core_usage_assignment_segment_movements.csv"),
+    ("core_usage_assignment_segments", "core_usage_assignment_segments.csv"),
+    ("core_loco_stand_candidates", "core_loco_stand_candidates.csv"),
+    ("dq_phase6c_uncertain_gaps", "dq_phase6c_uncertain_gaps.csv"),
+    ("dq_phase6c_gap_context_review", "dq_phase6c_gap_context_review.csv"),
+    ("dq_rule_engine_hardening_phase6c_audit", "dq_rule_engine_hardening_phase6c_audit.csv"),
     ("dq_findings", "dq_findings.csv"),
     ("dq_run_metadata", "dq_run_metadata.csv"),
     ("core_loco_day_coverage", "core_loco_day_coverage.csv"),
@@ -178,82 +184,52 @@ def table_exists(con, table_name: str) -> bool:
 
 
 def build_export_tables(con) -> None:
-    """
-    Fachliche CSV-Exporttabellen mit zentralem Export-Gate aufbauen.
-
-    Bewegungen werden nur exportiert, wenn die Zeile selbst exportfähig ist,
-    der zugehörige Lok-Tag nicht blockiert ist und am Kalendertag kein globaler
-    Export-Blocker wie R012 vorliegt.
-    """
+    """Fachliche CSV-Exporte aus der zentralen DE-Segmenttabelle erzeugen."""
+    if not table_exists(con, "core_usage_assignment_segments"):
+        raise RuntimeError("core_usage_assignment_segments fehlt. Phase 6C Pipeline neu ausführen.")
     gate_filter = """
+          and coalesce(s.export_blocking_movement_rows, 0) = 0
           and not exists (
-                select 1
-                from dq_export_gate_ru g
-                where g.loco_no = c.loco_no
-                  and g.performing_ru is not distinct from c.performing_ru
-                  and g.coverage_date = cast(
-                        coalesce(
-                            c.actual_departure_ts,
-                            c.period_start_utc,
-                            c.sequence_ts,
-                            c.actual_arrival_ts,
-                            c.period_end_utc
-                        ) as date
-                  )
+                select 1 from dq_export_gate_ru g
+                where g.loco_no = s.loco_no
+                  and g.performing_ru is not distinct from s.performing_ru
+                  and g.coverage_date >= cast(s.segment_start_utc as date)
+                  and g.coverage_date <= cast(s.segment_end_utc as date)
                   and g.gate_status = 'BLOCKED'
           )
           and not exists (
-                select 1
-                from dq_global_export_blockers b
-                where b.blocker_date = cast(
-                        coalesce(
-                            c.actual_departure_ts,
-                            c.period_start_utc,
-                            c.sequence_ts,
-                            c.actual_arrival_ts,
-                            c.period_end_utc
-                        ) as date
-                )
+                select 1 from dq_global_export_blockers b
+                where b.blocker_date >= cast(s.segment_start_utc as date)
+                  and b.blocker_date <= cast(s.segment_end_utc as date)
                   and b.gate_status = 'BLOCKED'
           )
     """
-
-    con.execute(
-        f"""
+    con.execute(f"""
         create or replace table export_zuordnungen as
         select
-            c.tfze_or_tens as "TfzE oder tEns*",
-            c.period_start_utc as "Beginn der Zuordnung*",
-            c.period_end_utc as "Ende der Zuordnung",
-            coalesce(nullif(c.user_vens, ''), c.performing_ru) as "Nutzer-vEns*",
-            coalesce(nullif(c.holder_market_partner_id, ''), c.holder_name) as "Marktpartner ID für Nutzungsüberlassung"
-        from core_loco_timeline c
-        where c.row_type = 'MOVEMENT'
-          and c.report_scope = 'IN_REPORT'
-          and c.export_ready = true
+            s.tfze_or_tens as "TfzE oder tEns*",
+            s.segment_start_utc as "Beginn der Zuordnung*",
+            s.segment_end_utc as "Ende der Zuordnung",
+            coalesce(nullif(s.user_vens, ''), s.performing_ru) as "Nutzer-vEns*",
+            coalesce(nullif(s.holder_market_partner_id, ''), s.holder_name) as "Marktpartner ID für Nutzungsüberlassung"
+        from core_usage_assignment_segments s
+        where s.segment_start_utc is not null and s.segment_end_utc is not null
           {gate_filter}
-        """
-    )
-
-    con.execute(
-        f"""
+    """)
+    con.execute(f"""
         create or replace table export_nutzungsmeldung as
         select
-            c.tfze_or_tens as "TfzE oder tEns*",
-            c.period_start_utc as "Beginn der Nutzung*",
-            c.period_end_utc as "Ende der Nutzung",
-            coalesce(nullif(c.user_vens, ''), c.performing_ru) as "Nutzer-vEns*",
-            coalesce(nullif(c.holder_market_partner_id, ''), c.holder_name) as "Marktpartner ID für Nutzungsüberlassung*",
+            s.tfze_or_tens as "TfzE oder tEns*",
+            s.segment_start_utc as "Beginn der Nutzung*",
+            s.segment_end_utc as "Ende der Nutzung",
+            coalesce(nullif(s.user_vens, ''), s.performing_ru) as "Nutzer-vEns*",
+            coalesce(nullif(s.holder_market_partner_id, ''), s.holder_name) as "Marktpartner ID für Nutzungsüberlassung*",
             '' as "Übernahmeanfrage oder Übergabemeldung?"
-        from core_loco_timeline c
-        where c.row_type = 'MOVEMENT'
-          and c.report_scope = 'IN_REPORT'
-          and c.export_ready = true
+        from core_usage_assignment_segments s
+        where s.segment_start_utc is not null and s.segment_end_utc is not null
           {gate_filter}
-        """
-    )
-
-    # NETZENTGELT_QUALITY_GATE_PHASE2_V1_20260607
+    """)
+    # NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6C_V1_20260608
 
 
 def export_table_to_csv(
@@ -537,199 +513,42 @@ def _fetch_usage_segments(
     date_from: date,
     date_to: date,
 ) -> list[dict[str, object]]:
-    """
-    Ununterbrochene Nutzungssegmente für die gewählte PerformingRU ermitteln.
-
-    Der Datumsfilter greift anhand der ActualDeparture-Werte der DE-relevanten
-    Movement-Zeilen. Für ein Segment genügt mindestens eine passende Bewegung
-    innerhalb des gewählten Tagesfensters.
-    """
+    """DE-begrenzte Nutzungssegmente für die dynamische XLSX-Ausgabe liefern."""
     ru_values = _as_ru_tuple(performing_ru_values)
     placeholders = _placeholders(ru_values)
     window_start, window_end_exclusive = _to_day_bounds(date_from, date_to)
     _assert_export_gate_ready(con, ru_values, date_from, date_to)
-    normalized_performing_ru_sql = _normalize_company_name_sql("s.performing_ru")
-    normalized_holder_sql = _normalize_company_name_sql("s.holder_name")
-
-    rows = con.execute(
-        f"""
-        with ordered as (
-            select
-                c.*,
-
-                lag(row_type) over (
-                    partition by loco_no
-                    order by
-                        sort_sequence asc,
-                        case when row_type = 'MOVEMENT' then 0 else 1 end,
-                        source_row_id asc
-                ) as previous_row_type,
-
-                lag(performing_ru) over (
-                    partition by loco_no
-                    order by
-                        sort_sequence asc,
-                        case when row_type = 'MOVEMENT' then 0 else 1 end,
-                        source_row_id asc
-                ) as previous_performing_ru
-
-            from core_loco_timeline c
-            where nullif(trim(loco_no), '') is not null
-        ),
-        marked as (
-            select
-                *,
-                case
-                    when row_type <> 'MOVEMENT'
-                        then 0
-
-                    when previous_row_type is null
-                        then 1
-
-                    when previous_row_type = 'GAP'
-                        then 1
-
-                    when previous_performing_ru is distinct from performing_ru
-                        then 1
-
-                    else 0
-                end as starts_new_usage_segment
-            from ordered
-        ),
-        segmented as (
-            select
-                *,
-                sum(starts_new_usage_segment) over (
-                    partition by loco_no
-                    order by
-                        sort_sequence asc,
-                        case when row_type = 'MOVEMENT' then 0 else 1 end,
-                        source_row_id asc
-                    rows between unbounded preceding and current row
-                ) as usage_segment_no
-            from marked
-        ),
-        segment_summary as (
-            select
-                loco_no,
-                performing_ru,
-                usage_segment_no,
-
-                first(
-                    actual_departure_ts
-                    order by sort_sequence asc, source_row_id asc
-                ) filter (where row_type = 'MOVEMENT') as usage_start,
-
-                first(
-                    actual_arrival_ts
-                    order by sort_sequence desc, source_row_id desc
-                ) filter (where row_type = 'MOVEMENT') as usage_end,
-
-                count(*) filter (
-                    where row_type = 'MOVEMENT'
-                ) as movement_count,
-
-                max(
-                    case
-                        when row_type = 'MOVEMENT'
-                         and report_scope = 'IN_REPORT'
-                         -- NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6B_V1_20260608
-                         and coalesce(export_blocking, false) = true
-                            then 1
-                        else 0
-                    end
-                ) as has_export_blocking_movement,
-
-                first(
-                    nullif(trim(holder_name), '')
-                    order by sort_sequence asc, source_row_id asc
-                ) filter (
-                    where row_type = 'MOVEMENT'
-                      and nullif(trim(holder_name), '') is not null
-                ) as holder_name,
-
-                max(
-                    case
-                        when row_type = 'MOVEMENT'
-                         and report_scope = 'IN_REPORT'
-                         and actual_departure_ts >= ?
-                         and actual_departure_ts < ?
-                            then 1
-                        else 0
-                    end
-                ) as matches_selected_departure_day
-
-            from segmented
-            group by
-                loco_no,
-                performing_ru,
-                usage_segment_no
-        )
+    if not table_exists(con, "core_usage_assignment_segments"):
+        raise RuntimeError("core_usage_assignment_segments fehlt. Phase 6C Pipeline neu ausführen.")
+    rows = con.execute(f"""
         select
             cast(s.loco_no as varchar) as locomotive_no,
-            s.usage_start,
-            s.usage_end,
+            s.segment_start_utc,
+            s.segment_end_utc,
             s.performing_ru,
             s.movement_count,
-
-            coalesce(
-                anu_mapping.market_partner_id,
-                anu_direct.market_partner_id,
-                s.performing_ru
-            ) as user_vens,
-
-            coalesce(
-                ane_mapping.market_partner_id,
-                ane_direct.market_partner_id,
-                s.holder_name
-            ) as holder_market_partner_id
-
-        from segment_summary s
-
-        left join cfg_market_partner_mapping_effective anu_mapping
-          on anu_mapping.role_code = 'ANU_VENS'
-         and anu_mapping.source_value_normalized = {normalized_performing_ru_sql}
-
-        left join cfg_market_partner_role_effective anu_direct
-          on anu_direct.role_code = 'ANU_VENS'
-         and anu_direct.company_name_normalized = {normalized_performing_ru_sql}
-
-        left join cfg_market_partner_mapping_effective ane_mapping
-          on ane_mapping.role_code = 'ANE_TENS'
-         and ane_mapping.source_value_normalized = {normalized_holder_sql}
-
-        left join cfg_market_partner_role_effective ane_direct
-          on ane_direct.role_code = 'ANE_TENS'
-         and ane_direct.company_name_normalized = {normalized_holder_sql}
-
+            coalesce(nullif(s.user_vens, ''), s.performing_ru) as user_vens,
+            coalesce(nullif(s.holder_market_partner_id, ''), s.holder_name) as holder_market_partner_id
+        from core_usage_assignment_segments s
         where s.performing_ru in ({placeholders})
-          and s.matches_selected_departure_day = 1
-          and s.usage_start is not null
-          and coalesce(s.has_export_blocking_movement, 0) = 0
-
-        order by
-            s.loco_no asc,
-            s.usage_start asc
-        """,
-        [window_start, window_end_exclusive, *ru_values],
-    ).fetchall()
-
-    result = []
-
-    for row in rows:
-        result.append(
-            {
-                "locomotive_no": row[0],
-                "usage_start": row[1],
-                "usage_end": row[2],
-                "performing_ru": row[3],
-                "movement_count": row[4],
-                "user_vens": row[5],
-                "holder_market_partner_id": row[6],
-            }
-        )
-
-    return result
+          and coalesce(s.export_blocking_movement_rows, 0) = 0
+          and exists (
+                select 1
+                from core_usage_assignment_segment_movements m
+                where m.usage_segment_id = s.usage_segment_id
+                  and m.actual_departure_ts >= ?
+                  and m.actual_departure_ts < ?
+          )
+        order by s.loco_no, s.segment_start_utc
+    """, [*ru_values, window_start, window_end_exclusive]).fetchall()
+    return [
+        {
+            "locomotive_no": row[0], "usage_start": row[1], "usage_end": row[2],
+            "performing_ru": row[3], "movement_count": row[4], "user_vens": row[5],
+            "holder_market_partner_id": row[6],
+        }
+        for row in rows
+    ]
 
 
 def _resolve_export_header(

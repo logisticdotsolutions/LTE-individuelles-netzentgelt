@@ -50,6 +50,11 @@ from rule_engine_hardening_phase6b import (
     apply_core_assignment_fallbacks,
     harden_findings_and_export_policy,
 )
+# NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6C_V1_20260608
+from rule_engine_hardening_phase6c import (
+    harden_findings_and_segments_phase6c,
+    prepare_timeline_context_phase6c,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 RAW_DIR = ROOT / "data" / "00_raw"
@@ -2533,11 +2538,13 @@ def main():
         build_transport_routes(con)
         build_core(con, run_id)
         apply_core_assignment_fallbacks(con, run_id)
+        prepare_timeline_context_phase6c(con, run_id)
         build_unresolved_performing_ru_market_partner_alias(con)
 
         # 4. Findings und fachliche Exporttabellen neu berechnen.
         build_findings(con, run_id, home_country_iso=HOME_COUNTRY_ISO)
         harden_findings_and_export_policy(con, run_id)
+        harden_findings_and_segments_phase6c(con, run_id)
         build_quality_gate_tables(con, run_id)
         build_exports(con)
         refresh_reconciliation_table(con, run_id)
@@ -2554,6 +2561,12 @@ def main():
             ("audit_manual_override_application", "audit_manual_override_application.csv"),
             ("dq_rule_engine_hardening_audit", "dq_rule_engine_hardening_audit.csv"),
             ("dq_rule_engine_hardening_blockers", "dq_rule_engine_hardening_blockers.csv"),
+            ("dq_rule_engine_hardening_phase6c_audit", "dq_rule_engine_hardening_phase6c_audit.csv"),
+            ("dq_phase6c_uncertain_gaps", "dq_phase6c_uncertain_gaps.csv"),
+            ("dq_phase6c_gap_context_review", "dq_phase6c_gap_context_review.csv"),
+            ("core_loco_stand_candidates", "core_loco_stand_candidates.csv"),
+            ("core_usage_assignment_segment_movements", "core_usage_assignment_segment_movements.csv"),
+            ("core_usage_assignment_segments", "core_usage_assignment_segments.csv"),
             ("stg_loco_events", "stg_loco_events.csv"),
             ("core_loco_timeline", "core_loco_timeline.csv"),
             ("dq_findings", "dq_findings.csv"),

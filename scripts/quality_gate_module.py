@@ -94,105 +94,25 @@ def build_quality_gate_tables(con, run_id: str) -> None:
     run_id_text = str(run_id)
 
     # ------------------------------------------------------------------
-    # 1. Nutzungssegmente aus der bereits vorhandenen Timeline ableiten.
+    # 1. Zentrale, auf DE begrenzte Nutzungssegmente aus Phase 6C verwenden.
+    # NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6C_V1_20260608
     # ------------------------------------------------------------------
+    _require_tables(con, ["core_usage_assignment_segments"])
     con.execute(
         """
         create or replace temp table tmp_qg_usage_segments as
-        with ordered as (
-            select
-                c.*,
-                lag(row_type) over (
-                    partition by loco_no
-                    order by
-                        sort_sequence asc,
-                        case when row_type = 'MOVEMENT' then 0 else 1 end,
-                        source_row_id asc
-                ) as previous_row_type,
-                lag(performing_ru) over (
-                    partition by loco_no
-                    order by
-                        sort_sequence asc,
-                        case when row_type = 'MOVEMENT' then 0 else 1 end,
-                        source_row_id asc
-                ) as previous_performing_ru
-            from core_loco_timeline c
-            where nullif(trim(loco_no), '') is not null
-        ),
-        marked as (
-            select
-                *,
-                case
-                    when row_type <> 'MOVEMENT' then 0
-                    when previous_row_type is null then 1
-                    when previous_row_type = 'GAP' then 1
-                    when previous_performing_ru is distinct from performing_ru then 1
-                    else 0
-                end as starts_new_usage_segment
-            from ordered
-        ),
-        segmented as (
-            select
-                *,
-                sum(starts_new_usage_segment) over (
-                    partition by loco_no
-                    order by
-                        sort_sequence asc,
-                        case when row_type = 'MOVEMENT' then 0 else 1 end,
-                        source_row_id asc
-                    rows between unbounded preceding and current row
-                ) as usage_segment_no
-            from marked
-        )
         select
             loco_no,
             performing_ru,
             usage_segment_no,
-            min(actual_departure_ts) filter (
-                where row_type = 'MOVEMENT'
-                  and actual_departure_ts is not null
-            ) as segment_start_utc,
-            max(actual_arrival_ts) filter (
-                where row_type = 'MOVEMENT'
-                  and actual_arrival_ts is not null
-            ) as segment_end_utc,
-            count(*) filter (
-                where row_type = 'MOVEMENT'
-                  and report_scope = 'IN_REPORT'
-            ) as in_report_movement_rows,
-            count(*) filter (
-                where row_type = 'MOVEMENT'
-                  and report_scope = 'IN_REPORT'
-                  -- NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6B_V1_20260608
-                  -- Nur fachlich blockierende Bewegungen zaehlen. Frische
-                  -- unvollstaendige Daten innerhalb der 24h-Toleranz bleiben
-                  -- sichtbar, sperren den Lok-Tag aber noch nicht.
-                  and coalesce(export_blocking, false) = true
-            ) as not_export_ready_movement_rows
-        from segmented
-        group by
-            loco_no,
-            performing_ru,
-            usage_segment_no
-        having count(*) filter (
-            where row_type = 'MOVEMENT'
-              and report_scope = 'IN_REPORT'
-        ) > 0
-           and min(actual_departure_ts) filter (
-                where row_type = 'MOVEMENT'
-                  and actual_departure_ts is not null
-           ) is not null
-           and max(actual_arrival_ts) filter (
-                where row_type = 'MOVEMENT'
-                  and actual_arrival_ts is not null
-           ) is not null
-           and max(actual_arrival_ts) filter (
-                where row_type = 'MOVEMENT'
-                  and actual_arrival_ts is not null
-           ) > min(actual_departure_ts) filter (
-                where row_type = 'MOVEMENT'
-                  and actual_departure_ts is not null
-           )
+            segment_start_utc,
+            segment_end_utc,
+            movement_count as in_report_movement_rows,
+            export_blocking_movement_rows as not_export_ready_movement_rows
+        from core_usage_assignment_segments
+        where segment_start_utc is not null
+          and segment_end_utc is not null
+          and segment_end_utc > segment_start_utc
         """
     )
 
@@ -271,6 +191,7 @@ def build_quality_gate_tables(con, run_id: str) -> None:
         ) as slots(slot_start_utc)
         where c.row_type = 'GAP'
           and coalesce(c.gap_relevant_de, false) = true
+          and coalesce(c.gap_time_basis_safe, true) = true
           and nullif(trim(c.loco_no), '') is not null
           and c.period_start_utc is not null
           and c.period_end_utc is not null
@@ -335,15 +256,14 @@ def build_quality_gate_tables(con, run_id: str) -> None:
             select
                 row_number() over () as overlap_row_no,
                 loco_no,
-                period_start_utc,
-                period_end_utc
-            from core_loco_timeline
-            where row_type = 'MOVEMENT'
-              and report_scope = 'IN_REPORT'
-              and nullif(trim(loco_no), '') is not null
-              and period_start_utc is not null
-              and period_end_utc is not null
-              and period_end_utc > period_start_utc
+                de_period_start_utc as period_start_utc,
+                de_period_end_utc as period_end_utc
+            from core_usage_assignment_segment_movements
+            where nullif(trim(loco_no), '') is not null
+              and de_period_start_utc is not null
+              and de_period_end_utc is not null
+              and de_period_end_utc > de_period_start_utc
+              and de_period_start_utc <= (select max(error_cutoff_utc) from dq_run_metadata)
         ),
         actual_overlap_intervals as (
             select
