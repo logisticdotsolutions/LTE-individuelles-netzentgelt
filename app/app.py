@@ -2785,6 +2785,17 @@ with tab_run:
 with tab_timeline:
     st.header("🔎 Lok-Detailprüfung")
 
+    # NETZENTGELT_LOCO_BOOKMARK_HOTFIX_APP_V1_20260608
+    bookmarked_loco = str(
+        st.session_state.get("timeline_bookmarked_loco", "")
+    ).strip()
+
+    if bookmarked_loco:
+        st.info(
+            f"Vorgemerkte Lok: {bookmarked_loco}. "
+            "Die Lok ist in der Auswahl unten bereits vorbelegt."
+        )
+
     core_path = EXPORT_DIR / "core_loco_timeline.csv"
     dq_path = EXPORT_DIR / "dq_findings.csv"
     route_detail_path = EXPORT_DIR / "stg_transport_details_enriched.csv"
@@ -2842,6 +2853,16 @@ with tab_timeline:
             .unique()
             .tolist()
         )
+
+        # Falls der Arbeitszeitraum geändert wurde und die bisher ausgewählte
+        # Lok darin nicht vorkommt, darf der Selectbox-State nicht auf einem
+        # ungültigen Wert stehen bleiben.
+        selected_loco_state = str(
+            st.session_state.get("timeline_detail_loco", "")
+        ).strip()
+
+        if selected_loco_state and selected_loco_state not in loco_values:
+            st.session_state.pop("timeline_detail_loco", None)
 
         selected_loco = st.selectbox(
             "Lok auswählen",

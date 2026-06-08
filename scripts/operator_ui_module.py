@@ -567,7 +567,13 @@ def _render_loco_shortcut(table: pd.DataFrame, key_suffix: str = "blocked") -> N
             key=f"operator_shortcut_button_{key_suffix}",
             use_container_width=True,
         ):
-            st.session_state["timeline_preview_loco"] = selected_loco
+            # NETZENTGELT_LOCO_BOOKMARK_HOTFIX_OPERATOR_V1_20260608
+            # Die verbleibende Detailansicht verwendet den Widget-Key
+            # ``timeline_detail_loco``. Die separate Vormerkung bleibt für einen
+            # sichtbaren Hinweis im Reiter "4. Lok prüfen" erhalten.
+            st.session_state["timeline_detail_loco"] = selected_loco
+            st.session_state["timeline_bookmarked_loco"] = selected_loco
             st.success(
-                f"Lok {selected_loco} wurde vorgemerkt. Öffne jetzt den Tab '4. Lok prüfen'."
+                f"Lok {selected_loco} wurde vorgemerkt. Öffne jetzt den Tab '4. Lok prüfen'. "
+                "Die Lok ist dort bereits ausgewählt."
             )
