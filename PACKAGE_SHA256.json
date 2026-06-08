@@ -1,0 +1,35 @@
+{
+  "package_id": "NETZENTGELT_REPOSITORY_CLEANUP_PHASE7C_V1_20260608",
+  "files": [
+    {
+      "path": "01_DRY_RUN_REPOSITORY_CLEANUP.bat",
+      "sha256": "0a8c52703c584d345e16bbafb893f342baa41b93422191aff99b89f4aeb8c906",
+      "bytes": 232
+    },
+    {
+      "path": "02_APPLY_REPOSITORY_CLEANUP.bat",
+      "sha256": "20272694b7e47892795fe3e06c0a509de3a297bb3af1a8a9caa5043a4b876a8c",
+      "bytes": 230
+    },
+    {
+      "path": "03_ROLLBACK_REPOSITORY_CLEANUP.bat",
+      "sha256": "094b9f2ca9f8f7aa608c8feb44571ecbb3a32b929721e1eaa25166d3005de96f",
+      "bytes": 233
+    },
+    {
+      "path": "04_CREATE_LOCAL_CLEANUP_COMMIT.bat",
+      "sha256": "bf2a65c16f26f6bfd382a53f411b1f8c8dacb2231b80e88e78018a02ef48bac4",
+      "bytes": 231
+    },
+    {
+      "path": "README_CLEANUP_PHASE7C.md",
+      "sha256": "d1a45a5a229c8aa43763694fad73877b0db6dfc43088213c5e7059701f5b8b1c",
+      "bytes": 1613
+    },
+    {
+      "path": "cleanup_netzentgelt_repository.py",
+      "sha256": "2ca98ba56d05da8be5390e5da94676975b8442475408426f8b1cb2b21a7ea938",
+      "bytes": 16466
+    }
+  ]
+}
