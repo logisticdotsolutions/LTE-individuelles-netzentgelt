@@ -1,0 +1,10 @@
+{
+  "raw_locomotivemovement_rows": 1,
+  "staging_event_rows": 1,
+  "timeline_movement_rows": 1,
+  "timeline_gap_rows": 0,
+  "findings_rows": 0,
+  "export_zuordnungen_rows": 1,
+  "export_nutzungsmeldung_rows": 1,
+  "ready_gate_rows": 1
+}

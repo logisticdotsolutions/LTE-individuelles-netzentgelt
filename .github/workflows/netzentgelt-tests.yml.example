@@ -1,0 +1,30 @@
+name: Netzentgelt MVP Tests
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'scripts/**'
+      - 'tests/**'
+      - 'requirements-test.txt'
+      - 'pytest.ini'
+
+jobs:
+  pytest:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install test dependencies
+        run: python -m pip install -r requirements-test.txt
+      - name: Run tests
+        shell: powershell
+        run: .\RUN_TESTS.ps1
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: netzentgelt-test-reports
+          path: _test_reports/**
