@@ -1,0 +1,808 @@
+role_code;role_label;company_name_official;company_name_normalized;market_partner_id;source_file;source_line_no
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Die Länderbahn GmbH DLB;dielaenderbahngmbhdlb;1900100300012;vens liste.csv;5
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;ITL-Eisenbahngesellschaft mbH;itleisenbahngesellschaftmbh;1900100300020;vens liste.csv;6
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;cantus Verkehrsgesellschaft mbH;cantusverkehrsgesellschaftmbh;1900100300038;vens liste.csv;7
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;boxXpress.de GmbH;boxxpressdegmbh;1900100300046;vens liste.csv;8
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Beacon Rail Capital Europe GmbH;beaconrailcapitaleuropegmbh;1900100300054;vens liste.csv;9
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Railpool GmbH;railpoolgmbh;1900100300062;vens liste.csv;10
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Rail4Captrain GmbH;rail4captraingmbh;1900100300070;vens liste.csv;11
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;eurobahn GmbH & Co. KG;eurobahngmbhcokg;1900100300088;vens liste.csv;12
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Regiobahn Bitterfeld Berlin GmbH;regiobahnbitterfeldberlingmbh;1900100300096;vens liste.csv;13
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Captrain Deutschland CargoWest GmbH;captraindeutschlandcargowestgmbh;1900100300103;vens liste.csv;14
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;RheinCargo GmbH & Co. KG;rheincargogmbhcokg;1900100300111;vens liste.csv;15
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;CFL Cargo Deutschland GmbH;cflcargodeutschlandgmbh;1900100300129;vens liste.csv;16
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;ODEG Ostdeutsche Eisenbahn GmbH;odegostdeutscheeisenbahngmbh;1900100300137;vens liste.csv;17
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Holzlogistik & Güterbahn GmbH;holzlogistikgueterbahngmbh;1900100300145;vens liste.csv;18
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;VIAS GmbH;viasgmbh;1900100300153;vens liste.csv;19
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Westfälische Landes-Eisenbahn GmbH;westfaelischelandeseisenbahngmbh;1900100300161;vens liste.csv;20
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;CFL Cargo S.A.;cflcargosa;1900100300179;vens liste.csv;21
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;METRANS Rail (Deutschland) GmbH;metransraildeutschlandgmbh;1900100300187;vens liste.csv;22
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Albtal-Verkehrs-Gesellschaft mbH;albtalverkehrsgesellschaftmbh;1900100300195;vens liste.csv;23
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;ELL Germany GmbH;ellgermanygmbh;1900100300202;vens liste.csv;24
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;metronom Eisenbahngesellschaft mbH;metronomeisenbahngesellschaftmbh;1900100300210;vens liste.csv;25
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Niederrheinische Verkehrsbetriebe AG;niederrheinischeverkehrsbetriebeag;1900100300228;vens liste.csv;26
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Nord-Ostsee-Bahn GmbH;nordostseebahngmbh;1900100300236;vens liste.csv;27
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;NordWestBahn GmbH;nordwestbahngmbh;1900100300244;vens liste.csv;28
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;SBB GmbH;sbbgmbh;1900100300252;vens liste.csv;29
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;trans regio Deutsche Regionalbahn GmbH;transregiodeutscheregionalbahngmbh;1900100300260;vens liste.csv;30
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Rail Cargo Carrier - Germany GmbH;railcargocarriergermanygmbh;1900100300278;vens liste.csv;31
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;SBB Cargo Deutschland GmbH;sbbcargodeutschlandgmbh;1900100300286;vens liste.csv;32
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;agilis Eisenbahngesellschaft mbH & Co. KG;agiliseisenbahngesellschaftmbhcokg;1900100300294;vens liste.csv;33
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Bayerische Oberlandbahn GmbH;bayerischeoberlandbahngmbh;1900100300301;vens liste.csv;34
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;BLS Cargo Nord NV;blscargonordnv;1900100300319;vens liste.csv;35
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;HSL Logistik GmbH;hsllogistikgmbh;1900100300327;vens liste.csv;36
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;NBE nordbahn Eisenbahngesellschaft mbH & Co. KG;nbenordbahneisenbahngesellschaftmbhcokg;1900100300335;vens liste.csv;37
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;WestfalenBahn GmbH;westfalenbahngmbh;1900100300343;vens liste.csv;38
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Akiem S.A.S.;akiemsas;1900100300351;vens liste.csv;39
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Havelländische Eisenbahn AG;havellaendischeeisenbahnag;1900100300369;vens liste.csv;40
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Regental Bahnbetriebs-GmbH;regentalbahnbetriebsgmbh;1900100300377;vens liste.csv;41
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;ArcelorMittal Eisenhüttenstadt Transport GmbH;arcelormittaleisenhuettenstadttransportgmbh;1900100300385;vens liste.csv;42
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;LTE Logistik- und Transport-GmbH;ltelogistikundtransportgmbh;1900100300393;vens liste.csv;43
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Transchem Spolka z o.o.;transchemspolkazoo;1900100300400;vens liste.csv;44
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Verkehrsbetriebe Peine-Salzgitter GmbH;verkehrsbetriebepeinesalzgittergmbh;1900100300418;vens liste.csv;45
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;METRANS Rail s.r.o.;metransrailsro;1900100300426;vens liste.csv;46
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Captrain Deutschland GmbH;captraindeutschlandgmbh;1900100300434;vens liste.csv;47
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;SBB Cargo AG;sbbcargoag;1900100300442;vens liste.csv;48
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;TSS Cargo a.s.;tsscargoas;1900100300450;vens liste.csv;49
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Stauden-Verkehrs-GmbH;staudenverkehrsgmbh;1900100300468;vens liste.csv;50
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;METRANS a.s.;metransas;1900100300476;vens liste.csv;51
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;SRI Rail Invest GmbH;srirailinvestgmbh;1900100300484;vens liste.csv;52
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Mittelweserbahn GmbH;mittelweserbahngmbh;1900100300567;vens liste.csv;53
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Akiem Technik Germany GmbH & Co. KG;akiemtechnikgermanygmbhcokg;1900100300575;vens liste.csv;54
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;LEG Leipziger Eisenbahnverkehrsgesellschaft mbH;legleipzigereisenbahnverkehrsgesellschaftmbh;1900100300583;vens liste.csv;55
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Alstom Transport Deutschland GmbH;alstomtransportdeutschlandgmbh;1900100300591;vens liste.csv;56
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;National Express Rail GmbH;nationalexpressrailgmbh;1900100300608;vens liste.csv;57
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;HLB Hessenbahn GmbH;hlbhessenbahngmbh;1900100300616;vens liste.csv;58
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;EVB Elbe-Weser GmbH;evbelbewesergmbh;1900100300632;vens liste.csv;59
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Regionalbahn Kassel GmbH;regionalbahnkasselgmbh;1900100300640;vens liste.csv;60
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;RegioTram Gesellschaft mbH;regiotramgesellschaftmbh;1900100300658;vens liste.csv;61
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;TX Logistik AG;txlogistikag;1900100300666;vens liste.csv;62
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;IGE GmbH & Co. KG;igegmbhcokg;1900100300674;vens liste.csv;63
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Emons Bahntransporte GmbH;emonsbahntransportegmbh;1900100300690;vens liste.csv;64
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Saarbahn GmbH;saarbahngmbh;1900100300707;vens liste.csv;65
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Abellio Rail Mitteldeutschland GmbH;abelliorailmitteldeutschlandgmbh;1900100300715;vens liste.csv;66
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Abellio Rail GmbH;abelliorailgmbh;1900100300723;vens liste.csv;67
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;TX Logistik Transalpine GmbH;txlogistiktransalpinegmbh;1900100300731;vens liste.csv;68
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Alpha Trains Luxembourg S.á.r.l.;alphatrainsluxembourgsarl;1900100300749;vens liste.csv;69
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Transdev Mitteldeutschland GmbH;transdevmitteldeutschlandgmbh;1900100300822;vens liste.csv;70
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Macquarie European Rail Limited;macquarieeuropeanraillimited;1900100300830;vens liste.csv;71
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Hector Rail AB;hectorrailab;1900100300848;vens liste.csv;72
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Beacon Rail Leasing Limited;beaconrailleasinglimited;1900100300856;vens liste.csv;73
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Transdev Regio GmbH;transdevregiogmbh;1900100300864;vens liste.csv;74
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;ÖBB-Produktion GmbH;oebbproduktiongmbh;1900100300872;vens liste.csv;75
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;LOKOMOTION Gesellschaft für Schienentraktion mbH;lokomotiongesellschaftfuerschienentraktionmbh;1900100300880;vens liste.csv;76
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;RAG Anthrazit Ibbenbüren GmbH;raganthrazitibbenbuerengmbh;1900100300898;vens liste.csv;77
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;SVG Schienenverkehrsgesellschaft mbH;svgschienenverkehrsgesellschaftmbh;1900100300905;vens liste.csv;78
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;RTS Rail Transport Service GmbH;rtsrailtransportservicegmbh;1900100300913;vens liste.csv;79
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;PKP CARGO S. A. w restrukturyzacji;pkpcargosawrestrukturyzacji;1900100300921;vens liste.csv;80
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Train4you Betriebs GmbH;train4youbetriebsgmbh;1900100300939;vens liste.csv;81
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;ŠKODA TRANSPORTATION a.s.;skodatransportationas;1900100300947;vens liste.csv;82
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Vorbereitungsgesellschaft Transporttechnik mbH;vorbereitungsgesellschafttransporttechnikmbh;1900100300963;vens liste.csv;83
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Intermodal Terminal Rzepin Sp. Z o.o.;intermodalterminalrzepinspzoo;1900100300971;vens liste.csv;84
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Railtraxx NV;railtraxxnv;1900100300989;vens liste.csv;85
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Rhenus Rail St. Ingbert GmbH;rhenusrailstingbertgmbh;1900100300997;vens liste.csv;86
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Mindener Kreisbahnen GmbH;mindenerkreisbahnengmbh;1900100301002;vens liste.csv;87
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;UEF Eisenbahn-Verkehrsgesellschaft mbH;uefeisenbahnverkehrsgesellschaftmbh;1900100301010;vens liste.csv;88
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;BTE BahnTouristikExpress GmbH;btebahntouristikexpressgmbh;1900100301028;vens liste.csv;89
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;RailAdventure GmbH;railadventuregmbh;1900100301036;vens liste.csv;90
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Raildox GmbH & Co.KG;raildoxgmbhcokg;1900100301044;vens liste.csv;91
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Erfurter Bahnservice Gesellschaft mbH;erfurterbahnservicegesellschaftmbh;1900100301052;vens liste.csv;92
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;ELV - Eisenbahnlogistik Vienenburg;elveisenbahnlogistikvienenburg;1900100301060;vens liste.csv;93
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Eisenbahngesellschaft Potsdam mbH;eisenbahngesellschaftpotsdammbh;1900100301078;vens liste.csv;94
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;ecco rail GmbH;eccorailgmbh;1900100301086;vens liste.csv;95
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;CER Cargo Traction GmbH;cercargotractiongmbh;1900100301094;vens liste.csv;96
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Schweerbau Logistik GmbH;schweerbaulogistikgmbh;1900100301101;vens liste.csv;97
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Maik Ampft Eisenbahndienstleistungen;maikampfteisenbahndienstleistungen;1900100301127;vens liste.csv;98
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Bayerischer Localbahn Verein e.V.;bayerischerlocalbahnvereinev;1900100301135;vens liste.csv;99
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;LINEAS NV/SA;lineasnvsa;1900100301143;vens liste.csv;100
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Locon Logistik & Consulting AG;loconlogistikconsultingag;1900100301151;vens liste.csv;101
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;IGT - Inbetriebnahme Gesellschaft Transporttechnik GmbH;igtinbetriebnahmegesellschafttransporttechnikgmbh;1900100301169;vens liste.csv;102
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Saar Rail GmbH;saarrailgmbh;1900100301177;vens liste.csv;103
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Thurbo AG;thurboag;1900100301185;vens liste.csv;104
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Vulkan-Eifel-Bahn Betriebsgesellschaft mbH;vulkaneifelbahnbetriebsgesellschaftmbh;1900100301193;vens liste.csv;105
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Nordlandrail GmbH;nordlandrailgmbh;1900100301200;vens liste.csv;106
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Arbeitsgemeinschaft NostalgieZugReisen.de;arbeitsgemeinschaftnostalgiezugreisende;1900100301218;vens liste.csv;107
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;DeltaRail GmbH;deltarailgmbh;1900100301226;vens liste.csv;108
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Georg Verkehrsorganisation GmbH;georgverkehrsorganisationgmbh;1900100301234;vens liste.csv;109
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;IntEgro Verkehr GmbH;integroverkehrgmbh;1900100301242;vens liste.csv;110
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Gesellschaft zur Erhaltung von Schienenfahrzeugen Stuttgart e.V.;gesellschaftzurerhaltungvonschienenfahrzeugenstuttgartev;1900100301250;vens liste.csv;111
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Siemens AG;siemensag;1900100301268;vens liste.csv;112
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;SETG - Salzburger Eisenbahn TransportLogistik GmbH;setgsalzburgereisenbahntransportlogistikgmbh;1900100301276;vens liste.csv;113
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;KombiRail Europe B.V.;kombiraileuropebv;1900100301284;vens liste.csv;114
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;SWEG Südwestdeutsche Landesverkehrs-GmbH;swegsuedwestdeutschelandesverkehrsgmbh;1900100301292;vens liste.csv;115
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;SNCFL Société Nationale des Chemins de Fer Luxembourgeois;sncflsocietenationaledescheminsdeferluxembourgeois;1900100301309;vens liste.csv;116
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;e.g.o.o. Eisenbahngesellschaft Ostfriesland-Oldenburg mbH;egooeisenbahngesellschaftostfrieslandoldenburgmbh;1900100301317;vens liste.csv;117
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;SBB AG;sbbag;1900100301325;vens liste.csv;118
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;ESG Eisenbahn Service Gesellschaft mbH;esgeisenbahnservicegesellschaftmbh;1900100301333;vens liste.csv;119
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Rotterdam Rail Feeding B.V.;rotterdamrailfeedingbv;1900100301341;vens liste.csv;120
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Bocholter Eisenbahngesellschaft mbH;bocholtereisenbahngesellschaftmbh;1900100301359;vens liste.csv;121
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Centralbahn AG;centralbahnag;1900100301367;vens liste.csv;122
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;CTL Logistics GmbH;ctllogisticsgmbh;1900100301375;vens liste.csv;123
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;ERS Railways B.V.;ersrailwaysbv;1900100301383;vens liste.csv;124
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;GfE Ges. für Eisenbahnbetrieb mbH;gfegesfuereisenbahnbetriebmbh;1900100301391;vens liste.csv;125
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;ÖBB-Personenverkehr AG;oebbpersonenverkehrag;1900100301408;vens liste.csv;126
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;InfraLeuna GmbH;infraleunagmbh;1900100301416;vens liste.csv;127
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Rail 4U - Eisenbahndienstleistungen;rail4ueisenbahndienstleistungen;1900100301424;vens liste.csv;128
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Eichholz Eivel GmbH;eichholzeivelgmbh;1900100301432;vens liste.csv;129
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Cargo Logistik Rail Service GmbH;cargologistikrailservicegmbh;1900100301440;vens liste.csv;130
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;MEV Eisenbahn-Verkehrsgesellschaft mbH;meveisenbahnverkehrsgesellschaftmbh;1900100301458;vens liste.csv;131
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Traditionsgemeinschaft Bw Halle P e.V.;traditionsgemeinschaftbwhallepev;1900100301466;vens liste.csv;132
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Rail Cargo Austria AG;railcargoaustriaag;1900100301474;vens liste.csv;133
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;LTE Netherlands B.V.;ltenetherlandsbv;1900100301482;vens liste.csv;134
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Eisenbahn-Bau- und Betriebsgesellschaft Pressnitztalbahn mbH;eisenbahnbauundbetriebsgesellschaftpressnitztalbahnmbh;1900100301490;vens liste.csv;135
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;ORLEN Kolej sp. z o.o.;orlenkolejspzoo;1900100301507;vens liste.csv;136
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;TRI Train Rental GmbH;tritrainrentalgmbh;1900100301515;vens liste.csv;137
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Locon Benelux B.V.;loconbeneluxbv;1900100301523;vens liste.csv;138
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;northrail Fahrzeugverwaltungs GmbH;northrailfahrzeugverwaltungsgmbh;1900100301531;vens liste.csv;139
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;BLS Cargo AG;blscargoag;1900100301549;vens liste.csv;140
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;BayernBahn GmbH;bayernbahngmbh;1900100301557;vens liste.csv;141
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Retrack Germany GmbH;retrackgermanygmbh;1900100301565;vens liste.csv;142
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Bahnwelt Betriebs-GmbH;bahnweltbetriebsgmbh;1900100301573;vens liste.csv;143
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;ALSTOM Transportation Germany GmbH;alstomtransportationgermanygmbh;1900100301581;vens liste.csv;144
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Freightliner DE GmbH;freightlinerdegmbh;1900100301599;vens liste.csv;145
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;BLG RailTec GmbH;blgrailtecgmbh;1900100301606;vens liste.csv;146
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;LokoTrain s.r.o.;lokotrainsro;1900100301614;vens liste.csv;147
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;DB Cargo AG;dbcargoag;1900100301622;vens liste.csv;148
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Falkenberger Eisenbahngesellschaft mbH;falkenbergereisenbahngesellschaftmbh;1900100301630;vens liste.csv;149
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;SNCF Societé Nationale des Chemins de Fer Français;sncfsocietenationaledescheminsdeferfrancais;1900100301648;vens liste.csv;150
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;DB Regio AG;dbregioag;1900100301656;vens liste.csv;151
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;S-Rail GmbH;srailgmbh;1900100301664;vens liste.csv;152
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Steiermarkbahn Transport & Logistik GmbH;steiermarkbahntransportlogistikgmbh;1900100301672;vens liste.csv;153
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Cargo Service GmbH;cargoservicegmbh;1900100301680;vens liste.csv;154
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;SNCF Voyages Deutschland GmbH;sncfvoyagesdeutschlandgmbh;1900100301698;vens liste.csv;155
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;PKP Intercity S.A.;pkpintercitysa;1900100301705;vens liste.csv;156
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;CD Cargo a.s. Niederlassung Deutschland;cdcargoasniederlassungdeutschland;1900100301713;vens liste.csv;157
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Green Cargo AB;greencargoab;1900100301721;vens liste.csv;158
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;SNCB (Société nationale des chemins de fer belges);sncbsocietenationaledescheminsdeferbelges;1900100301739;vens liste.csv;159
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;HGB-Hessische Güterbahn GmbH;hgbhessischegueterbahngmbh;1900100301747;vens liste.csv;160
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Wedler Franz Logistik GmbH & Co. KG;wedlerfranzlogistikgmbhcokg;1900100301755;vens liste.csv;161
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;TRIANGULA Logistik GmbH;triangulalogistikgmbh;1900100301763;vens liste.csv;162
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;EURO-EXPRESS Sonderzüge GmbH & Co. KG;euroexpresssonderzuegegmbhcokg;1900100301771;vens liste.csv;163
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Lausitzer Dampflok Club e.V.;lausitzerdampflokclubev;1900100301789;vens liste.csv;164
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;EUROPORTE France;europortefrance;1900100301797;vens liste.csv;165
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Nordliner Gesellschaft für Eisenbahnverkehr mbH;nordlinergesellschaftfuereisenbahnverkehrmbh;1900100301804;vens liste.csv;166
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;DB Cargo France SAS;dbcargofrancesas;1900100301812;vens liste.csv;167
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;BLP Wiebe Logistik GmbH;blpwiebelogistikgmbh;1900100301820;vens liste.csv;168
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Bahnlogistik24 GmbH;bahnlogistik24gmbh;1900100301838;vens liste.csv;169
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Bolay & Moser EVU;bolaymoserevu;1900100301846;vens liste.csv;170
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;DB Regio Stuttgart GmbH;dbregiostuttgartgmbh;1900100301854;vens liste.csv;171
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;BSAS EisenbahnVerkehrs GmbH & Co. KG;bsaseisenbahnverkehrsgmbhcokg;1900100301862;vens liste.csv;172
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Uwe Adam EVU GmbH;uweadamevugmbh;1900100301870;vens liste.csv;173
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Lok-Partner GmbH & Co. KG;lokpartnergmbhcokg;1900100301888;vens liste.csv;174
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Backhaus Consulting Logistics Services;backhausconsultinglogisticsservices;1900100301896;vens liste.csv;175
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;GYSEV Zrt;gysevzrt;1900100301903;vens liste.csv;176
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Historische Eisenbahnfahrzeuge Lübeck e.V.;historischeeisenbahnfahrzeugeluebeckev;1900100301911;vens liste.csv;177
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;WESTbahn Management GmbH;westbahnmanagementgmbh;1900100301929;vens liste.csv;178
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Hector Rail GmbH;hectorrailgmbh;1900100301937;vens liste.csv;179
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;DB Fernverkehr AG;dbfernverkehrag;1900100301945;vens liste.csv;180
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;DB Schenker Rail Scandinavia A/S;dbschenkerrailscandinaviaas;1900100301953;vens liste.csv;181
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Hamburger Rail Service GmbH & Co. KG;hamburgerrailservicegmbhcokg;1900100301961;vens liste.csv;182
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;EP Cargo Deutschland GmbH;epcargodeutschlandgmbh;1900100301979;vens liste.csv;183
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Pro-Lok GmbH;prolokgmbh;1900100301987;vens liste.csv;184
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;NS Reizigers B.V.;nsreizigersbv;1900100301995;vens liste.csv;185
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;MEG Mitteldeutsche Eisenbahn GmbH;megmitteldeutscheeisenbahngmbh;1900100302000;vens liste.csv;186
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Swiss Rail Traffic AG;swissrailtrafficag;1900100302018;vens liste.csv;187
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;WRS Widmer Rail Service AG;wrswidmerrailserviceag;1900100302026;vens liste.csv;188
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;BELog Baustoffe- Entsorgung- Logistik GmbH & Co. KG;belogbaustoffeentsorgunglogistikgmbhcokg;1900100302034;vens liste.csv;189
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;LEO Express GmbH;leoexpressgmbh;1900100302042;vens liste.csv;190
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;UTL Umwelt und Transportlogistik GmbH;utlumweltundtransportlogistikgmbh;1900100302050;vens liste.csv;191
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Salzland Rail Service GmbH;salzlandrailservicegmbh;1900100302068;vens liste.csv;192
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;3-Seenbahn gGmbH;3seenbahnggmbh;1900100302109;vens liste.csv;193
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;BM Bahndienste GmbH;bmbahndienstegmbh;1900100302125;vens liste.csv;194
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;BBL Logistik GmbH;bbllogistikgmbh;1900100302133;vens liste.csv;195
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Fahrzeugwerke Karsdorf GmbH & Co. KG;fahrzeugwerkekarsdorfgmbhcokg;1900100302141;vens liste.csv;196
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;RBH Logistics GmbH;rbhlogisticsgmbh;1900100302167;vens liste.csv;197
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Train4Train GmbH;train4traingmbh;1900100302175;vens liste.csv;198
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Siemens Mobility GmbH;siemensmobilitygmbh;1900100302183;vens liste.csv;199
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;ERC.D GmbH;ercdgmbh;1900100302191;vens liste.csv;200
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Arverio Baden-Württemberg GmbH;arveriobadenwuerttemberggmbh;1900100302208;vens liste.csv;201
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Zug-Pilot GmbH;zugpilotgmbh;1900100302216;vens liste.csv;202
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;AKE-Eisenbahntouristik – Jörg Petry e.K.;akeeisenbahntouristikjoergpetryek;1900100302224;vens liste.csv;203
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;STARKENBERGER Güterlogistik GmbH;starkenbergergueterlogistikgmbh;1900100302232;vens liste.csv;204
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;TrainLog GmbH;trainloggmbh;1900100302240;vens liste.csv;205
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Lausitz Energie Bergbau AG;lausitzenergiebergbauag;1900100302258;vens liste.csv;206
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Rennsteigbahn GmbH & Co. KG;rennsteigbahngmbhcokg;1900100302266;vens liste.csv;207
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;smart rail GmbH;smartrailgmbh;1900100302274;vens liste.csv;208
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;vlexx GmbH;vlexxgmbh;1900100302282;vens liste.csv;209
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Elektrische Zugförderung Württemberg gGmbH;elektrischezugfoerderungwuerttembergggmbh;1900100302290;vens liste.csv;210
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Hupac SA;hupacsa;1900100302307;vens liste.csv;211
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Transdev Regio Ost GmbH;transdevregioostgmbh;1900100302315;vens liste.csv;212
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;HELROM GmbH;helromgmbh;1900100302323;vens liste.csv;213
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;SLG Spitzke Logistik GmbH;slgspitzkelogistikgmbh;1900100302331;vens liste.csv;214
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;dispo-Tf Rail GmbH;dispotfrailgmbh;1900100302349;vens liste.csv;215
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Railexperts B.V.;railexpertsbv;1900100302357;vens liste.csv;216
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Stadler Rail Service Deutschland GmbH;stadlerrailservicedeutschlandgmbh;1900100302365;vens liste.csv;217
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Heavy Haul Power International GmbH;heavyhaulpowerinternationalgmbh;1900100302373;vens liste.csv;218
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;railCare AG;railcareag;1900100302381;vens liste.csv;219
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Netzwerkbahn Sachsen GmbH;netzwerkbahnsachsengmbh;1900100302399;vens liste.csv;220
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Württembergische Eisenbahn-Gesellschaft mbH;wuerttembergischeeisenbahngesellschaftmbh;1900100302406;vens liste.csv;221
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;GfF Gesellschaft für Fahrzeugtechnik mbH;gffgesellschaftfuerfahrzeugtechnikmbh;1900100302414;vens liste.csv;222
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Leipziger Dampf KulTour Alexander Schröter;leipzigerdampfkultouralexanderschroeter;1900100302422;vens liste.csv;223
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;RCM Rail Care and Management GmbH;rcmrailcareandmanagementgmbh;1900100302430;vens liste.csv;224
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;RegioJet a.s.;regiojetas;1900100302448;vens liste.csv;225
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;LTE Germany GmbH;ltegermanygmbh;1900100302456;vens liste.csv;226
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Centralbahn GmbH;centralbahngmbh;1900100302464;vens liste.csv;227
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Rolling Stock Lease s.r.o.;rollingstockleasesro;1900100302472;vens liste.csv;228
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;KERAM Beteiligungsgesellschaft mbh;kerambeteiligungsgesellschaftmbh;1900100302480;vens liste.csv;229
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Flex Bahndienstleistungen GmbH;flexbahndienstleistungengmbh;1900100302498;vens liste.csv;230
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;DB InfraGO AG;dbinfragoag;1900100302505;vens liste.csv;231
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Eisenbahnfreunde Treysa e.V.;eisenbahnfreundetreysaev;1900100302513;vens liste.csv;232
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;ESL GmbH;eslgmbh;1900100302521;vens liste.csv;233
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;DB Systemtechnik GmbH;dbsystemtechnikgmbh;1900100302539;vens liste.csv;234
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Martin Schlünß Eisenbahnlogistik;martinschluensseisenbahnlogistik;1900100302547;vens liste.csv;235
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Deutsche Bahn Stiftung gGmbH;deutschebahnstiftungggmbh;1900100302555;vens liste.csv;236
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Lion Rail GmbH;lionrailgmbh;1900100302563;vens liste.csv;237
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;RTB Cargo Netherlands B.V.;rtbcargonetherlandsbv;1900100302571;vens liste.csv;238
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Railtrans International a.s.;railtransinternationalas;1900100302589;vens liste.csv;239
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;twentyone GmbH;twentyonegmbh;1900100302597;vens liste.csv;240
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Diepholzer Kreisbahn EVU GmbH;diepholzerkreisbahnevugmbh;1900100302604;vens liste.csv;241
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;NBS Niederlausitzer Bahnservice GmbH;nbsniederlausitzerbahnservicegmbh;1900100302612;vens liste.csv;242
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;DB Fahrwegdienste GmbH;dbfahrwegdienstegmbh;1900100302620;vens liste.csv;243
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;PKP CARGO INTERNATIONAL a.s.;pkpcargointernationalas;1900100302638;vens liste.csv;244
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Rail Force One Germany GmbH;railforceonegermanygmbh;1900100302646;vens liste.csv;245
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;DB Fahrzeuginstandhaltung GmbH;dbfahrzeuginstandhaltunggmbh;1900100302654;vens liste.csv;246
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Hexafret SAS;hexafretsas;1900100302662;vens liste.csv;247
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Eurasian Railway Carrier SP. z.o.o.;eurasianrailwaycarrierspzoo;1900100302670;vens liste.csv;248
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Railsystems RP GmbH;railsystemsrpgmbh;1900100302688;vens liste.csv;249
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;InRail S.p.A;inrailspa;1900100302696;vens liste.csv;250
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Regio Infra Service Sachsen GmbH;regioinfraservicesachsengmbh;1900100302703;vens liste.csv;251
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;WRS Deutschland GmbH;wrsdeutschlandgmbh;1900100302711;vens liste.csv;252
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Gesellschaft der Förderer der Museumseisenbahn Hamm e. V.;gesellschaftderfoerdererdermuseumseisenbahnhammev;1900100302729;vens liste.csv;253
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;International Rolling Stock Investment AG;internationalrollingstockinvestmentag;1900100302737;vens liste.csv;254
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;THI Factory;thifactory;1900100302745;vens liste.csv;255
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Förderverein BW Arnstadt/historisch e.V.;foerdervereinbwarnstadthistorischev;1900100302753;vens liste.csv;256
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Slovenská plavba a prístavy a.s.;slovenskaplavbaapristavyas;1900100302761;vens liste.csv;257
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;BUDAMAR WEST GmbH;budamarwestgmbh;1900100302779;vens liste.csv;258
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Bodensee-Oberschwaben-Bahn GmbH & Co. KG;bodenseeoberschwabenbahngmbhcokg;1900100302787;vens liste.csv;259
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;CARGOUNIT Sp. z o.o.;cargounitspzoo;1900100302795;vens liste.csv;260
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Transdev Hannover GmbH;transdevhannovergmbh;1900100302802;vens liste.csv;261
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Lok-Partner Betriebsgesellschaft mbH & Co. KG;lokpartnerbetriebsgesellschaftmbhcokg;1900100302810;vens liste.csv;262
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;LoConnect GmbH;loconnectgmbh;1900100302828;vens liste.csv;263
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;FOXrail Zrt.;foxrailzrt;1900100302836;vens liste.csv;264
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;FlixTrain GmbH;flixtraingmbh;1900100302844;vens liste.csv;265
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;FRACHTbahn Traktion GmbH;frachtbahntraktiongmbh;1900100302852;vens liste.csv;266
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Stadler Rail Valencia S.A.U.;stadlerrailvalenciasau;1900100302860;vens liste.csv;267
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Verein Depot und Schienenfahrzeuge Koblenz;vereindepotundschienenfahrzeugekoblenz;1900100302878;vens liste.csv;268
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Rund ums Gleis GmbH;rundumsgleisgmbh;1900100302886;vens liste.csv;269
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Dampflok-Depot Full;dampflokdepotfull;1900100302894;vens liste.csv;270
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Rail2U B.V.;rail2ubv;1900100302901;vens liste.csv;271
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Hafen Krefeld GmbH & Co. KG;hafenkrefeldgmbhcokg;1900100302919;vens liste.csv;272
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;SKL Schienen Komplex Logistik Magdeburg GmbH & Co. KG;sklschienenkomplexlogistikmagdeburggmbhcokg;1900100302927;vens liste.csv;273
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Interessengemeinschaft Bw Dresden Altstadt e.V.;interessengemeinschaftbwdresdenaltstadtev;1900100302935;vens liste.csv;274
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Stern & Hafferl Verkehrsgesellschaft m.b.H.;sternhafferlverkehrsgesellschaftmbh;1900100302943;vens liste.csv;275
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;DB RegioNetz Verkehrs GmbH;dbregionetzverkehrsgmbh;1900100302951;vens liste.csv;276
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;DB ZugBus Regionalverkehr Alb-Bodensee GmbH;dbzugbusregionalverkehralbbodenseegmbh;1900100302969;vens liste.csv;277
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;S-Bahn Hamburg GmbH;sbahnhamburggmbh;1900100302977;vens liste.csv;278
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Arverio Bayern GmbH;arveriobayerngmbh;1900100302985;vens liste.csv;279
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Nordic Rail Service GmbH;nordicrailservicegmbh;1900100302993;vens liste.csv;280
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Saar Mosel Rail GmbH;saarmoselrailgmbh;1900100303008;vens liste.csv;281
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Weser Ems Eisenbahn GmbH;weseremseisenbahngmbh;1900100303016;vens liste.csv;282
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Eifelbahn Verkehrsgesellschaft mbH;eifelbahnverkehrsgesellschaftmbh;1900100303024;vens liste.csv;283
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;NEB Betriebsgesellschaft mbH;nebbetriebsgesellschaftmbh;1900100303032;vens liste.csv;284
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Lokomotion Austria GmbH;lokomotionaustriagmbh;1900100303040;vens liste.csv;285
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;NeSA Eisenbahn-Betriebsgesellschaft Neckar-Schwarzwald-Alb mbH;nesaeisenbahnbetriebsgesellschaftneckarschwarzwaldalbmbh;1900100303058;vens liste.csv;286
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;LTE Schweiz GmbH;lteschweizgmbh;1900100303066;vens liste.csv;287
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Rail Bavaria Logistik GmbH;railbavarialogistikgmbh;1900100303074;vens liste.csv;288
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;WECO Rail GmbH;wecorailgmbh;1900100303082;vens liste.csv;289
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Anhaltinisch-Brandenburgische Eisenbahngesellschaft mbH;anhaltinischbrandenburgischeeisenbahngesellschaftmbh;1900100303090;vens liste.csv;290
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;VIAS Rail GmbH;viasrailgmbh;1900100303107;vens liste.csv;291
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;smart rail traction GmbH;smartrailtractiongmbh;1900100303115;vens liste.csv;292
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;HBC Hanseatisches Bahn Contor GmbH;hbchanseatischesbahncontorgmbh;1900100303123;vens liste.csv;293
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;CD Cargo a.s.;cdcargoas;1900100303131;vens liste.csv;294
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Tenforty2-Rail GmbH;tenforty2railgmbh;1900100303149;vens liste.csv;295
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;IG Traditionslok 58 3047 e.V.;igtraditionslok583047ev;1900100303157;vens liste.csv;296
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;RBP - Rheinische Bahnpersonal- und Verkehrsgesellschaft mbH;rbprheinischebahnpersonalundverkehrsgesellschaftmbh;1900100303165;vens liste.csv;297
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;DB Bahnbau Gruppe GmbH;dbbahnbaugruppegmbh;1900100303173;vens liste.csv;298
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;RSE Rhein-Sieg-Eisenbahn GmbH;rserheinsiegeisenbahngmbh;1900100303181;vens liste.csv;299
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Medway Italia S.R.L.;medwayitaliasrl;1900100303199;vens liste.csv;300
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;SPL EisenbahnVerkehr GmbH;spleisenbahnverkehrgmbh;1900100303206;vens liste.csv;301
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Eiffage Infra-Rail GmbH;eiffageinfrarailgmbh;1900100303214;vens liste.csv;302
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;UTL Umwelt- und Transportlogistik AG;utlumweltundtransportlogistikag;1900100303222;vens liste.csv;303
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;nordbahn Verkehrsgesellschaft Ost-West mbH;nordbahnverkehrsgesellschaftostwestmbh;1900100303230;vens liste.csv;304
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;nordbahn Verkehrsgesellschaft Nord mbH;nordbahnverkehrsgesellschaftnordmbh;1900100303248;vens liste.csv;305
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;erixx-Holstein GmbH;erixxholsteingmbh;1900100303256;vens liste.csv;306
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Holsteinische Eisenbahngesellschaft für historischen Verkehr gGmbH;holsteinischeeisenbahngesellschaftfuerhistorischenverkehrggmbh;1900100303264;vens liste.csv;307
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;CONSTRUCCIONES Y AUXILIAR DE FERROCARRILES, S.A.;construccionesyauxiliardeferrocarrilessa;1900100303272;vens liste.csv;308
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;BUG Vermietungsgesellschaft mbH;bugvermietungsgesellschaftmbh;1900100303280;vens liste.csv;309
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Rail&Sea Logistics GmbH;railsealogisticsgmbh;1900100303298;vens liste.csv;310
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Dortmunder Eisenbahn GmbH;dortmundereisenbahngmbh;1900100303305;vens liste.csv;311
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Stadler Deutschland GmbH;stadlerdeutschlandgmbh;1900100303313;vens liste.csv;312
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Retrack Czech s.r.o.;retrackczechsro;1900100303321;vens liste.csv;313
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Passauer Eisenbahnfreunde e.V.;passauereisenbahnfreundeev;1900100303339;vens liste.csv;314
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Train Charter Services B.V.;traincharterservicesbv;1900100303347;vens liste.csv;315
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;duisport rail GmbH;duisportrailgmbh;1900100303355;vens liste.csv;316
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;LWC Lappwaldbahn Cargo GmbH;lwclappwaldbahncargogmbh;1900100303363;vens liste.csv;317
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;LOKORAIL, a.s.;lokorailas;1900100303371;vens liste.csv;318
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;MZ Eisenbahndienstleistungen GmbH;mzeisenbahndienstleistungengmbh;1900100303389;vens liste.csv;319
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;RTB CARGO GmbH;rtbcargogmbh;1900100303397;vens liste.csv;320
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Raaberbahn Cargo GmbH;raaberbahncargogmbh;1900100303404;vens liste.csv;321
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;DSB Dänische Staatsbahn;dsbdaenischestaatsbahn;1900100303412;vens liste.csv;322
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;DPB Rail Infra Service GmbH;dpbrailinfraservicegmbh;1900100303420;vens liste.csv;323
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Rhomberg Sersa Rail GmbH;rhombergsersarailgmbh;1900100303438;vens liste.csv;324
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;EH Güterverkehr GmbH;ehgueterverkehrgmbh;1900100303446;vens liste.csv;325
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;ORLEN Unipetrol Doprava s.r.o.;orlenunipetroldopravasro;1900100303454;vens liste.csv;326
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;LEONHARD WEISS GmbH & Co. KG;leonhardweissgmbhcokg;1900100303462;vens liste.csv;327
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;KonRail GmbH;konrailgmbh;1900100303470;vens liste.csv;328
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;InterTourex GmbH;intertourexgmbh;1900100303488;vens liste.csv;329
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;European Loc Pool AG;europeanlocpoolag;1900100303496;vens liste.csv;330
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Medway Belgium NV;medwaybelgiumnv;1900100303503;vens liste.csv;331
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Ceské dráhy, a.s.;ceskedrahyas;1900100303511;vens liste.csv;332
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Vossloh Rolling Stock GmbH;vosslohrollingstockgmbh;1900100303529;vens liste.csv;333
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Hansebahn Bremen GmbH;hansebahnbremengmbh;1900100303537;vens liste.csv;334
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Bahnbetrieb Gera GmbH;bahnbetriebgeragmbh;1900100303545;vens liste.csv;335
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;STRABAG Rail Fahrleitungen GmbH;strabagrailfahrleitungengmbh;1900100303553;vens liste.csv;336
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Wagenmeister + Logistik Dienstleistungs Nord GmbH;wagenmeisterlogistikdienstleistungsnordgmbh;1900100303561;vens liste.csv;337
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;PCC Intermodal GmbH;pccintermodalgmbh;1900100303579;vens liste.csv;338
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;SGL - Schienen Güter Logistik GmbH;sglschienengueterlogistikgmbh;1900100303587;vens liste.csv;339
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Bahn PT GmbH;bahnptgmbh;1900100303595;vens liste.csv;340
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Lokdienste Braun GmbH;lokdienstebraungmbh;1900100303602;vens liste.csv;341
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Bahnbetriebswerk Glauchau GmbH;bahnbetriebswerkglauchaugmbh;1900100303610;vens liste.csv;342
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Museumsbahn e.V.;museumsbahnev;1900100303628;vens liste.csv;343
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;KGT Gleis- und Tiefbau GmbH;kgtgleisundtiefbaugmbh;1900100303636;vens liste.csv;344
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;zl-traktion GmbH;zltraktiongmbh;1900100303644;vens liste.csv;345
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Rail Cargo Logistics - Germany GmbH;railcargologisticsgermanygmbh;1900100303652;vens liste.csv;346
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Altmark-Rail GmbH;altmarkrailgmbh;1900100303660;vens liste.csv;347
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Rail&Sea Traction GmbH;railseatractiongmbh;1900100303678;vens liste.csv;348
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;MDrivers B.V.;mdriversbv;1900100303686;vens liste.csv;349
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Anschütz & Richter GbR;anschuetzrichtergbr;1900100303694;vens liste.csv;350
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Willke Logistics GmbH;willkelogisticsgmbh;1900100303701;vens liste.csv;351
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;CAF Deutschland GmbH;cafdeutschlandgmbh;1900100303719;vens liste.csv;352
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Am Zehnhoff-Söns GmbH International Railway Services;amzehnhoffsoensgmbhinternationalrailwayservices;1900100303727;vens liste.csv;353
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Flexx-Tf Dienstleistungen UG (haftungsbeschränkt);flexxtfdienstleistungenughaftungsbeschraenkt;1900100303735;vens liste.csv;354
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;GTS Rail S.p.A.;gtsrailspa;1900100303743;vens liste.csv;355
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Traktion4Rent GmbH;traktion4rentgmbh;1900100303751;vens liste.csv;356
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Historische S-Bahn NRW e.V.;historischesbahnnrwev;1900100303769;vens liste.csv;357
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Rhomberg Sersa Gleisbau GmbH;rhombergsersagleisbaugmbh;1900100303777;vens liste.csv;358
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;VLO Bahn GmbH;vlobahngmbh;1900100303785;vens liste.csv;359
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Hanse Bahn Nord GmbH;hansebahnnordgmbh;1900100303793;vens liste.csv;360
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;GMP Green Mobility Partners GmbH;gmpgreenmobilitypartnersgmbh;1900100303800;vens liste.csv;361
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Regionalverkehre Start Deutschland GmbH;regionalverkehrestartdeutschlandgmbh;1900100303818;vens liste.csv;362
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Mambar Rail GmbH;mambarrailgmbh;1900100303826;vens liste.csv;363
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;dispo-Tf Rail Austria GmbH;dispotfrailaustriagmbh;1900100303834;vens liste.csv;364
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;TFR Cargo GmbH;tfrcargogmbh;1900100303842;vens liste.csv;365
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Keolis Nederland B.V.;keolisnederlandbv;1900100303850;vens liste.csv;366
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Plasser & Theurer, Export von Bahnbaumaschinen, Gesellschaft m.b.H.;plassertheurerexportvonbahnbaumaschinengesellschaftmbh;1900100303868;vens liste.csv;367
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;D & D Eisenbahngesellschaft mbH;ddeisenbahngesellschaftmbh;1900100303876;vens liste.csv;368
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;ART Altmann Rail Traction GmbH;artaltmannrailtractiongmbh;1900100303884;vens liste.csv;369
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;European Vision Rail GmbH;europeanvisionrailgmbh;1900100303892;vens liste.csv;370
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Rail Unit GmbH;railunitgmbh;1900100303909;vens liste.csv;371
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;eisenbahn.jetzt GmbH;eisenbahnjetztgmbh;1900100303917;vens liste.csv;372
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;PORR Bau GmbH;porrbaugmbh;1900100303925;vens liste.csv;373
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Bahnoperator Polska Sp. z o.o;bahnoperatorpolskaspzoo;1900100303933;vens liste.csv;374
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Idun Rail GmbH;idunrailgmbh;1900100303941;vens liste.csv;375
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Rail Traction Company S.p.A.;railtractioncompanyspa;1900100303959;vens liste.csv;376
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;WECO Rail Germany GmbH;wecorailgermanygmbh;1900100303967;vens liste.csv;377
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;BASF SE;basfse;1900100303975;vens liste.csv;378
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;1435 railway operations GmbH & Co. KG;1435railwayoperationsgmbhcokg;1900100303983;vens liste.csv;379
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Cargo Motion s.r.o.;cargomotionsro;1900100303991;vens liste.csv;380
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Bentheimer Eisenbahn AG;bentheimereisenbahnag;1900100304006;vens liste.csv;381
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Cargo Rail Solutions GmbH;cargorailsolutionsgmbh;1900100304014;vens liste.csv;382
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Projektbahn Mobility GmbH;projektbahnmobilitygmbh;1900100304022;vens liste.csv;383
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Eisenbahn-Güterlogistik GmbH;eisenbahngueterlogistikgmbh;1900100304030;vens liste.csv;384
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Nordic Re-Finance AB;nordicrefinanceab;1900100304048;vens liste.csv;385
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;City-Bahn Chemnitz GmbH;citybahnchemnitzgmbh;1900100304056;vens liste.csv;386
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;Arriva Personalvervoer Nederland B.V.;arrivapersonalvervoernederlandbv;1900100304064;vens liste.csv;387
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;WDW-Rail Nederland BV;wdwrailnederlandbv;1900100304072;vens liste.csv;388
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;WLD Logistik GmbH;wldlogistikgmbh;1900100304080;vens liste.csv;389
+ANU_VENS;ANu-vEns (Nutzer) im Bahnstromnetz;KSW Kreisbahn Siegen-Wittgenstein GmbH;kswkreisbahnsiegenwittgensteingmbh;1900100304098;vens liste.csv;390
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Die Länderbahn GmbH DLB;dielaenderbahngmbhdlb;1900100400010;vens liste.csv;395
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;ITL-Eisenbahngesellschaft mbH;itleisenbahngesellschaftmbh;1900100400028;vens liste.csv;396
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;cantus Verkehrsgesellschaft mbH;cantusverkehrsgesellschaftmbh;1900100400036;vens liste.csv;397
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;boxXpress.de GmbH;boxxpressdegmbh;1900100400044;vens liste.csv;398
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Beacon Rail Capital Europe GmbH;beaconrailcapitaleuropegmbh;1900100400052;vens liste.csv;399
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Railpool GmbH;railpoolgmbh;1900100400060;vens liste.csv;400
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Rail4Captrain GmbH;rail4captraingmbh;1900100400078;vens liste.csv;401
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;eurobahn GmbH & Co. KG;eurobahngmbhcokg;1900100400086;vens liste.csv;402
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Regiobahn Bitterfeld Berlin GmbH;regiobahnbitterfeldberlingmbh;1900100400094;vens liste.csv;403
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Captrain Deutschland CargoWest GmbH;captraindeutschlandcargowestgmbh;1900100400101;vens liste.csv;404
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;RheinCargo GmbH & Co. KG;rheincargogmbhcokg;1900100400119;vens liste.csv;405
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;CFL Cargo Deutschland GmbH;cflcargodeutschlandgmbh;1900100400127;vens liste.csv;406
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;ODEG Ostdeutsche Eisenbahn GmbH;odegostdeutscheeisenbahngmbh;1900100400135;vens liste.csv;407
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;VIAS GmbH;viasgmbh;1900100400143;vens liste.csv;408
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Westfälische Landes-Eisenbahn GmbH;westfaelischelandeseisenbahngmbh;1900100400151;vens liste.csv;409
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Holzlogistik & Güterbahn GmbH;holzlogistikgueterbahngmbh;1900100400169;vens liste.csv;410
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;CFL Cargo S.A.;cflcargosa;1900100400177;vens liste.csv;411
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;METRANS Rail (Deutschland) GmbH;metransraildeutschlandgmbh;1900100400185;vens liste.csv;412
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Albtal-Verkehrs-Gesellschaft mbH;albtalverkehrsgesellschaftmbh;1900100400193;vens liste.csv;413
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;ELL Germany GmbH;ellgermanygmbh;1900100400200;vens liste.csv;414
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;metronom Eisenbahngesellschaft mbH;metronomeisenbahngesellschaftmbh;1900100400218;vens liste.csv;415
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Niederrheinische Verkehrsbetriebe AG;niederrheinischeverkehrsbetriebeag;1900100400226;vens liste.csv;416
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;trans regio Deutsche Regionalbahn GmbH;transregiodeutscheregionalbahngmbh;1900100400234;vens liste.csv;417
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;NordWestBahn GmbH;nordwestbahngmbh;1900100400242;vens liste.csv;418
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;SBB GmbH;sbbgmbh;1900100400250;vens liste.csv;419
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Rail Cargo Carrier - Germany GmbH;railcargocarriergermanygmbh;1900100400276;vens liste.csv;420
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;SBB Cargo Deutschland GmbH;sbbcargodeutschlandgmbh;1900100400284;vens liste.csv;421
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;agilis Eisenbahngesellschaft mbH & Co. KG;agiliseisenbahngesellschaftmbhcokg;1900100400292;vens liste.csv;422
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Bayerische Oberlandbahn GmbH;bayerischeoberlandbahngmbh;1900100400309;vens liste.csv;423
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;BLS Cargo Nord NV;blscargonordnv;1900100400317;vens liste.csv;424
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;HSL Logistik GmbH;hsllogistikgmbh;1900100400325;vens liste.csv;425
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;NBE nordbahn Eisenbahngesellschaft mbH & Co. KG;nbenordbahneisenbahngesellschaftmbhcokg;1900100400333;vens liste.csv;426
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;WestfalenBahn GmbH;westfalenbahngmbh;1900100400341;vens liste.csv;427
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Akiem S.A.S.;akiemsas;1900100400359;vens liste.csv;428
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Havelländische Eisenbahn AG;havellaendischeeisenbahnag;1900100400367;vens liste.csv;429
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Regental Bahnbetriebs-GmbH;regentalbahnbetriebsgmbh;1900100400375;vens liste.csv;430
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;ArcelorMittal Eisenhüttenstadt Transport GmbH;arcelormittaleisenhuettenstadttransportgmbh;1900100400383;vens liste.csv;431
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;LTE Logistik- und Transport-GmbH;ltelogistikundtransportgmbh;1900100400391;vens liste.csv;432
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Transchem Spolka z o.o.;transchemspolkazoo;1900100400408;vens liste.csv;433
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Verkehrsbetriebe Peine-Salzgitter GmbH;verkehrsbetriebepeinesalzgittergmbh;1900100400416;vens liste.csv;434
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;METRANS Rail s.r.o.;metransrailsro;1900100400424;vens liste.csv;435
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Captrain Deutschland GmbH;captraindeutschlandgmbh;1900100400432;vens liste.csv;436
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;SBB Cargo AG;sbbcargoag;1900100400440;vens liste.csv;437
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;TSS Cargo a.s.;tsscargoas;1900100400458;vens liste.csv;438
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Stauden-Verkehrs-GmbH;staudenverkehrsgmbh;1900100400466;vens liste.csv;439
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;METRANS a.s.;metransas;1900100400474;vens liste.csv;440
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;SRI Rail Invest GmbH;srirailinvestgmbh;1900100400482;vens liste.csv;441
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Mittelweserbahn GmbH;mittelweserbahngmbh;1900100400565;vens liste.csv;442
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Akiem Technik Germany GmbH & Co. KG;akiemtechnikgermanygmbhcokg;1900100400573;vens liste.csv;443
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;LEG Leipziger Eisenbahnverkehrsgesellschaft mbH;legleipzigereisenbahnverkehrsgesellschaftmbh;1900100400581;vens liste.csv;444
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Alstom Transport Deutschland GmbH;alstomtransportdeutschlandgmbh;1900100400599;vens liste.csv;445
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;National Express Rail GmbH;nationalexpressrailgmbh;1900100400606;vens liste.csv;446
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;HLB Hessenbahn GmbH;hlbhessenbahngmbh;1900100400614;vens liste.csv;447
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;EVB Elbe-Weser GmbH;evbelbewesergmbh;1900100400630;vens liste.csv;448
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Regionalbahn Kassel GmbH;regionalbahnkasselgmbh;1900100400648;vens liste.csv;449
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;RegioTram Gesellschaft mbH;regiotramgesellschaftmbh;1900100400656;vens liste.csv;450
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;TX Logistik AG;txlogistikag;1900100400664;vens liste.csv;451
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;IGE GmbH & Co. KG;igegmbhcokg;1900100400672;vens liste.csv;452
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Emons Bahntransporte GmbH;emonsbahntransportegmbh;1900100400698;vens liste.csv;453
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Saarbahn GmbH;saarbahngmbh;1900100400705;vens liste.csv;454
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Abellio Rail Mitteldeutschland GmbH;abelliorailmitteldeutschlandgmbh;1900100400713;vens liste.csv;455
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Abellio Rail GmbH;abelliorailgmbh;1900100400721;vens liste.csv;456
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;TX Logistik Transalpine GmbH;txlogistiktransalpinegmbh;1900100400739;vens liste.csv;457
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Alpha Trains Luxembourg S.á.r.l.;alphatrainsluxembourgsarl;1900100400747;vens liste.csv;458
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Transdev Mitteldeutschland GmbH;transdevmitteldeutschlandgmbh;1900100400820;vens liste.csv;459
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Macquarie European Rail Limited;macquarieeuropeanraillimited;1900100400838;vens liste.csv;460
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Hector Rail AB;hectorrailab;1900100400846;vens liste.csv;461
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Beacon Rail Leasing Limited;beaconrailleasinglimited;1900100400854;vens liste.csv;462
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Transdev Regio GmbH;transdevregiogmbh;1900100400862;vens liste.csv;463
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;ÖBB-Produktion GmbH;oebbproduktiongmbh;1900100400870;vens liste.csv;464
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;LOKOMOTION Gesellschaft für Schienentraktion mbH;lokomotiongesellschaftfuerschienentraktionmbh;1900100400888;vens liste.csv;465
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;RAG Anthrazit Ibbenbüren GmbH;raganthrazitibbenbuerengmbh;1900100400896;vens liste.csv;466
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;SVG Schienenverkehrsgesellschaft mbH;svgschienenverkehrsgesellschaftmbh;1900100400903;vens liste.csv;467
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;RTS Rail Transport Service GmbH;rtsrailtransportservicegmbh;1900100400911;vens liste.csv;468
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;PKP CARGO S. A. w restrukturyzacji;pkpcargosawrestrukturyzacji;1900100400929;vens liste.csv;469
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Train4you Betriebs GmbH;train4youbetriebsgmbh;1900100400937;vens liste.csv;470
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;ŠKODA TRANSPORTATION a.s.;skodatransportationas;1900100400945;vens liste.csv;471
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Vorbereitungsgesellschaft Transporttechnik mbH;vorbereitungsgesellschafttransporttechnikmbh;1900100400961;vens liste.csv;472
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Intermodal Terminal Rzepin Sp. Z o.o.;intermodalterminalrzepinspzoo;1900100400979;vens liste.csv;473
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Railtraxx NV;railtraxxnv;1900100400987;vens liste.csv;474
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Rhenus Rail St. Ingbert GmbH;rhenusrailstingbertgmbh;1900100400995;vens liste.csv;475
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Mindener Kreisbahnen GmbH;mindenerkreisbahnengmbh;1900100401000;vens liste.csv;476
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;UEF Eisenbahn-Verkehrsgesellschaft mbH;uefeisenbahnverkehrsgesellschaftmbh;1900100401018;vens liste.csv;477
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;BTE BahnTouristikExpress GmbH;btebahntouristikexpressgmbh;1900100401026;vens liste.csv;478
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;RailAdventure GmbH;railadventuregmbh;1900100401034;vens liste.csv;479
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Raildox GmbH & Co.KG;raildoxgmbhcokg;1900100401042;vens liste.csv;480
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Erfurter Bahnservice Gesellschaft mbH;erfurterbahnservicegesellschaftmbh;1900100401050;vens liste.csv;481
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;ELV - Eisenbahnlogistik Vienenburg;elveisenbahnlogistikvienenburg;1900100401068;vens liste.csv;482
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Eisenbahngesellschaft Potsdam mbH;eisenbahngesellschaftpotsdammbh;1900100401076;vens liste.csv;483
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;ecco rail GmbH;eccorailgmbh;1900100401084;vens liste.csv;484
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;CER Cargo Traction GmbH;cercargotractiongmbh;1900100401092;vens liste.csv;485
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Schweerbau Logistik GmbH;schweerbaulogistikgmbh;1900100401109;vens liste.csv;486
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Maik Ampft Eisenbahndienstleistungen;maikampfteisenbahndienstleistungen;1900100401125;vens liste.csv;487
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Bayerischer Localbahn Verein e.V.;bayerischerlocalbahnvereinev;1900100401133;vens liste.csv;488
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;LINEAS NV/SA;lineasnvsa;1900100401141;vens liste.csv;489
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Locon Logistik & Consulting AG;loconlogistikconsultingag;1900100401159;vens liste.csv;490
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;IGT - Inbetriebnahme Gesellschaft Transporttechnik GmbH;igtinbetriebnahmegesellschafttransporttechnikgmbh;1900100401167;vens liste.csv;491
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Saar Rail GmbH;saarrailgmbh;1900100401175;vens liste.csv;492
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Thurbo AG;thurboag;1900100401183;vens liste.csv;493
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Vulkan-Eifel-Bahn Betriebsgesellschaft mbH;vulkaneifelbahnbetriebsgesellschaftmbh;1900100401191;vens liste.csv;494
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Nordlandrail GmbH;nordlandrailgmbh;1900100401208;vens liste.csv;495
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Arbeitsgemeinschaft NostalgieZugReisen.de;arbeitsgemeinschaftnostalgiezugreisende;1900100401216;vens liste.csv;496
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;DeltaRail GmbH;deltarailgmbh;1900100401224;vens liste.csv;497
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Georg Verkehrsorganisation GmbH;georgverkehrsorganisationgmbh;1900100401232;vens liste.csv;498
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;IntEgro Verkehr GmbH;integroverkehrgmbh;1900100401240;vens liste.csv;499
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Gesellschaft zur Erhaltung von Schienenfahrzeugen Stuttgart e.V.;gesellschaftzurerhaltungvonschienenfahrzeugenstuttgartev;1900100401258;vens liste.csv;500
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Siemens AG;siemensag;1900100401266;vens liste.csv;501
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;SETG - Salzburger Eisenbahn TransportLogistik GmbH;setgsalzburgereisenbahntransportlogistikgmbh;1900100401274;vens liste.csv;502
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;KombiRail Europe B.V.;kombiraileuropebv;1900100401282;vens liste.csv;503
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;SWEG Südwestdeutsche Landesverkehrs-GmbH;swegsuedwestdeutschelandesverkehrsgmbh;1900100401290;vens liste.csv;504
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;SNCFL Société Nationale des Chemins de Fer Luxembourgeois;sncflsocietenationaledescheminsdeferluxembourgeois;1900100401307;vens liste.csv;505
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;e.g.o.o. Eisenbahngesellschaft Ostfriesland-Oldenburg mbH;egooeisenbahngesellschaftostfrieslandoldenburgmbh;1900100401315;vens liste.csv;506
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;SBB AG;sbbag;1900100401323;vens liste.csv;507
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;ESG Eisenbahn Service Gesellschaft mbH;esgeisenbahnservicegesellschaftmbh;1900100401331;vens liste.csv;508
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Rotterdam Rail Feeding B.V.;rotterdamrailfeedingbv;1900100401349;vens liste.csv;509
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Bocholter Eisenbahngesellschaft mbH;bocholtereisenbahngesellschaftmbh;1900100401357;vens liste.csv;510
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Centralbahn AG;centralbahnag;1900100401365;vens liste.csv;511
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;CTL Logistics GmbH;ctllogisticsgmbh;1900100401373;vens liste.csv;512
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;ERS Railways B.V.;ersrailwaysbv;1900100401381;vens liste.csv;513
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;GfE Ges. für Eisenbahnbetrieb mbH;gfegesfuereisenbahnbetriebmbh;1900100401399;vens liste.csv;514
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;ÖBB-Personenverkehr AG;oebbpersonenverkehrag;1900100401406;vens liste.csv;515
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;InfraLeuna GmbH;infraleunagmbh;1900100401414;vens liste.csv;516
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Rail 4U - Eisenbahndienstleistungen;rail4ueisenbahndienstleistungen;1900100401422;vens liste.csv;517
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Eichholz Eivel GmbH;eichholzeivelgmbh;1900100401430;vens liste.csv;518
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Cargo Logistik Rail Service GmbH;cargologistikrailservicegmbh;1900100401448;vens liste.csv;519
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;MEV Eisenbahn-Verkehrsgesellschaft mbH;meveisenbahnverkehrsgesellschaftmbh;1900100401456;vens liste.csv;520
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Traditionsgemeinschaft Bw Halle P e.V.;traditionsgemeinschaftbwhallepev;1900100401464;vens liste.csv;521
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Rail Cargo Austria AG;railcargoaustriaag;1900100401472;vens liste.csv;522
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;LTE Netherlands B.V.;ltenetherlandsbv;1900100401480;vens liste.csv;523
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Eisenbahn-Bau- und Betriebsgesellschaft Pressnitztalbahn mbH;eisenbahnbauundbetriebsgesellschaftpressnitztalbahnmbh;1900100401498;vens liste.csv;524
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;ORLEN Kolej sp. z o.o.;orlenkolejspzoo;1900100401505;vens liste.csv;525
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;TRI Train Rental GmbH;tritrainrentalgmbh;1900100401513;vens liste.csv;526
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Locon Benelux B.V.;loconbeneluxbv;1900100401521;vens liste.csv;527
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;northrail Fahrzeugverwaltungs GmbH;northrailfahrzeugverwaltungsgmbh;1900100401539;vens liste.csv;528
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;BLS Cargo AG;blscargoag;1900100401547;vens liste.csv;529
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;BayernBahn GmbH;bayernbahngmbh;1900100401555;vens liste.csv;530
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Retrack Germany GmbH;retrackgermanygmbh;1900100401563;vens liste.csv;531
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Bahnwelt Betriebs-GmbH;bahnweltbetriebsgmbh;1900100401571;vens liste.csv;532
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;ALSTOM Transportation Germany GmbH;alstomtransportationgermanygmbh;1900100401589;vens liste.csv;533
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Freightliner DE GmbH;freightlinerdegmbh;1900100401597;vens liste.csv;534
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;BLG RailTec GmbH;blgrailtecgmbh;1900100401604;vens liste.csv;535
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;LokoTrain s.r.o.;lokotrainsro;1900100401612;vens liste.csv;536
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;DB Cargo AG;dbcargoag;1900100401620;vens liste.csv;537
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Falkenberger Eisenbahngesellschaft mbH;falkenbergereisenbahngesellschaftmbh;1900100401638;vens liste.csv;538
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;SNCF Societé Nationale des Chemins de Fer Français;sncfsocietenationaledescheminsdeferfrancais;1900100401646;vens liste.csv;539
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;DB Regio AG;dbregioag;1900100401654;vens liste.csv;540
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;S-Rail GmbH;srailgmbh;1900100401662;vens liste.csv;541
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Steiermarkbahn Transport & Logistik GmbH;steiermarkbahntransportlogistikgmbh;1900100401670;vens liste.csv;542
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Cargo Service GmbH;cargoservicegmbh;1900100401688;vens liste.csv;543
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;SNCF Voyages Deutschland GmbH;sncfvoyagesdeutschlandgmbh;1900100401696;vens liste.csv;544
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;PKP Intercity S.A.;pkpintercitysa;1900100401703;vens liste.csv;545
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;CD Cargo a.s. Niederlassung Deutschland;cdcargoasniederlassungdeutschland;1900100401711;vens liste.csv;546
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Green Cargo AB;greencargoab;1900100401729;vens liste.csv;547
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;SNCB (Société nationale des chemins de fer belges);sncbsocietenationaledescheminsdeferbelges;1900100401737;vens liste.csv;548
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;HGB-Hessische Güterbahn GmbH;hgbhessischegueterbahngmbh;1900100401745;vens liste.csv;549
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Wedler Franz Logistik GmbH & Co. KG;wedlerfranzlogistikgmbhcokg;1900100401753;vens liste.csv;550
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;TRIANGULA Logistik GmbH;triangulalogistikgmbh;1900100401761;vens liste.csv;551
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;EURO-EXPRESS Sonderzüge GmbH & Co. KG;euroexpresssonderzuegegmbhcokg;1900100401779;vens liste.csv;552
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Lausitzer Dampflok Club e.V.;lausitzerdampflokclubev;1900100401787;vens liste.csv;553
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;EUROPORTE France;europortefrance;1900100401795;vens liste.csv;554
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Nordliner Gesellschaft für Eisenbahnverkehr mbH;nordlinergesellschaftfuereisenbahnverkehrmbh;1900100401802;vens liste.csv;555
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;DB Cargo France SAS;dbcargofrancesas;1900100401810;vens liste.csv;556
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;BLP Wiebe Logistik GmbH;blpwiebelogistikgmbh;1900100401828;vens liste.csv;557
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Bahnlogistik24 GmbH;bahnlogistik24gmbh;1900100401836;vens liste.csv;558
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Bolay & Moser EVU;bolaymoserevu;1900100401844;vens liste.csv;559
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;DB Regio Stuttgart GmbH;dbregiostuttgartgmbh;1900100401852;vens liste.csv;560
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;BSAS EisenbahnVerkehrs GmbH & Co. KG;bsaseisenbahnverkehrsgmbhcokg;1900100401860;vens liste.csv;561
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Uwe Adam EVU GmbH;uweadamevugmbh;1900100401878;vens liste.csv;562
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Lok-Partner GmbH & Co. KG;lokpartnergmbhcokg;1900100401886;vens liste.csv;563
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Backhaus Consulting Logistics Services;backhausconsultinglogisticsservices;1900100401894;vens liste.csv;564
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;GYSEV Zrt;gysevzrt;1900100401901;vens liste.csv;565
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Historische Eisenbahnfahrzeuge Lübeck e.V.;historischeeisenbahnfahrzeugeluebeckev;1900100401919;vens liste.csv;566
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;WESTbahn Management GmbH;westbahnmanagementgmbh;1900100401927;vens liste.csv;567
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Hector Rail GmbH;hectorrailgmbh;1900100401935;vens liste.csv;568
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;DB Fernverkehr AG;dbfernverkehrag;1900100401943;vens liste.csv;569
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;DB Schenker Rail Scandinavia A/S;dbschenkerrailscandinaviaas;1900100401951;vens liste.csv;570
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Hamburger Rail Service GmbH & Co. KG;hamburgerrailservicegmbhcokg;1900100401969;vens liste.csv;571
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;EP Cargo Deutschland GmbH;epcargodeutschlandgmbh;1900100401977;vens liste.csv;572
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Pro-Lok GmbH;prolokgmbh;1900100401985;vens liste.csv;573
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;NS Reizigers B.V.;nsreizigersbv;1900100401993;vens liste.csv;574
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;MEG Mitteldeutsche Eisenbahn GmbH;megmitteldeutscheeisenbahngmbh;1900100402008;vens liste.csv;575
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Swiss Rail Traffic AG;swissrailtrafficag;1900100402016;vens liste.csv;576
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;WRS Widmer Rail Service AG;wrswidmerrailserviceag;1900100402024;vens liste.csv;577
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;BELog Baustoffe- Entsorgung- Logistik GmbH & Co. KG;belogbaustoffeentsorgunglogistikgmbhcokg;1900100402032;vens liste.csv;578
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;LEO Express GmbH;leoexpressgmbh;1900100402040;vens liste.csv;579
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;UTL Umwelt und Transportlogistik GmbH;utlumweltundtransportlogistikgmbh;1900100402058;vens liste.csv;580
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Salzland Rail Service GmbH;salzlandrailservicegmbh;1900100402066;vens liste.csv;581
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;3-Seenbahn gGmbH;3seenbahnggmbh;1900100402107;vens liste.csv;582
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;BM Bahndienste GmbH;bmbahndienstegmbh;1900100402123;vens liste.csv;583
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;BBL Logistik GmbH;bbllogistikgmbh;1900100402131;vens liste.csv;584
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Fahrzeugwerke Karsdorf GmbH & Co. KG;fahrzeugwerkekarsdorfgmbhcokg;1900100402149;vens liste.csv;585
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;RBH Logistics GmbH;rbhlogisticsgmbh;1900100402165;vens liste.csv;586
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Train4Train GmbH;train4traingmbh;1900100402173;vens liste.csv;587
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Siemens Mobility GmbH;siemensmobilitygmbh;1900100402181;vens liste.csv;588
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;ERC.D GmbH;ercdgmbh;1900100402199;vens liste.csv;589
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Arverio Baden-Württemberg GmbH;arveriobadenwuerttemberggmbh;1900100402206;vens liste.csv;590
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Zug-Pilot GmbH;zugpilotgmbh;1900100402214;vens liste.csv;591
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;AKE-Eisenbahntouristik – Jörg Petry e.K.;akeeisenbahntouristikjoergpetryek;1900100402222;vens liste.csv;592
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;STARKENBERGER Güterlogistik GmbH;starkenbergergueterlogistikgmbh;1900100402230;vens liste.csv;593
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;TrainLog GmbH;trainloggmbh;1900100402248;vens liste.csv;594
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Lausitz Energie Bergbau AG;lausitzenergiebergbauag;1900100402256;vens liste.csv;595
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Rennsteigbahn GmbH & Co. KG;rennsteigbahngmbhcokg;1900100402264;vens liste.csv;596
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;smart rail GmbH;smartrailgmbh;1900100402272;vens liste.csv;597
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;vlexx GmbH;vlexxgmbh;1900100402280;vens liste.csv;598
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Elektrische Zugförderung Württemberg gGmbH;elektrischezugfoerderungwuerttembergggmbh;1900100402298;vens liste.csv;599
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Hupac SA;hupacsa;1900100402305;vens liste.csv;600
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Transdev Regio Ost GmbH;transdevregioostgmbh;1900100402313;vens liste.csv;601
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;HELROM GmbH;helromgmbh;1900100402321;vens liste.csv;602
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;SLG Spitzke Logistik GmbH;slgspitzkelogistikgmbh;1900100402339;vens liste.csv;603
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;dispo-Tf Rail GmbH;dispotfrailgmbh;1900100402347;vens liste.csv;604
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Railexperts B.V.;railexpertsbv;1900100402355;vens liste.csv;605
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Stadler Rail Service Deutschland GmbH;stadlerrailservicedeutschlandgmbh;1900100402363;vens liste.csv;606
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Heavy Haul Power International GmbH;heavyhaulpowerinternationalgmbh;1900100402371;vens liste.csv;607
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;railCare AG;railcareag;1900100402389;vens liste.csv;608
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Netzwerkbahn Sachsen GmbH;netzwerkbahnsachsengmbh;1900100402397;vens liste.csv;609
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Württembergische Eisenbahn-Gesellschaft mbH;wuerttembergischeeisenbahngesellschaftmbh;1900100402404;vens liste.csv;610
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;GfF Gesellschaft für Fahrzeugtechnik mbH;gffgesellschaftfuerfahrzeugtechnikmbh;1900100402412;vens liste.csv;611
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Leipziger Dampf KulTour Alexander Schröter;leipzigerdampfkultouralexanderschroeter;1900100402420;vens liste.csv;612
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;RCM Rail Care and Management GmbH;rcmrailcareandmanagementgmbh;1900100402438;vens liste.csv;613
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;RegioJet a.s.;regiojetas;1900100402446;vens liste.csv;614
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;LTE Germany GmbH;ltegermanygmbh;1900100402454;vens liste.csv;615
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Centralbahn GmbH;centralbahngmbh;1900100402462;vens liste.csv;616
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Rolling Stock Lease s.r.o.;rollingstockleasesro;1900100402470;vens liste.csv;617
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;KERAM Beteiligungsgesellschaft mbh;kerambeteiligungsgesellschaftmbh;1900100402488;vens liste.csv;618
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Flex Bahndienstleistungen GmbH;flexbahndienstleistungengmbh;1900100402496;vens liste.csv;619
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;DB InfraGO AG;dbinfragoag;1900100402503;vens liste.csv;620
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Eisenbahnfreunde Treysa e.V.;eisenbahnfreundetreysaev;1900100402511;vens liste.csv;621
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;ESL GmbH;eslgmbh;1900100402529;vens liste.csv;622
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;DB Systemtechnik GmbH;dbsystemtechnikgmbh;1900100402537;vens liste.csv;623
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Martin Schlünß Eisenbahnlogistik;martinschluensseisenbahnlogistik;1900100402545;vens liste.csv;624
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Deutsche Bahn Stiftung gGmbH;deutschebahnstiftungggmbh;1900100402553;vens liste.csv;625
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Lion Rail GmbH;lionrailgmbh;1900100402561;vens liste.csv;626
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;RTB Cargo Netherlands B.V.;rtbcargonetherlandsbv;1900100402579;vens liste.csv;627
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Railtrans International a.s.;railtransinternationalas;1900100402587;vens liste.csv;628
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;twentyone GmbH;twentyonegmbh;1900100402595;vens liste.csv;629
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Diepholzer Kreisbahn EVU GmbH;diepholzerkreisbahnevugmbh;1900100402602;vens liste.csv;630
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;NBS Niederlausitzer Bahnservice GmbH;nbsniederlausitzerbahnservicegmbh;1900100402610;vens liste.csv;631
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;DB Fahrwegdienste GmbH;dbfahrwegdienstegmbh;1900100402628;vens liste.csv;632
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;PKP CARGO INTERNATIONAL a.s.;pkpcargointernationalas;1900100402636;vens liste.csv;633
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Rail Force One Germany GmbH;railforceonegermanygmbh;1900100402644;vens liste.csv;634
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;DB Fahrzeuginstandhaltung GmbH;dbfahrzeuginstandhaltunggmbh;1900100402652;vens liste.csv;635
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Hexafret SAS;hexafretsas;1900100402660;vens liste.csv;636
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Eurasian Railway Carrier SP. z.o.o.;eurasianrailwaycarrierspzoo;1900100402678;vens liste.csv;637
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Railsystems RP GmbH;railsystemsrpgmbh;1900100402686;vens liste.csv;638
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;InRail S.p.A;inrailspa;1900100402694;vens liste.csv;639
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Regio Infra Service Sachsen GmbH;regioinfraservicesachsengmbh;1900100402701;vens liste.csv;640
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;WRS Deutschland GmbH;wrsdeutschlandgmbh;1900100402719;vens liste.csv;641
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Gesellschaft der Förderer der Museumseisenbahn Hamm e. V.;gesellschaftderfoerdererdermuseumseisenbahnhammev;1900100402727;vens liste.csv;642
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;International Rolling Stock Investment AG;internationalrollingstockinvestmentag;1900100402735;vens liste.csv;643
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;THI Factory;thifactory;1900100402743;vens liste.csv;644
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Förderverein BW Arnstadt/historisch e.V.;foerdervereinbwarnstadthistorischev;1900100402751;vens liste.csv;645
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Slovenská plavba a prístavy a.s.;slovenskaplavbaapristavyas;1900100402769;vens liste.csv;646
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;BUDAMAR WEST GmbH;budamarwestgmbh;1900100402777;vens liste.csv;647
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Bodensee-Oberschwaben-Bahn GmbH & Co. KG;bodenseeoberschwabenbahngmbhcokg;1900100402785;vens liste.csv;648
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;CARGOUNIT Sp. z o.o.;cargounitspzoo;1900100402793;vens liste.csv;649
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Transdev Hannover GmbH;transdevhannovergmbh;1900100402800;vens liste.csv;650
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Lok-Partner Betriebsgesellschaft mbH & Co. KG;lokpartnerbetriebsgesellschaftmbhcokg;1900100402818;vens liste.csv;651
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;LoConnect GmbH;loconnectgmbh;1900100402826;vens liste.csv;652
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;FOXrail Zrt.;foxrailzrt;1900100402834;vens liste.csv;653
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;FlixTrain GmbH;flixtraingmbh;1900100402842;vens liste.csv;654
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;FRACHTbahn Traktion GmbH;frachtbahntraktiongmbh;1900100402850;vens liste.csv;655
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Stadler Rail Valencia S.A.U.;stadlerrailvalenciasau;1900100402868;vens liste.csv;656
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Verein Depot und Schienenfahrzeuge Koblenz;vereindepotundschienenfahrzeugekoblenz;1900100402876;vens liste.csv;657
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Rund ums Gleis GmbH;rundumsgleisgmbh;1900100402884;vens liste.csv;658
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Dampflok-Depot Full;dampflokdepotfull;1900100402892;vens liste.csv;659
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Rail2U B.V.;rail2ubv;1900100402909;vens liste.csv;660
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Hafen Krefeld GmbH & Co. KG;hafenkrefeldgmbhcokg;1900100402917;vens liste.csv;661
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;SKL Schienen Komplex Logistik Magdeburg GmbH & Co. KG;sklschienenkomplexlogistikmagdeburggmbhcokg;1900100402925;vens liste.csv;662
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Interessengemeinschaft Bw Dresden Altstadt e.V.;interessengemeinschaftbwdresdenaltstadtev;1900100402933;vens liste.csv;663
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Stern & Hafferl Verkehrsgesellschaft m.b.H.;sternhafferlverkehrsgesellschaftmbh;1900100402941;vens liste.csv;664
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;DB RegioNetz Verkehrs GmbH;dbregionetzverkehrsgmbh;1900100402959;vens liste.csv;665
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;DB ZugBus Regionalverkehr Alb-Bodensee GmbH;dbzugbusregionalverkehralbbodenseegmbh;1900100402967;vens liste.csv;666
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;S-Bahn Hamburg GmbH;sbahnhamburggmbh;1900100402975;vens liste.csv;667
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Arverio Bayern GmbH;arveriobayerngmbh;1900100402983;vens liste.csv;668
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Nordic Rail Service GmbH;nordicrailservicegmbh;1900100402991;vens liste.csv;669
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Saar Mosel Rail GmbH;saarmoselrailgmbh;1900100403006;vens liste.csv;670
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Weser Ems Eisenbahn GmbH;weseremseisenbahngmbh;1900100403014;vens liste.csv;671
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Eifelbahn Verkehrsgesellschaft mbH;eifelbahnverkehrsgesellschaftmbh;1900100403022;vens liste.csv;672
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;NEB Betriebsgesellschaft mbH;nebbetriebsgesellschaftmbh;1900100403030;vens liste.csv;673
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Lokomotion Austria GmbH;lokomotionaustriagmbh;1900100403048;vens liste.csv;674
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;NeSA Eisenbahn-Betriebsgesellschaft Neckar-Schwarzwald-Alb mbH;nesaeisenbahnbetriebsgesellschaftneckarschwarzwaldalbmbh;1900100403056;vens liste.csv;675
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;LTE Schweiz GmbH;lteschweizgmbh;1900100403064;vens liste.csv;676
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Rail Bavaria Logistik GmbH;railbavarialogistikgmbh;1900100403072;vens liste.csv;677
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;WECO Rail GmbH;wecorailgmbh;1900100403080;vens liste.csv;678
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Anhaltinisch-Brandenburgische Eisenbahngesellschaft mbH;anhaltinischbrandenburgischeeisenbahngesellschaftmbh;1900100403098;vens liste.csv;679
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;VIAS Rail GmbH;viasrailgmbh;1900100403105;vens liste.csv;680
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;smart rail traction GmbH;smartrailtractiongmbh;1900100403113;vens liste.csv;681
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;HBC Hanseatisches Bahn Contor GmbH;hbchanseatischesbahncontorgmbh;1900100403121;vens liste.csv;682
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;CD Cargo a.s.;cdcargoas;1900100403139;vens liste.csv;683
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Tenforty2-Rail GmbH;tenforty2railgmbh;1900100403147;vens liste.csv;684
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;IG Traditionslok 58 3047 e.V.;igtraditionslok583047ev;1900100403155;vens liste.csv;685
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;RBP - Rheinische Bahnpersonal- und Verkehrsgesellschaft mbH;rbprheinischebahnpersonalundverkehrsgesellschaftmbh;1900100403163;vens liste.csv;686
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;DB Bahnbau Gruppe GmbH;dbbahnbaugruppegmbh;1900100403171;vens liste.csv;687
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;RSE Rhein-Sieg-Eisenbahn GmbH;rserheinsiegeisenbahngmbh;1900100403189;vens liste.csv;688
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Medway Italia S.R.L.;medwayitaliasrl;1900100403197;vens liste.csv;689
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;SPL EisenbahnVerkehr GmbH;spleisenbahnverkehrgmbh;1900100403204;vens liste.csv;690
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Eiffage Infra-Rail GmbH;eiffageinfrarailgmbh;1900100403212;vens liste.csv;691
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;UTL Umwelt- und Transportlogistik AG;utlumweltundtransportlogistikag;1900100403220;vens liste.csv;692
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;nordbahn Verkehrsgesellschaft Ost-West mbH;nordbahnverkehrsgesellschaftostwestmbh;1900100403238;vens liste.csv;693
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;nordbahn Verkehrsgesellschaft Nord mbH;nordbahnverkehrsgesellschaftnordmbh;1900100403246;vens liste.csv;694
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;erixx-Holstein GmbH;erixxholsteingmbh;1900100403254;vens liste.csv;695
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Holsteinische Eisenbahngesellschaft für historischen Verkehr gGmbH;holsteinischeeisenbahngesellschaftfuerhistorischenverkehrggmbh;1900100403262;vens liste.csv;696
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;CONSTRUCCIONES Y AUXILIAR DE FERROCARRILES, S.A.;construccionesyauxiliardeferrocarrilessa;1900100403270;vens liste.csv;697
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;BUG Vermietungsgesellschaft mbH;bugvermietungsgesellschaftmbh;1900100403288;vens liste.csv;698
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Rail&Sea Logistics GmbH;railsealogisticsgmbh;1900100403296;vens liste.csv;699
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Dortmunder Eisenbahn GmbH;dortmundereisenbahngmbh;1900100403303;vens liste.csv;700
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Stadler Deutschland GmbH;stadlerdeutschlandgmbh;1900100403311;vens liste.csv;701
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Retrack Czech s.r.o.;retrackczechsro;1900100403329;vens liste.csv;702
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Passauer Eisenbahnfreunde e.V.;passauereisenbahnfreundeev;1900100403337;vens liste.csv;703
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Train Charter Services B.V.;traincharterservicesbv;1900100403345;vens liste.csv;704
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;duisport rail GmbH;duisportrailgmbh;1900100403353;vens liste.csv;705
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;LWC Lappwaldbahn Cargo GmbH;lwclappwaldbahncargogmbh;1900100403361;vens liste.csv;706
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;LOKORAIL, a.s.;lokorailas;1900100403379;vens liste.csv;707
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;MZ Eisenbahndienstleistungen GmbH;mzeisenbahndienstleistungengmbh;1900100403387;vens liste.csv;708
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;RTB CARGO GmbH;rtbcargogmbh;1900100403395;vens liste.csv;709
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Raaberbahn Cargo GmbH;raaberbahncargogmbh;1900100403402;vens liste.csv;710
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;DSB Dänische Staatsbahn;dsbdaenischestaatsbahn;1900100403410;vens liste.csv;711
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;DPB Rail Infra Service GmbH;dpbrailinfraservicegmbh;1900100403428;vens liste.csv;712
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Rhomberg Sersa Rail GmbH;rhombergsersarailgmbh;1900100403436;vens liste.csv;713
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;EH Güterverkehr GmbH;ehgueterverkehrgmbh;1900100403444;vens liste.csv;714
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;ORLEN Unipetrol Doprava s.r.o.;orlenunipetroldopravasro;1900100403452;vens liste.csv;715
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;LEONHARD WEISS GmbH & Co. KG;leonhardweissgmbhcokg;1900100403460;vens liste.csv;716
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;KonRail GmbH;konrailgmbh;1900100403478;vens liste.csv;717
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;InterTourex GmbH;intertourexgmbh;1900100403486;vens liste.csv;718
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;European Loc Pool AG;europeanlocpoolag;1900100403494;vens liste.csv;719
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Medway Belgium NV;medwaybelgiumnv;1900100403501;vens liste.csv;720
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Ceské dráhy, a.s.;ceskedrahyas;1900100403519;vens liste.csv;721
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Vossloh Rolling Stock GmbH;vosslohrollingstockgmbh;1900100403527;vens liste.csv;722
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Hansebahn Bremen GmbH;hansebahnbremengmbh;1900100403535;vens liste.csv;723
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Bahnbetrieb Gera GmbH;bahnbetriebgeragmbh;1900100403543;vens liste.csv;724
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;STRABAG Rail Fahrleitungen GmbH;strabagrailfahrleitungengmbh;1900100403551;vens liste.csv;725
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Wagenmeister + Logistik Dienstleistungs Nord GmbH;wagenmeisterlogistikdienstleistungsnordgmbh;1900100403569;vens liste.csv;726
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;PCC Intermodal GmbH;pccintermodalgmbh;1900100403577;vens liste.csv;727
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;SGL - Schienen Güter Logistik GmbH;sglschienengueterlogistikgmbh;1900100403585;vens liste.csv;728
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Bahn PT GmbH;bahnptgmbh;1900100403593;vens liste.csv;729
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Lokdienste Braun GmbH;lokdienstebraungmbh;1900100403600;vens liste.csv;730
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Bahnbetriebswerk Glauchau GmbH;bahnbetriebswerkglauchaugmbh;1900100403618;vens liste.csv;731
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Museumsbahn e.V.;museumsbahnev;1900100403626;vens liste.csv;732
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;KGT Gleis- und Tiefbau GmbH;kgtgleisundtiefbaugmbh;1900100403634;vens liste.csv;733
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;zl-traktion GmbH;zltraktiongmbh;1900100403642;vens liste.csv;734
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Rail Cargo Logistics - Germany GmbH;railcargologisticsgermanygmbh;1900100403650;vens liste.csv;735
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Altmark-Rail GmbH;altmarkrailgmbh;1900100403668;vens liste.csv;736
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Rail&Sea Traction GmbH;railseatractiongmbh;1900100403676;vens liste.csv;737
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;MDrivers B.V.;mdriversbv;1900100403684;vens liste.csv;738
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Anschütz & Richter GbR;anschuetzrichtergbr;1900100403692;vens liste.csv;739
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Willke Logistics GmbH;willkelogisticsgmbh;1900100403709;vens liste.csv;740
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;CAF Deutschland GmbH;cafdeutschlandgmbh;1900100403717;vens liste.csv;741
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Am Zehnhoff-Söns GmbH International Railway Services;amzehnhoffsoensgmbhinternationalrailwayservices;1900100403725;vens liste.csv;742
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Flexx-Tf Dienstleistungen UG (haftungsbeschränkt);flexxtfdienstleistungenughaftungsbeschraenkt;1900100403733;vens liste.csv;743
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;GTS Rail S.p.A.;gtsrailspa;1900100403741;vens liste.csv;744
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Traktion4Rent GmbH;traktion4rentgmbh;1900100403759;vens liste.csv;745
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Historische S-Bahn NRW e.V.;historischesbahnnrwev;1900100403767;vens liste.csv;746
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Rhomberg Sersa Gleisbau GmbH;rhombergsersagleisbaugmbh;1900100403775;vens liste.csv;747
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;VLO Bahn GmbH;vlobahngmbh;1900100403783;vens liste.csv;748
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Hanse Bahn Nord GmbH;hansebahnnordgmbh;1900100403791;vens liste.csv;749
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;GMP Green Mobility Partners GmbH;gmpgreenmobilitypartnersgmbh;1900100403808;vens liste.csv;750
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Regionalverkehre Start Deutschland GmbH;regionalverkehrestartdeutschlandgmbh;1900100403816;vens liste.csv;751
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Mambar Rail GmbH;mambarrailgmbh;1900100403824;vens liste.csv;752
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;dispo-Tf Rail Austria GmbH;dispotfrailaustriagmbh;1900100403832;vens liste.csv;753
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;TFR Cargo GmbH;tfrcargogmbh;1900100403840;vens liste.csv;754
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Keolis Nederland B.V.;keolisnederlandbv;1900100403858;vens liste.csv;755
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Plasser & Theurer, Export von Bahnbaumaschinen, Gesellschaft m.b.H.;plassertheurerexportvonbahnbaumaschinengesellschaftmbh;1900100403866;vens liste.csv;756
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;D & D Eisenbahngesellschaft mbH;ddeisenbahngesellschaftmbh;1900100403874;vens liste.csv;757
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;ART Altmann Rail Traction GmbH;artaltmannrailtractiongmbh;1900100403882;vens liste.csv;758
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;European Vision Rail GmbH;europeanvisionrailgmbh;1900100403890;vens liste.csv;759
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Rail Unit GmbH;railunitgmbh;1900100403907;vens liste.csv;760
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;eisenbahn.jetzt GmbH;eisenbahnjetztgmbh;1900100403915;vens liste.csv;761
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;PORR Bau GmbH;porrbaugmbh;1900100403923;vens liste.csv;762
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Bahnoperator Polska Sp. z o.o;bahnoperatorpolskaspzoo;1900100403931;vens liste.csv;763
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Idun Rail GmbH;idunrailgmbh;1900100403949;vens liste.csv;764
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Rail Traction Company S.p.A.;railtractioncompanyspa;1900100403957;vens liste.csv;765
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;WECO Rail Germany GmbH;wecorailgermanygmbh;1900100403965;vens liste.csv;766
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;BASF SE;basfse;1900100403973;vens liste.csv;767
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;1435 railway operations GmbH & Co. KG;1435railwayoperationsgmbhcokg;1900100403981;vens liste.csv;768
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Cargo Motion s.r.o.;cargomotionsro;1900100403999;vens liste.csv;769
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Bentheimer Eisenbahn AG;bentheimereisenbahnag;1900100404004;vens liste.csv;770
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Cargo Rail Solutions GmbH;cargorailsolutionsgmbh;1900100404012;vens liste.csv;771
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Projektbahn Mobility GmbH;projektbahnmobilitygmbh;1900100404020;vens liste.csv;772
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Eisenbahn-Güterlogistik GmbH;eisenbahngueterlogistikgmbh;1900100404038;vens liste.csv;773
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Nordic Re-Finance AB;nordicrefinanceab;1900100404046;vens liste.csv;774
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;City-Bahn Chemnitz GmbH;citybahnchemnitzgmbh;1900100404054;vens liste.csv;775
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;Arriva Personalvervoer Nederland B.V.;arrivapersonalvervoernederlandbv;1900100404062;vens liste.csv;776
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;WDW-Rail Nederland BV;wdwrailnederlandbv;1900100404070;vens liste.csv;777
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;WLD Logistik GmbH;wldlogistikgmbh;1900100404088;vens liste.csv;778
+ANE_TENS;ANe-tEns (Halter) im Bahnstromnetz;KSW Kreisbahn Siegen-Wittgenstein GmbH;kswkreisbahnsiegenwittgensteingmbh;1900100404096;vens liste.csv;779
+DIENSTLEISTER;Dienstleister im Bahnstromnetz;UKL iT & Logistik GmbH;uklitlogistikgmbh;1900100390013;vens liste.csv;783
+DIENSTLEISTER;Dienstleister im Bahnstromnetz;railizer GbR;railizergbr;1900100390021;vens liste.csv;784
+DIENSTLEISTER;Dienstleister im Bahnstromnetz;DB Energie GmbH - Kommunikationsdienstleister;dbenergiegmbhkommunikationsdienstleister;1900100380006;vens liste.csv;785
+NETZBETREIBER;Netzbetreiber im Bahnstromnetz;DB Energie GmbH;dbenergiegmbh;1900100370007;vens liste.csv;789
+STROMLIEFERANT;Stromlieferanten im Bahnstromnetz;DB Energie GmbH - Bahnstromlieferant BLF;dbenergiegmbhbahnstromlieferantblf;1900100380105;vens liste.csv;793
+BILANZKREISVERANTWORTLICHER;Bilankreisverantwortliche im Bahnstromnetz;DB Energie GmbH;dbenergiegmbh;1900100360115;vens liste.csv;797
+BILANZKREISVERANTWORTLICHER;Bilankreisverantwortliche im Bahnstromnetz;LOKOMOTION Gesellschaft für Schienentraktion mbH;lokomotiongesellschaftfuerschienentraktionmbh;1900100360230;vens liste.csv;798
+BILANZKREISVERANTWORTLICHER;Bilankreisverantwortliche im Bahnstromnetz;Lokomotion Austria GmbH;lokomotionaustriagmbh;1900100360280;vens liste.csv;799
+UEBERTRAGUNGSNETZBETREIBER;Übertragungsnetzbetreiber im Bahnstromnetz;DB Energie GmbH;dbenergiegmbh;1900100310003;vens liste.csv;803
+EINSATZVERANTWORTLICHER;Einsatzverantwortliche im Bahnstromnetz;DB Energie GmbH;dbenergiegmbh;1900100350009;vens liste.csv;807
+BETREIBER_TECHNISCHE_RESSOURCE;Betreiber einer technischen Ressource im Bahnstromnetz;DB Energie GmbH;dbenergiegmbh;1900100340000;vens liste.csv;811
+BETREIBER_TECHNISCHE_RESSOURCE;Betreiber einer technischen Ressource im Bahnstromnetz;DB Energie GmbH;dbenergiegmbh;1900100330001;vens liste.csv;815
+MESSDIENSTLEISTER;Messdienstleister im Bahnstromnetz;DB Energie Dummy (Dummy) (0000);dbenergiedummydummy0000;1900100500000;vens liste.csv;819
+MESSDIENSTLEISTER;Messdienstleister im Bahnstromnetz;Deutsche Bahn Energie (DE) (0080);deutschebahnenergiede0080;1900100500802;vens liste.csv;820
+MESSDIENSTLEISTER;Messdienstleister im Bahnstromnetz;ADIF (ES) - Administrador de Infraestructuras Ferroviarias (0071);adifesadministradordeinfraestructurasferroviarias0071;1900100500711;vens liste.csv;821
+MESSDIENSTLEISTER;Messdienstleister im Bahnstromnetz;Bane NOR (NO) (0076);banenorno0076;1900100500761;vens liste.csv;822
+MESSDIENSTLEISTER;Messdienstleister im Bahnstromnetz;BDK (DK) - Banedanmark (0086);bdkdkbanedanmark0086;1900100500860;vens liste.csv;823
+MESSDIENSTLEISTER;Messdienstleister im Bahnstromnetz;CFL (LU) - Société Nationale des Chemins de Fer Luxembourgeois Infrastructure (0082);cfllusocietenationaledescheminsdeferluxembourgeoisinfrastructure0082;1900100500828;vens liste.csv;824
+MESSDIENSTLEISTER;Messdienstleister im Bahnstromnetz;CFR (RO) - Caile Ferate Române (0053);cfrrocaileferateromane0053;1900100500539;vens liste.csv;825
+MESSDIENSTLEISTER;Messdienstleister im Bahnstromnetz;HZ (HR) - Hrvatske željeznice Infrastruktura (0078);hzhrhrvatskezeljezniceinfrastruktura0078;1900100500787;vens liste.csv;826
+MESSDIENSTLEISTER;Messdienstleister im Bahnstromnetz;Infrabel (BE) (0088);infrabelbe0088;1900100500886;vens liste.csv;827
+MESSDIENSTLEISTER;Messdienstleister im Bahnstromnetz;IP (PT) - Infraestruturas de Portugal (0094);ipptinfraestruturasdeportugal0094;1900100500943;vens liste.csv;828
+MESSDIENSTLEISTER;Messdienstleister im Bahnstromnetz;MAV (HU) - Magyar Államvasutak (0055);mavhumagyarallamvasutak0055;1900100500555;vens liste.csv;829
+MESSDIENSTLEISTER;Messdienstleister im Bahnstromnetz;Network Rail (GB) (4711);networkrailgb4711;1900100547119;vens liste.csv;830
+MESSDIENSTLEISTER;Messdienstleister im Bahnstromnetz;ÖBB (AT) - Österreichischen Bundesbahnen Infrastruktur (0081);oebbatoesterreichischenbundesbahneninfrastruktur0081;1900100500810;vens liste.csv;831
+MESSDIENSTLEISTER;Messdienstleister im Bahnstromnetz;PGE (PL) - Polska Grupa Energetyczna (5080);pgeplpolskagrupaenergetyczna5080;1900100550807;vens liste.csv;832
+MESSDIENSTLEISTER;Messdienstleister im Bahnstromnetz;ProRail (NL) (0084);prorailnl0084;1900100500844;vens liste.csv;833
+MESSDIENSTLEISTER;Messdienstleister im Bahnstromnetz;RFI (IT) - Rete Ferroviaria Italiana (0083);rfiitreteferroviariaitaliana0083;1900100500836;vens liste.csv;834
+MESSDIENSTLEISTER;Messdienstleister im Bahnstromnetz;RTE (FR) - Réseau de Transport d'Electricité (5158);rtefrreseaudetransportdelectricite5158;1900100551582;vens liste.csv;835
+MESSDIENSTLEISTER;Messdienstleister im Bahnstromnetz;SBB (CH) - Schweizerische Bundesbahnen Infrastruktur (0085);sbbchschweizerischebundesbahneninfrastruktur0085;1900100500852;vens liste.csv;836
+MESSDIENSTLEISTER;Messdienstleister im Bahnstromnetz;SZ (SI) - Slovenske železnice (0079);szsislovenskezeleznice0079;1900100500795;vens liste.csv;837
+MESSDIENSTLEISTER;Messdienstleister im Bahnstromnetz;SZDC (CZ) - Správa železnicní dopravní cesty (0054);szdcczspravazeleznicnidopravnicesty0054;1900100500547;vens liste.csv;838
+MESSDIENSTLEISTER;Messdienstleister im Bahnstromnetz;Trafikverket (SE) (0074);trafikverketse0074;1900100500745;vens liste.csv;839
+MESSDIENSTLEISTER;Messdienstleister im Bahnstromnetz;Vayla (FI) - Väylävirasto (0010);vaylafivaeylaevirasto0010;1900100500109;vens liste.csv;840
+MESSDIENSTLEISTER;Messdienstleister im Bahnstromnetz;ZS (RS) - Železnice Srbije (0072);zsrszeleznicesrbije0072;1900100500729;vens liste.csv;841
+MESSDIENSTLEISTER;Messdienstleister im Bahnstromnetz;ZSR (SK) - Železnice Slovenskej republiky (0056);zsrskzelezniceslovenskejrepubliky0056;1900100500563;vens liste.csv;842

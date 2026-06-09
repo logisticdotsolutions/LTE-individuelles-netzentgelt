@@ -12,12 +12,20 @@ verarbeitet.
 from __future__ import annotations
 
 import csv
+import os
+import shutil
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable
 
 ROOT = Path(__file__).resolve().parents[1]
 DUMMY_MAPPING_PATH = ROOT / "data" / "01_mapping" / "dummy_locomotives.csv"
+DUMMY_CHANGE_LOG_PATH = ROOT / "data" / "01_mapping" / "dummy_locomotive_change_log.csv"
+DUMMY_MAPPING_BACKUP_DIR = ROOT / ".dummy_locomotive_mapping_backups"
+DUMMY_MAPPING_COLUMNS = ("loco_no", "reason", "active_flag")
+DUMMY_CHANGE_LOG_COLUMNS = ("changed_at_utc", "action", "loco_no", "reason", "changed_by")
 MARKER = "NETZENTGELT_DUMMY_LOCOMOTIVE_HARDENING_V1_20260608"
+DUMMY_UI_CLASSIFICATION_MARKER = "NETZENTGELT_DUMMY_UI_CLASSIFICATION_V2_20260609"
 
 DEFAULT_DUMMY_LOCOMOTIVES = (
     "91850000002-4",
@@ -41,6 +49,7 @@ DEFAULT_DUMMY_LOCOMOTIVES = (
     "00000000002-6",
     "00000000014-1",
     "00000000001-8",
+    "91806189000-3",
 )
 
 
@@ -108,6 +117,113 @@ def _ensure_mapping_csv() -> None:
                 }
             )
 
+
+def _utc_now_text() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _read_all_mapping_rows() -> list[dict[str, str]]:
+    _ensure_mapping_csv()
+    rows: list[dict[str, str]] = []
+    with DUMMY_MAPPING_PATH.open("r", encoding="utf-8-sig", newline="") as handle:
+        reader = csv.DictReader(handle, delimiter=";")
+        for row in reader:
+            loco_no = str(row.get("loco_no") or "").strip()
+            if not loco_no:
+                continue
+            rows.append(
+                {
+                    "loco_no": loco_no,
+                    "reason": str(row.get("reason") or "Bekannte Planungs-/Dummy-Loknummer").strip(),
+                    "active_flag": str(row.get("active_flag") or "Y").strip().upper() or "Y",
+                }
+            )
+    return rows
+
+
+def _backup_mapping_csv() -> Path | None:
+    if not DUMMY_MAPPING_PATH.exists():
+        return None
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ_%f")
+    target_dir = DUMMY_MAPPING_BACKUP_DIR / stamp
+    target_dir.mkdir(parents=True, exist_ok=True)
+    target = target_dir / DUMMY_MAPPING_PATH.name
+    shutil.copy2(DUMMY_MAPPING_PATH, target)
+    return target
+
+
+def _write_mapping_rows_atomic(rows: list[dict[str, str]]) -> None:
+    DUMMY_MAPPING_PATH.parent.mkdir(parents=True, exist_ok=True)
+    temporary = DUMMY_MAPPING_PATH.with_name(DUMMY_MAPPING_PATH.name + ".tmp")
+    with temporary.open("w", encoding="utf-8-sig", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(DUMMY_MAPPING_COLUMNS), delimiter=";", lineterminator="\r\n")
+        writer.writeheader()
+        for row in rows:
+            writer.writerow({column: str(row.get(column) or "").strip() for column in DUMMY_MAPPING_COLUMNS})
+    os.replace(temporary, DUMMY_MAPPING_PATH)
+
+
+def _append_dummy_change_log(*, action: str, loco_no: str, reason: str, changed_by: str) -> None:
+    DUMMY_CHANGE_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
+    exists = DUMMY_CHANGE_LOG_PATH.exists()
+    with DUMMY_CHANGE_LOG_PATH.open("a", encoding="utf-8-sig", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(DUMMY_CHANGE_LOG_COLUMNS), delimiter=";", lineterminator="\r\n")
+        if not exists:
+            writer.writeheader()
+        writer.writerow(
+            {
+                "changed_at_utc": _utc_now_text(),
+                "action": action,
+                "loco_no": loco_no,
+                "reason": reason,
+                "changed_by": changed_by,
+            }
+        )
+
+
+def upsert_dummy_locomotive_mapping(*, loco_no: str, reason: str, changed_by: str) -> str:
+    """Controller-Klassifikation auditierbar in den zentralen Dummy-Katalog uebernehmen."""
+    cleaned_loco = str(loco_no or "").strip()
+    cleaned_reason = str(reason or "").strip()
+    cleaned_by = str(changed_by or "").strip() or "unknown"
+    if not cleaned_loco:
+        raise ValueError("Bitte eine Loknummer angeben.")
+    if not cleaned_reason:
+        raise ValueError("Bitte eine nachvollziehbare Begruendung angeben.")
+
+    rows = _read_all_mapping_rows()
+    result: list[dict[str, str]] = []
+    found = False
+    changed = False
+    action = "CREATE"
+    for row in rows:
+        if row["loco_no"] != cleaned_loco:
+            result.append(row)
+            continue
+        if found:
+            changed = True
+            continue
+        found = True
+        old_active = row.get("active_flag", "Y").strip().upper() or "Y"
+        old_reason = row.get("reason", "").strip()
+        if old_active in {"N", "NO", "FALSE", "0"}:
+            action = "REACTIVATE"
+            changed = True
+        elif old_reason != cleaned_reason:
+            action = "UPDATE_REASON"
+            changed = True
+        else:
+            action = "ALREADY_ACTIVE"
+        result.append({"loco_no": cleaned_loco, "reason": cleaned_reason, "active_flag": "Y"})
+    if not found:
+        result.append({"loco_no": cleaned_loco, "reason": cleaned_reason, "active_flag": "Y"})
+        changed = True
+
+    if changed:
+        _backup_mapping_csv()
+        _write_mapping_rows_atomic(result)
+    _append_dummy_change_log(action=action, loco_no=cleaned_loco, reason=cleaned_reason, changed_by=cleaned_by)
+    return action
 
 def _read_mapping_rows() -> list[dict[str, str]]:
     _ensure_mapping_csv()

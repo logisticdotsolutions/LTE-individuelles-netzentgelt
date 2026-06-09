@@ -6,10 +6,19 @@ import tempfile
 from pathlib import Path
 
 PKG = Path(__file__).resolve().parents[1]
-spec = importlib.util.spec_from_file_location('installer', PKG / 'apply_rule_engine_hardening_phase6b.py')
-installer = importlib.util.module_from_spec(spec)
-assert spec.loader
-spec.loader.exec_module(installer)
+# NETZENTGELT_HISTORICAL_INSTALLER_TEST_SKIP_V1_20260609
+INSTALLER_PATH = PKG / 'apply_rule_engine_hardening_phase6b.py'
+installer = None
+if INSTALLER_PATH.exists():
+    spec = importlib.util.spec_from_file_location('installer', INSTALLER_PATH)
+    installer = importlib.util.module_from_spec(spec)
+    assert spec.loader
+    spec.loader.exec_module(installer)
+
+def test_historical_phase6b_installer_artifact():
+    if installer is None:
+        import pytest
+        pytest.skip('Historischer Phase-6B-Installer wurde beim Repository-Cleanup entfernt.')
 
 
 def write_crlf(path: Path, text: str) -> None:
@@ -18,6 +27,9 @@ def write_crlf(path: Path, text: str) -> None:
 
 
 def main() -> int:
+    if installer is None:
+        print('SKIP: historischer Phase-6B-Installer wurde beim Repository-Cleanup entfernt.')
+        return 0
     with tempfile.TemporaryDirectory() as tmp_text:
         root = Path(tmp_text)
         shutil.copytree(PKG / 'payload', root / 'payload')

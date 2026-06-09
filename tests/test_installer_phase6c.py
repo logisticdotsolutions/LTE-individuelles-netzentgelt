@@ -7,10 +7,19 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-spec = importlib.util.spec_from_file_location("installer", ROOT / "apply_rule_engine_hardening_phase6c.py")
-installer = importlib.util.module_from_spec(spec)
-assert spec.loader is not None
-spec.loader.exec_module(installer)
+# NETZENTGELT_HISTORICAL_INSTALLER_TEST_SKIP_V1_20260609
+INSTALLER_PATH = ROOT / "apply_rule_engine_hardening_phase6c.py"
+installer = None
+if INSTALLER_PATH.exists():
+    spec = importlib.util.spec_from_file_location("installer", INSTALLER_PATH)
+    installer = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(installer)
+
+def test_historical_phase6c_installer_artifact():
+    if installer is None:
+        import pytest
+        pytest.skip("Historischer Phase-6C-Installer wurde beim Repository-Cleanup entfernt.")
 
 RUN_ALL = """from rule_engine_hardening_phase6b import (
     apply_core_assignment_fallbacks,
@@ -112,6 +121,9 @@ def crlf(text: str) -> bytes:
 
 
 def main() -> int:
+    if installer is None:
+        print("SKIP: historischer Phase-6C-Installer wurde beim Repository-Cleanup entfernt.")
+        return 0
     with tempfile.TemporaryDirectory() as tmp:
         project = Path(tmp)
         (project / "scripts").mkdir(parents=True)

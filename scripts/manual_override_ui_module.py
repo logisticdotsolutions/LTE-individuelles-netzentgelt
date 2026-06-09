@@ -37,11 +37,17 @@ from manual_override_batch_module import (
     PHASE5D_BATCH_MARKER,
     create_overrides_from_selected_suggestions,
 )
+from dummy_locomotive_module import (
+    DUMMY_CHANGE_LOG_COLUMNS,
+    DUMMY_CHANGE_LOG_PATH,
+    upsert_dummy_locomotive_mapping,
+)
 
 
 PHASE5B_UI_MARKER = "NETZENTGELT_MANUAL_OVERRIDE_PHASE5B_UI_V1_20260607"
 # NETZENTGELT_CONTROLLER_UX_PHASE5E_V1_20260608
 PHASE5D_UI_MARKER = "NETZENTGELT_MANUAL_OVERRIDE_PHASE5D_V1_20260608"
+DUMMY_UI_CLASSIFICATION_MARKER = "NETZENTGELT_DUMMY_UI_CLASSIFICATION_V2_20260609"
 ROOT = Path(__file__).resolve().parents[1]
 MAP_DIR = ROOT / "data" / "01_mapping"
 BACKUP_DIR = ROOT / ".manual_override_backups"
@@ -56,6 +62,7 @@ OVERRIDE_TYPE_LABELS = {
     "SET_ACTUAL_ARRIVAL": "Ankunftszeit korrigieren",
     "CLASSIFY_GAP": "Unterbrechung fachlich klassifizieren",
     "CASE_NOTE": "Bearbeitungsnotiz hinterlegen",
+    "MARK_DUMMY_LOCOMOTIVE": "Als Dummy-/Planungslok markieren",
 }
 
 CLASSIFICATION_OPTIONS = {
@@ -835,6 +842,7 @@ def _render_new_override(
     with col_confidence:
         st.metric("Sicherheit", CONFIDENCE_LABELS.get(suggestion_confidence, suggestion_confidence or "LOW"))
 
+    is_dummy_action = override_type == "MARK_DUMMY_LOCOMOTIVE"
     form_key = f"manual_override_form_{override_type}_{abs(hash(selected_label))}_{_clean(prefill.get('suggestion_id'))}"
     with st.form(form_key):
         transport_number = st.text_input("Transportnummer", value=default_transport)
@@ -866,13 +874,39 @@ def _render_new_override(
             "Begründung / Kommentar",
             placeholder="Warum ist diese Korrektur fachlich zulässig?",
         )
-        save_only = st.form_submit_button("Override speichern")
-        save_and_rebuild = st.form_submit_button("Speichern und neu prüfen", type="primary")
+        save_only = st.form_submit_button("Dummy-Lok speichern" if is_dummy_action else "Override speichern")
+        save_and_rebuild = st.form_submit_button("Dummy-Lok speichern und neu prüfen" if is_dummy_action else "Speichern und neu prüfen", type="primary")
 
     if not (save_only or save_and_rebuild):
         return
     if not comment.strip():
         st.error("Bitte eine nachvollziehbare Begründung erfassen.")
+        return
+    if is_dummy_action:
+        try:
+            action = upsert_dummy_locomotive_mapping(
+                loco_no=target_loco_no.strip(),
+                reason=comment.strip(),
+                changed_by=created_by.strip() or getpass.getuser(),
+            )
+        except ValueError as error:
+            st.error(str(error))
+            return
+        st.success(f"Dummy-/Planungslok {target_loco_no.strip()} wurde gespeichert. Aktion: {action}.")
+        if save_and_rebuild:
+            with st.status("Dummy-Katalog wird gespeichert und sicher neu berechnet ...", expanded=True) as status:
+                result = _run_pipeline(Path(run_all_script))
+                if result.returncode == 0:
+                    status.update(label="Neuberechnung erfolgreich abgeschlossen.", state="complete", expanded=False)
+                    st.session_state["overview_refresh_completed"] = True
+                    st.session_state["overview_refresh_completed_at"] = datetime.now().strftime("%d.%m.%Y um %H:%M")
+                    st.rerun()
+                status.update(label="Neuberechnung fehlgeschlagen.", state="error", expanded=True)
+                st.error("Der letzte produktive DuckDB-Stand bleibt erhalten. Der Dummy-Katalogeintrag wurde gespeichert.")
+                st.text_area("Fehler der Berechnung", result.stderr, height=220)
+                st.text_area("Output der Berechnung", result.stdout, height=220)
+        else:
+            st.info("Bitte anschließend neu prüfen, damit Timeline, Quality Gate und Exporte aktualisiert werden.")
         return
     if override_type not in {"CLASSIFY_GAP", "CASE_NOTE"} and not override_value.strip():
         st.error("Für diese Korrektur ist ein neuer Wert erforderlich.")
@@ -962,6 +996,13 @@ def _render_audit() -> None:
         "freigegebene fachliche Grenzwerte."
     )
 
+    if DUMMY_CHANGE_LOG_PATH.exists():
+        st.markdown("#### Als Dummy-/Planungslok markierte Fahrzeuge")
+        st.dataframe(
+            _read_csv_safe(DUMMY_CHANGE_LOG_PATH, DUMMY_CHANGE_LOG_COLUMNS),
+            use_container_width=True,
+            hide_index=True,
+        )
     if CHANGE_LOG_PATH.exists():
         st.markdown("#### Änderungen an Overrides")
         st.dataframe(
