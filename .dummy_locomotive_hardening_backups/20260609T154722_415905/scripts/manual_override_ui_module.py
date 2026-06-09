@@ -752,30 +752,6 @@ def _render_new_override(
     prefill = st.session_state.get("manual_override_suggestion_prefill")
     prefill = prefill if isinstance(prefill, dict) else {}
     cases = _build_case_table(findings=findings, timeline=timeline)
-    # NETZENTGELT_DUMMY_LOCOMOTIVE_HARDENING_V1_20260608
-    # Controller waehlen zuerst eine Lok. Danach erscheinen ausschliesslich deren
-    # Prueffaelle. Dadurch rutschen keine GAP-Faelle anderer Loks in die Bearbeitung.
-    free_label = "Freie manuelle Erfassung"
-    case_loco_options = sorted({
-        _clean(value) for value in cases.get("loco_no", pd.Series(dtype=str)).tolist()
-        if _clean(value)
-    })
-    prefill_loco = _clean(prefill.get("loco_no"))
-    filter_options = [free_label, *case_loco_options]
-    default_filter_index = filter_options.index(prefill_loco) if prefill_loco in filter_options else 0
-    selected_case_loco = st.selectbox(
-        "Loknummer fuer Bearbeitung auswaehlen",
-        filter_options,
-        index=default_filter_index,
-        key=f"manual_override_case_loco_filter_{prefill_loco or 'manual'}",
-    )
-    if selected_case_loco == free_label:
-        cases = cases[cases["case_label"].eq(free_label)].copy()
-    else:
-        cases = cases[
-            cases["case_label"].eq(free_label)
-            | cases["loco_no"].fillna("").astype(str).eq(selected_case_loco)
-        ].copy()
     if prefill:
         cases = pd.concat([pd.DataFrame([_prefill_case(prefill)]), cases], ignore_index=True)
         st.success(

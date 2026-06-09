@@ -60,12 +60,6 @@ from rule_engine_hardening_phase6d import (
     finalize_quality_gate_phase6d,
     insert_gap_only_day_findings_phase6d,
 )
-# NETZENTGELT_DUMMY_LOCOMOTIVE_HARDENING_V1_20260608
-from dummy_locomotive_module import (
-    build_dummy_locomotive_catalog,
-    consolidate_dummy_locomotive_findings,
-    exclude_dummy_locomotives_from_staging,
-)
 
 ROOT = Path(__file__).resolve().parents[1]
 RAW_DIR = ROOT / "data" / "00_raw"
@@ -2529,7 +2523,6 @@ def main():
         # 1. Rohdaten frisch importieren.
         run_id, imported = import_csvs(con)
         build_cancelled_transport_exclusions(con)
-        build_dummy_locomotive_catalog(con)
 
         # 2. Fachliche Mappings und offizielle Marktpartner-Referenzdaten einlesen.
         import_mapping(con)
@@ -2546,7 +2539,6 @@ def main():
         # Die Reihenfolge ist relevant:
         # build_core() benötigt core_transport_route bereits für seinen Join.
         build_loco_events(con)
-        exclude_dummy_locomotives_from_staging(con)
         apply_staging_manual_overrides(con, run_id)
         build_transport_routes(con)
         build_core(con, run_id)
@@ -2556,7 +2548,6 @@ def main():
 
         # 4. Findings und fachliche Exporttabellen neu berechnen.
         build_findings(con, run_id, home_country_iso=HOME_COUNTRY_ISO)
-        consolidate_dummy_locomotive_findings(con, run_id)
         harden_findings_and_export_policy(con, run_id)
         harden_findings_and_segments_phase6c(con, run_id)
         build_quality_gate_tables(con, run_id)
@@ -2575,9 +2566,6 @@ def main():
         for table, name in [
             ("raw_import_run", "raw_import_run.csv"),
             ("audit_excluded_cancelled_transports", "audit_excluded_cancelled_transports.csv"),
-            ("cfg_dummy_locomotives_effective", "cfg_dummy_locomotives_effective.csv"),
-            ("audit_excluded_dummy_locomotives", "audit_excluded_dummy_locomotives.csv"),
-            ("audit_excluded_dummy_locomotive_staging", "audit_excluded_dummy_locomotive_staging.csv"),
             ("cfg_manual_overrides", "cfg_manual_overrides.csv"),
             ("cfg_manual_overrides_effective", "cfg_manual_overrides_effective.csv"),
             ("dq_manual_override_conflicts", "dq_manual_override_conflicts.csv"),
