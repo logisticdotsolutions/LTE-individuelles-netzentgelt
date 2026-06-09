@@ -18,6 +18,7 @@ import pandas as pd
 
 
 PHASE5C_DAY_FILTER_MARKER = "NETZENTGELT_OPERATIONAL_DAY_FILTER_PHASE5C_V1_20260608"
+GAP_OVERLAP_UI_HOTFIX_MARKER = "NETZENTGELT_OPERATIONAL_DAY_FILTER_GAP_OVERLAP_V1_20260609"
 VIENNA_TIMEZONE = ZoneInfo("Europe/Vienna")
 
 
@@ -51,6 +52,11 @@ def _parse_timestamp_series(series: pd.Series) -> pd.Series:
     return parsed
 
 
+def _parse_timestamp_series_utc(series: pd.Series) -> pd.Series:
+    """Zeitwerte fuer robuste Intervallvergleiche einheitlich in UTC lesen."""
+    return pd.to_datetime(series, errors="coerce", utc=True)
+
+
 def _coalesced_timestamp_series(
     data: pd.DataFrame,
     timestamp_candidates: Iterable[str],
@@ -69,6 +75,59 @@ def _coalesced_timestamp_series(
     return result, used_columns
 
 
+def _coalesced_timestamp_series_utc(
+    data: pd.DataFrame,
+    timestamp_candidates: Iterable[str],
+) -> tuple[pd.Series, list[str]]:
+    result = pd.Series(pd.NaT, index=data.index, dtype="datetime64[ns, UTC]")
+    used_columns: list[str] = []
+
+    for candidate in timestamp_candidates:
+        actual = _column(data, [candidate])
+        if not actual or actual in used_columns:
+            continue
+        used_columns.append(actual)
+        parsed = _parse_timestamp_series_utc(data[actual])
+        result = result.fillna(parsed)
+
+    return result, used_columns
+
+
+def _gap_interval_overlap_mask(
+    data: pd.DataFrame,
+    *,
+    date_from: date,
+    date_to: date,
+) -> tuple[pd.Series, pd.Series]:
+    """
+    Relevante GAP-Zeilen nach Intervallueberschneidung mit dem Arbeitszeitraum filtern.
+
+    Eine mehrtaegige GAP muss an jedem betroffenen Kalendertag sichtbar bleiben,
+    weil das Quality Gate ihre 15-Minuten-Slots ebenfalls tagesweise bewertet.
+    """
+    normalized_from, normalized_to = normalize_day_range(date_from, date_to)
+    starts, start_columns = _coalesced_timestamp_series_utc(
+        data,
+        ["gap_from_utc", "period_start_utc"],
+    )
+    ends, end_columns = _coalesced_timestamp_series_utc(
+        data,
+        ["gap_to_utc", "period_end_utc"],
+    )
+    has_interval = starts.notna() & ends.notna()
+    if not start_columns or not end_columns:
+        return pd.Series(False, index=data.index, dtype=bool), has_interval
+
+    selected_start = pd.Timestamp(normalized_from, tz="UTC")
+    selected_end_exclusive = pd.Timestamp(normalized_to + timedelta(days=1), tz="UTC")
+    overlaps = (
+        has_interval
+        & starts.lt(selected_end_exclusive)
+        & ends.gt(selected_start)
+    )
+    return overlaps, has_interval
+
+
 def filter_by_operational_days(
     data: pd.DataFrame,
     *,
@@ -83,6 +142,12 @@ def filter_by_operational_days(
     Die Uhrzeit wird ignoriert. Technisch entspricht dies je gewaehltem Bereich
     [Von-Tag 00:00, Tag nach Bis-Tag 00:00). Bei gemischten Tabellen wird der
     erste auswertbare Zeitwert aus der Kandidatenliste verwendet.
+
+    Ausnahme fuer Timeline- und Finding-GAPs:
+    Sobald row_type = GAP und belastbare Intervallgrenzen vorliegen, gilt eine
+    Zeile fuer jeden operativen Tag als sichtbar, den ihr Zeitraum schneidet.
+    Normale Bewegungen bleiben weiterhin am ersten auswertbaren Zeitanker und
+    damit insbesondere an ActualDeparture ausgerichtet.
     """
     if data is None:
         return pd.DataFrame()
@@ -98,6 +163,27 @@ def filter_by_operational_days(
     mask = day_values.notna() & (day_values >= normalized_from) & (day_values <= normalized_to)
     if keep_rows_without_timestamp:
         mask = mask | day_values.isna()
+
+    row_type_column = _column(data, ["row_type"])
+    if row_type_column:
+        row_type = data[row_type_column].fillna("").astype(str).str.strip().str.upper()
+        is_gap = row_type.eq("GAP")
+        gap_overlaps, gap_has_interval = _gap_interval_overlap_mask(
+            data,
+            date_from=normalized_from,
+            date_to=normalized_to,
+        )
+        mask = (
+            (~is_gap & mask)
+            | (
+                is_gap
+                & (
+                    gap_overlaps
+                    | (~gap_has_interval & mask)
+                )
+            )
+        )
+
     return data.loc[mask].copy()
 
 
@@ -173,7 +259,8 @@ def render_sidebar_operational_day_filter() -> tuple[date, date]:
     st.sidebar.header("Arbeitszeitraum")
     st.sidebar.caption(
         "Der Filter gilt zentral fuer Tagespruefung, Prueffaelle, Lok-Detailpruefung, "
-        "Fallbearbeitung und Systemvorschlaege. Massgeblich ist ActualDeparture. "
+        "Fallbearbeitung und Systemvorschlaege. Movements richten sich nach ActualDeparture. "
+        "GAPs bleiben an jedem geschnittenen Kalendertag sichtbar. "
         "Es werden immer vollstaendige Kalendertage betrachtet; Uhrzeiten werden ignoriert."
     )
     date_from = st.sidebar.date_input(
