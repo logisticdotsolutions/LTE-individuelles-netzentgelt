@@ -19,6 +19,8 @@ import pandas as pd
 
 PHASE5C_DAY_FILTER_MARKER = "NETZENTGELT_OPERATIONAL_DAY_FILTER_PHASE5C_V1_20260608"
 GAP_OVERLAP_UI_HOTFIX_MARKER = "NETZENTGELT_OPERATIONAL_DAY_FILTER_GAP_OVERLAP_V1_20260609"
+GAP_CONTEXT_UI_HOTFIX_MARKER = "NETZENTGELT_OPERATIONAL_DAY_FILTER_GAP_CONTEXT_V1_20260609"
+LARGE_GAP_CONTEXT_MINUTES = 480
 VIENNA_TIMEZONE = ZoneInfo("Europe/Vienna")
 
 
@@ -128,6 +130,99 @@ def _gap_interval_overlap_mask(
     return overlaps, has_interval
 
 
+def _truthy_series(series: pd.Series) -> pd.Series:
+    return (
+        series.fillna("")
+        .astype(str)
+        .str.strip()
+        .str.lower()
+        .isin(["true", "1", "yes", "y", "ja"])
+    )
+
+
+def _gap_context_neighbour_mask(
+    data: pd.DataFrame,
+    *,
+    row_type: pd.Series,
+    gap_overlaps: pd.Series,
+) -> pd.Series:
+    """
+    Bei relevanten GAPs ueber acht Stunden die direkt angrenzenden Bewegungen
+    derselben Lok als UI-Kontext einblenden.
+
+    Dadurch zeigen Fallbearbeitung und Lok-Detailpruefung immer den fachlichen
+    Kontextbogen:
+    letzte Bewegung vor der GAP -> vollstaendige GAP -> erste Bewegung danach.
+    """
+    result = pd.Series(False, index=data.index, dtype=bool)
+    loco_column = _column(data, ["loco_no", "LocomotiveNo", "locomotive_no"])
+    if not loco_column:
+        return result
+
+    gap_starts, gap_start_columns = _coalesced_timestamp_series_utc(
+        data,
+        ["gap_from_utc", "period_start_utc"],
+    )
+    gap_ends, gap_end_columns = _coalesced_timestamp_series_utc(
+        data,
+        ["gap_to_utc", "period_end_utc"],
+    )
+    if not gap_start_columns or not gap_end_columns:
+        return result
+
+    duration_column = _column(data, ["gap_duration_minutes"])
+    if duration_column:
+        duration_minutes = pd.to_numeric(data[duration_column], errors="coerce")
+    else:
+        duration_minutes = (gap_ends - gap_starts).dt.total_seconds() / 60.0
+
+    relevant_gap = (
+        row_type.eq("GAP")
+        & gap_overlaps
+        & gap_starts.notna()
+        & gap_ends.notna()
+        & duration_minutes.ge(LARGE_GAP_CONTEXT_MINUTES)
+    )
+    gap_relevance_column = _column(data, ["gap_relevant_de"])
+    if gap_relevance_column:
+        relevant_gap = relevant_gap & _truthy_series(data[gap_relevance_column])
+
+    if not bool(relevant_gap.any()):
+        return result
+
+    movement_mask = row_type.eq("MOVEMENT")
+    movement_starts, movement_start_columns = _coalesced_timestamp_series_utc(
+        data,
+        ["period_start_utc", "actual_departure_ts", "ActualDeparture", "sequence_ts"],
+    )
+    movement_ends, movement_end_columns = _coalesced_timestamp_series_utc(
+        data,
+        ["period_end_utc", "actual_arrival_ts", "ActualArrival", "sequence_ts"],
+    )
+    if not movement_start_columns or not movement_end_columns:
+        return result
+
+    loco_values = data[loco_column].fillna("").astype(str).str.strip()
+    for gap_index in data.index[relevant_gap]:
+        loco_no = loco_values.loc[gap_index]
+        if not loco_no:
+            continue
+
+        same_loco_movements = movement_mask & loco_values.eq(loco_no)
+        previous_candidates = same_loco_movements & movement_ends.le(gap_starts.loc[gap_index])
+        following_candidates = same_loco_movements & movement_starts.ge(gap_ends.loc[gap_index])
+
+        if bool(previous_candidates.any()):
+            previous_index = movement_ends[previous_candidates].idxmax()
+            result.loc[previous_index] = True
+
+        if bool(following_candidates.any()):
+            following_index = movement_starts[following_candidates].idxmin()
+            result.loc[following_index] = True
+
+    return result
+
+
 def filter_by_operational_days(
     data: pd.DataFrame,
     *,
@@ -148,6 +243,10 @@ def filter_by_operational_days(
     Zeile fuer jeden operativen Tag als sichtbar, den ihr Zeitraum schneidet.
     Normale Bewegungen bleiben weiterhin am ersten auswertbaren Zeitanker und
     damit insbesondere an ActualDeparture ausgerichtet.
+
+    Fuer fachlich relevante GAPs ueber acht Stunden werden zusaetzlich die letzte
+    Bewegung davor und die erste Bewegung danach eingeblendet. Der eigentliche
+    Pruefzeitraum bleibt dabei immer der vollstaendige GAP-Zeitraum.
     """
     if data is None:
         return pd.DataFrame()
@@ -182,6 +281,11 @@ def filter_by_operational_days(
                     | (~gap_has_interval & mask)
                 )
             )
+        )
+        mask = mask | _gap_context_neighbour_mask(
+            data,
+            row_type=row_type,
+            gap_overlaps=gap_overlaps,
         )
 
     return data.loc[mask].copy()
@@ -260,7 +364,8 @@ def render_sidebar_operational_day_filter() -> tuple[date, date]:
     st.sidebar.caption(
         "Der Filter gilt zentral fuer Tagespruefung, Prueffaelle, Lok-Detailpruefung, "
         "Fallbearbeitung und Systemvorschlaege. Movements richten sich nach ActualDeparture. "
-        "GAPs bleiben an jedem geschnittenen Kalendertag sichtbar. "
+        "GAPs bleiben an jedem geschnittenen Kalendertag sichtbar. Bei GAPs ueber acht Stunden "
+        "werden die direkt angrenzenden Bewegungen als Kontext eingeblendet. "
         "Es werden immer vollstaendige Kalendertage betrachtet; Uhrzeiten werden ignoriert."
     )
     date_from = st.sidebar.date_input(
