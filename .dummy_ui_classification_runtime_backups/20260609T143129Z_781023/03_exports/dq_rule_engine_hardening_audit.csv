@@ -1,8 +1,0 @@
-phase_id;run_id;metric;metric_value;calculated_at_utc;comment
-NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6B_V1_20260608;RUN_20260609_142008;corrected_holder_market_partner_rows;13642;2026-06-09 16:20:13.534617;Halter-Aufloesung wurde anhand holder_name statt performing_ru aktualisiert.
-NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6B_V1_20260608;RUN_20260609_142008;fallback_user_vens_rows;7140;2026-06-09 16:20:13.535954;Nutzer-vEns verwendet PerformingRU als abgestimmten MVP-Fallback.
-NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6B_V1_20260608;RUN_20260609_142008;fallback_holder_name_rows;7551;2026-06-09 16:20:13.537632;Halter-Marktpartner-ID verwendet Haltername als abgestimmten MVP-Fallback.
-NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6B_V1_20260608;RUN_20260609_142008;old_r011_findings;222;2026-06-09 16:20:15.704473;Vor Phase-6B-Neuberechnung vorhandene R011-Findings.
-NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6B_V1_20260608;RUN_20260609_142008;new_r011_findings;147;2026-06-09 16:20:15.708209;R011 anhand echter Intervallschnittmengen neu erzeugt.
-NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6B_V1_20260608;RUN_20260609_142008;hard_blocking_movement_rows;174;2026-06-09 16:20:15.711949;Sichtbare blockierende Movements nach Phase 6B.
-NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6B_V1_20260608;RUN_20260609_142008;pending_24h_tolerance_rows;10;2026-06-09 16:20:15.715283;Nicht exportfaehige, aber innerhalb der Toleranz noch nicht blockierende Movements.

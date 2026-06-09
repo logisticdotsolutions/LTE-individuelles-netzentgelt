@@ -8,6 +8,8 @@ import sys
 import tempfile
 from pathlib import Path
 
+import pytest
+
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 INSTALLER = PACKAGE_ROOT / "apply_rule_engine_diagnostic_phase6a.py"
 PAYLOAD = PACKAGE_ROOT / "payload" / "scripts" / "rule_engine_diagnostic_phase6a.py"
@@ -22,6 +24,11 @@ def run(*args: str, cwd: Path | None = None) -> subprocess.CompletedProcess[str]
     )
 
 
+# NETZENTGELT_HISTORICAL_INSTALLER_TEST_SKIP_PHASE6A_V1_20260609
+@pytest.mark.skipif(
+    not INSTALLER.exists(),
+    reason="Historischer Phase-6A-Installer wurde beim Repository-Cleanup entfernt.",
+)
 def test_installer_roundtrip() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         root = Path(tmp)

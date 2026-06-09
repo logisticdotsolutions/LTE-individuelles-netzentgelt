@@ -304,3 +304,57 @@ TEST_REPORT_*.md
 test_phase*_logic.py
 verify_manual_override_phase*.py
 # NETZENTGELT_CONTROLLER_UX_PHASE5E_V1_20260608
+
+# =========================================================
+# Netzentgelt Tool - local runtime, patch and test artefacts
+# =========================================================
+# NETZENTGELT_REPOSITORY_CLEANUP_PHASE8A_V3_20260609
+
+# Local backups and generated test reports
+.*_backups/
+*_backups/
+.patch_backups/
+.repository_cleanup_phase8a_backups/
+.rc8a/
+_test_reports/
+
+# Local runtime state
+data/02_duckdb/**
+data/04_logs/**
+logs/**
+tmp/**
+*.duckdb
+*.duckdb.wal
+*.db
+
+# Local audit and controller change logs
+data/01_mapping/*_change_log.csv
+data/01_mapping/manual_overrides.csv
+data/01_mapping/manual_override_*.csv
+
+# Patch packages and temporary installer helpers in repository root
+/00_INSTALL_*.bat
+/01_DRY_RUN_*.bat
+/02_APPLY_*.bat
+/03_VERIFY_*.bat
+/03_ROLLBACK_*.bat
+/04_ROLLBACK_*.bat
+/04_CREATE_LOCAL_COMMIT*.bat
+/05_PACKAGE_SELFTEST_*.bat
+/05_RUN_PIPELINE_AND_VERIFY_*.bat
+/06_ROLLBACK_*.bat
+/07_PACKAGE_SELFTEST_*.bat
+/07_PACKAGE_SELFTEST_*.py
+/apply_*.py
+/rollback_*.py
+/package_selftest_*.py
+/run_pipeline_verify_*.py
+/README_*HOTFIX*.md
+/README_*HOTFIX*.txt
+/README_*PHASE*.md
+/README_*PHASE*.txt
+/TEST_REPORT_*.md
+/PACKAGE_SHA256.json
+/PACKAGE_MANIFEST.json
+/*.zip
+/*.sha256

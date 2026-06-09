@@ -72,7 +72,6 @@ CLASSIFICATION_OPTIONS = {
     "OUTSIDE_DE": "Lok außerhalb Deutschlands",
     "MISSING_MOVEMENT": "Fehlende Bewegung vermutet",
     "SAME_RU_CONTINUITY": "Gleiches nutzendes EVU vor und nach der Unterbrechung",
-    "SAME_RU_CONTINUITY": "PerformingRU vor und nach GAP identisch",
     "PLAUSIBLE_SHORT_DEVIATION": "Plausible kurze Abweichung",
     "OTHER": "Sonstiger Grund",
 }
