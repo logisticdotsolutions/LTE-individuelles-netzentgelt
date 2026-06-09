@@ -23,7 +23,6 @@ import streamlit as st
 
 DAU_UX_MARKER = "NETZENTGELT_DAU_UX_PHASE3_V1_20260607"
 # NETZENTGELT_CONTROLLER_UX_PHASE5E_V1_20260608
-# NETZENTGELT_CONTROLLER_UI_DUMMY_LABEL_V1_20260609
 
 
 RULE_TEXT = {
@@ -60,7 +59,7 @@ RULE_TEXT = {
         "Ueberlappende Bewegungen vergleichen und fachlich bereinigen.",
     ),
     "R012": (
-        "Loknummer fehlt",
+        "Loknummer fehlt oder technische Dummy-Lok wurde verwendet",
         "Loknummer in der Transportplanung fachlich korrigieren.",
     ),
 }
@@ -159,30 +158,17 @@ def _friendly_gate_reason(value: object) -> str:
     return text
 
 
-def _dummy_loco_numbers(findings: pd.DataFrame | None) -> set[str]:
-    if findings is None or findings.empty:
-        return set()
-    rule_col = _column(findings, ["rule_id", "rule"])
-    loco_col = _column(findings, ["loco_no"])
-    message_col = _column(findings, ["message"])
-    row_type_col = _column(findings, ["row_type"])
-    if not rule_col or not loco_col:
-        return set()
-    rule = _normalized(findings[rule_col]).str.upper()
-    message = _normalized(findings[message_col]).str.lower() if message_col else pd.Series("", index=findings.index)
-    row_type = _normalized(findings[row_type_col]).str.upper() if row_type_col else pd.Series("", index=findings.index)
-    dummy_mask = rule.eq("R012") & (message.str.contains("dummy", regex=False) | message.str.contains("planungs", regex=False) | row_type.eq("RAW_DUMMY_LOCOMOTIVE"))
-    return {value for value in _normalized(findings.loc[dummy_mask, loco_col]).tolist() if value}
-
 def _friendly_rule(rule_id: object, message: object = "") -> tuple[str, str]:
     key = "" if pd.isna(rule_id) else str(rule_id).strip().upper()
-    clean_message = "" if pd.isna(message) else str(message).strip()
-    clean_message_lower = clean_message.lower()
-    if key == "R012" and ("dummy" in clean_message_lower or "planungs" in clean_message_lower):
-        return ("Dummy-Lok", "Echte Loknummer beziehungsweise Planung in RailCube pruefen und korrigieren.")
+
     if key in RULE_TEXT:
         return RULE_TEXT[key]
-    return (clean_message or "Prueffall ohne hinterlegte Klartextbeschreibung", "Weitere Details prüfen und fachlich bewerten.")
+
+    clean_message = "" if pd.isna(message) else str(message).strip()
+    return (
+        clean_message or "Prueffall ohne hinterlegte Klartextbeschreibung",
+        "Weitere Details prüfen und fachlich bewerten.",
+    )
 
 
 def _format_date_series(series: pd.Series) -> pd.Series:
@@ -195,11 +181,7 @@ def _format_datetime_series(series: pd.Series) -> pd.Series:
     return parsed.dt.strftime("%d.%m.%Y %H:%M").fillna(_normalized(series))
 
 
-def _friendly_gate_table(
-    export_gate: pd.DataFrame,
-    only_status: str | None = None,
-    findings: pd.DataFrame | None = None,
-) -> pd.DataFrame:
+def _friendly_gate_table(export_gate: pd.DataFrame, only_status: str | None = None) -> pd.DataFrame:
     columns = [
         "Status",
         "Loknummer",
@@ -259,12 +241,6 @@ def _friendly_gate_table(
             "BLOCKED": "Lok im Detail pruefen und Ursache bereinigen.",
         }
     ).fillna("Weitere Details prüfen.")
-
-    dummy_loco_numbers = _dummy_loco_numbers(findings)
-    if dummy_loco_numbers:
-        dummy_mask = result["Loknummer"].isin(dummy_loco_numbers)
-        result.loc[dummy_mask, "Warum?"] = "Dummy-Lok"
-        result.loc[dummy_mask, "Naechster Schritt"] = "Echte Loknummer beziehungsweise Planung in RailCube pruefen und korrigieren."
 
     return result[columns].reset_index(drop=True)
 
@@ -436,7 +412,7 @@ def render_operator_dashboard(
     st.markdown("#### Empfohlener Ablauf")
     _render_process_steps(summary)
 
-    blocked_days = _friendly_gate_table(export_gate, only_status="BLOCKED", findings=findings)
+    blocked_days = _friendly_gate_table(export_gate, only_status="BLOCKED")
 
     if not blocked_days.empty:
         st.markdown("#### Warum sind Lok-Tage gesperrt?")
@@ -487,8 +463,8 @@ def render_open_tasks(
         "Regelnummern sind nur fuer die technische Nachvollziehbarkeit eingeblendet."
     )
 
-    blocking_gate = _friendly_gate_table(export_gate, only_status="BLOCKED", findings=findings)
-    warning_gate = _friendly_gate_table(export_gate, only_status="WARNING", findings=findings)
+    blocking_gate = _friendly_gate_table(export_gate, only_status="BLOCKED")
+    warning_gate = _friendly_gate_table(export_gate, only_status="WARNING")
     blockers = _friendly_global_blockers(global_export_blockers)
     finding_table = _friendly_findings(findings, include_info=True)
 

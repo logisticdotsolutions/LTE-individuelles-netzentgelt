@@ -452,13 +452,6 @@ def _suggestion_display_table(data: pd.DataFrame) -> pd.DataFrame:
     if data.empty:
         return data
     result = data.copy()
-    # NETZENTGELT_CONTROLLER_UI_GAP_MINUTES_V1_20260609
-    gap_suggestion_types = {"GAP_PERFORMING_RU_FROM_BOTH_NEIGHBOURS", "BROKEN_LOCATION_CHAIN", "POSSIBLE_COLD_STAND_SAME_LOCATION"}
-    suggestion_type = result.get("suggestion_type", pd.Series("", index=result.index)).fillna("").astype(str)
-    period_start = pd.to_datetime(result.get("period_start_utc", pd.Series(index=result.index, dtype="object")), errors="coerce")
-    period_end = pd.to_datetime(result.get("period_end_utc", pd.Series(index=result.index, dtype="object")), errors="coerce")
-    gap_minutes = ((period_end - period_start).dt.total_seconds() / 60).round()
-    result["GAP-Minuten"] = gap_minutes.where(suggestion_type.isin(gap_suggestion_types)).astype("Int64")
     result["confidence"] = result["confidence"].map(CONFIDENCE_LABELS).fillna(result["confidence"])
     result["suggestion_type"] = result["suggestion_type"].map(SUGGESTION_TYPE_LABELS).fillna(result["suggestion_type"])
     result = result.rename(
@@ -480,7 +473,6 @@ def _suggestion_display_table(data: pd.DataFrame) -> pd.DataFrame:
         "Transportnummer",
         "Von",
         "Bis",
-        "GAP-Minuten",
         "Vorgeschlagener Wert",
         "Begründung",
     ]
