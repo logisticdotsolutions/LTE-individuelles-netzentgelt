@@ -1,0 +1,4 @@
+run_id;imported_at_utc;source_snapshot_at_utc;source_file;target_table;source_hash;row_count;status;error_message
+RUN_20260609_142008;2026-06-09T14:20:09Z;2026-06-09T14:19:50Z;Locomotive.csv;raw_locomotive;b1d7d03393a232c03f6f1d1faad7ae9f03f780b0faa20c011bdf66276d643b93;1891;imported;
+RUN_20260609_142008;2026-06-09T14:20:10Z;2026-06-09T14:19:50Z;LocomotiveMovement.csv;raw_locomotivemovement;d18c6fcbe48c7f8671ef47a17dcc4cacebabc0752b6fff98d0e076bab59b48b5;21142;imported;
+RUN_20260609_142008;2026-06-09T14:20:11Z;2026-06-09T14:19:50Z;TransportDetail.csv;raw_transportdetail;d7ff35430ce0f917f6866feb41852687659faf59c6a09b380bef42e0b504259a;19477;imported;

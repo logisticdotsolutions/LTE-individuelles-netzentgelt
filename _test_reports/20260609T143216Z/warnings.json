@@ -1,0 +1,9 @@
+{
+  "warnings": [
+    {
+      "code": "W001_SOURCE_ROW_HASH_NOT_INTEGRATED",
+      "message": "Die produktive Pipeline enthält noch keine persistierte source_row_hash-Spalte. Die Testsuite prüft bereits den deterministischen Referenzvertrag; die Integration in Import, Staging und Audit sollte als eigene Folgephase umgesetzt werden."
+    }
+  ],
+  "warning_count": 1
+}
