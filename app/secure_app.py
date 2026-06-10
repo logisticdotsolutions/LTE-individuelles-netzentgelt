@@ -2,10 +2,9 @@
 Secure local entrypoint for the Netzentgelt Streamlit application.
 
 The existing fachliche app remains unchanged and is executed only after a local
-user has authenticated. The temporary set_page_config shim is intentionally
-scoped to this wrapper because the legacy app still configures the Streamlit
-page itself. During the later server migration the wrapper can be replaced by
-an Entra-ID adapter without changing the fachliche UI.
+user has authenticated. Runtime bridges add audit attribution, role scope and
+controlled export exceptions around the legacy UI without changing the fachliche
+pipeline itself.
 """
 
 from __future__ import annotations
@@ -24,6 +23,11 @@ LEGACY_APP_PATH = BASE_DIR / "app" / "app.py"
 if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 
+from export_exception_runtime_bridge import export_exception_runtime  # noqa: E402
+from export_exception_ui_module import (  # noqa: E402
+    render_export_exception_area,
+    render_export_exception_sidebar_toggle,
+)
 from local_auth_runtime_bridge import authenticated_runtime  # noqa: E402
 from local_auth_ui_module import (  # noqa: E402
     render_admin_area,
@@ -35,6 +39,7 @@ from role_scope_runtime_bridge import role_scoped_runtime  # noqa: E402
 
 PHASE9A_SECURE_ENTRYPOINT_MARKER = "NETZENTGELT_PORTABLE_LOCAL_AUTH_ENTRYPOINT_PHASE9A_V1_20260610"
 PHASE9B_SCOPE_ENTRYPOINT_MARKER = "NETZENTGELT_PORTABLE_ROLE_SCOPE_ENTRYPOINT_PHASE9B_V1_20260610"
+PHASE9C_EXCEPTION_ENTRYPOINT_MARKER = "NETZENTGELT_EXPORT_EXCEPTION_ENTRYPOINT_PHASE9C_V1_20260610"
 
 
 st.set_page_config(
@@ -45,6 +50,11 @@ st.set_page_config(
 
 current_user = require_local_login()
 admin_mode = render_authenticated_sidebar(current_user)
+exception_mode = render_export_exception_sidebar_toggle()
+
+if exception_mode:
+    render_export_exception_area(current_user)
+    st.stop()
 
 if admin_mode:
     render_admin_area(current_user)
@@ -63,6 +73,7 @@ st.set_page_config = lambda *args, **kwargs: None
 try:
     with authenticated_runtime(current_user):
         with role_scoped_runtime(current_user):
-            runpy.run_path(str(LEGACY_APP_PATH), run_name="__main__")
+            with export_exception_runtime(current_user):
+                runpy.run_path(str(LEGACY_APP_PATH), run_name="__main__")
 finally:
     st.set_page_config = _original_set_page_config
