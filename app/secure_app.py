@@ -24,6 +24,7 @@ LEGACY_APP_PATH = BASE_DIR / "app" / "app.py"
 if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 
+from local_auth_runtime_bridge import authenticated_runtime  # noqa: E402
 from local_auth_ui_module import (  # noqa: E402
     render_admin_area,
     render_authenticated_sidebar,
@@ -58,6 +59,7 @@ if not LEGACY_APP_PATH.exists():
 _original_set_page_config = st.set_page_config
 st.set_page_config = lambda *args, **kwargs: None
 try:
-    runpy.run_path(str(LEGACY_APP_PATH), run_name="__main__")
+    with authenticated_runtime(current_user):
+        runpy.run_path(str(LEGACY_APP_PATH), run_name="__main__")
 finally:
     st.set_page_config = _original_set_page_config
