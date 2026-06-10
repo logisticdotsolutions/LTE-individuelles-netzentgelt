@@ -8,9 +8,11 @@ from typing import Iterable
 
 import duckdb
 
+from export_exception_gap_query_helper import list_gap_root_blockers
 from export_exception_state_module import ExportBlocker, make_blocker
 
-PHASE9C_EXCEPTION_QUERY_MARKER = "NETZENTGELT_EXPORT_EXCEPTION_QUERY_PHASE9C_V1_20260610"
+PHASE9C_EXCEPTION_QUERY_MARKER = "NETZENTGELT_EXPORT_EXCEPTION_QUERY_PHASE9C_V2_20260610"
+_GAP_FINDING_RULES = {"R010", "R010.5", "R016", "GATE_DAY"}
 
 
 def _clean(value: object) -> str:
@@ -77,14 +79,20 @@ def _local_blockers(con, ru_values: tuple[str, ...], date_from: date, date_to: d
     ).fetchall()
     result: list[ExportBlocker] = []
     for loco_no, performing_ru, day, reason in rows:
-        findings = _root_findings(con, _clean(loco_no), _clean(performing_ru), day)
-        if findings:
+        loco = _clean(loco_no)
+        ru = _clean(performing_ru)
+        findings = _root_findings(con, loco, ru, day)
+        gaps = list_gap_root_blockers(con, loco_no=loco, performing_ru=ru, day=day)
+        if gaps:
+            result.extend(gaps)
+            result.extend(item for item in findings if item.rule_id not in _GAP_FINDING_RULES)
+        elif findings:
             result.extend(findings)
         else:
             start, end = _day_bounds(day)
             result.append(make_blocker(
                 blocker_type="LOCAL_GATE_DAY", rule_id="GATE_DAY",
-                loco_no=_clean(loco_no), performing_ru=_clean(performing_ru),
+                loco_no=loco, performing_ru=ru,
                 period_start_utc=start.isoformat(sep=" "),
                 period_end_utc=end.isoformat(sep=" "),
                 message=_clean(reason) or "Lok-Tag ist im Quality Gate gesperrt.",
@@ -119,14 +127,24 @@ def _global_blockers(con, date_from: date, date_to: date) -> list[ExportBlocker]
     return result
 
 
+def list_required_export_blockers_from_connection(*, con, performing_ru_values: Iterable[str], date_from: date, date_to: date) -> list[ExportBlocker]:
+    """Return deduplicated root blockers from an existing read connection."""
+    values = _rus(performing_ru_values)
+    blockers = [*_local_blockers(con, values, date_from, date_to), *_global_blockers(con, date_from, date_to)]
+    return sorted({item.fingerprint: item for item in blockers}.values(), key=lambda item: (item.rule_id, item.loco_no, item.period_start_utc))
+
+
 def list_required_export_blockers(*, db_path: Path, performing_ru_values: Iterable[str], date_from: date, date_to: date) -> list[ExportBlocker]:
     """Return deduplicated root blockers for one XLSX export request."""
-    values = _rus(performing_ru_values)
     if not Path(db_path).exists():
         raise FileNotFoundError(f"DuckDB-Datei fehlt: {db_path}")
     con = duckdb.connect(str(db_path), read_only=True)
     try:
-        blockers = [*_local_blockers(con, values, date_from, date_to), *_global_blockers(con, date_from, date_to)]
+        return list_required_export_blockers_from_connection(
+            con=con,
+            performing_ru_values=performing_ru_values,
+            date_from=date_from,
+            date_to=date_to,
+        )
     finally:
         con.close()
-    return sorted({item.fingerprint: item for item in blockers}.values(), key=lambda item: (item.rule_id, item.loco_no, item.period_start_utc))
