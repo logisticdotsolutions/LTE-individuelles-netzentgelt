@@ -11,7 +11,7 @@ import duckdb
 from export_exception_gap_query_helper import list_gap_root_blockers
 from export_exception_state_module import ExportBlocker, make_blocker
 
-PHASE9C_EXCEPTION_QUERY_MARKER = "NETZENTGELT_EXPORT_EXCEPTION_QUERY_PHASE9C_V2_20260610"
+PHASE9C_EXCEPTION_QUERY_MARKER = "NETZENTGELT_EXPORT_EXCEPTION_QUERY_PHASE9C_V3_20260610"
 _GAP_FINDING_RULES = {"R010", "R010.5", "R016", "GATE_DAY"}
 
 
@@ -34,7 +34,36 @@ def _day_bounds(day: date) -> tuple[datetime, datetime]:
     return start, start + timedelta(days=1)
 
 
-def _root_findings(con, loco_no: str, performing_ru: str, day: date) -> list[ExportBlocker]:
+def _table_exists(con, table_name: str) -> bool:
+    return bool(
+        con.execute(
+            """
+            select count(*) > 0
+            from information_schema.tables
+            where lower(table_name) = lower(?)
+            """,
+            [table_name],
+        ).fetchone()[0]
+    )
+
+
+def _current_run_id(con) -> str:
+    """Read the current pipeline run id defensively for legacy fixtures."""
+    if not _table_exists(con, "dq_run_metadata"):
+        return ""
+    columns = {
+        str(row[0]).lower()
+        for row in con.execute("describe dq_run_metadata").fetchall()
+    }
+    if "run_id" not in columns:
+        return ""
+    row = con.execute(
+        "select coalesce(cast(run_id as varchar), '') from dq_run_metadata limit 1"
+    ).fetchone()
+    return _clean(row[0]) if row else ""
+
+
+def _root_findings(con, loco_no: str, performing_ru: str, day: date, run_id: str) -> list[ExportBlocker]:
     start, end = _day_bounds(day)
     rows = con.execute(
         """
@@ -58,13 +87,13 @@ def _root_findings(con, loco_no: str, performing_ru: str, day: date) -> list[Exp
             rule_id=_clean(row[0]), loco_no=_clean(row[1]) or loco_no,
             performing_ru=_clean(row[2]) or performing_ru,
             period_start_utc=_clean(row[3]), period_end_utc=_clean(row[4]),
-            message=_clean(row[5]),
+            message=_clean(row[5]), run_id=run_id,
         )
         for row in rows
     ]
 
 
-def _local_blockers(con, ru_values: tuple[str, ...], date_from: date, date_to: date) -> list[ExportBlocker]:
+def _local_blockers(con, ru_values: tuple[str, ...], date_from: date, date_to: date, run_id: str) -> list[ExportBlocker]:
     rows = con.execute(
         f"""
         select coalesce(loco_no, ''), coalesce(performing_ru, ''),
@@ -81,8 +110,14 @@ def _local_blockers(con, ru_values: tuple[str, ...], date_from: date, date_to: d
     for loco_no, performing_ru, day, reason in rows:
         loco = _clean(loco_no)
         ru = _clean(performing_ru)
-        findings = _root_findings(con, loco, ru, day)
-        gaps = list_gap_root_blockers(con, loco_no=loco, performing_ru=ru, day=day)
+        findings = _root_findings(con, loco, ru, day, run_id)
+        gaps = list_gap_root_blockers(
+            con,
+            loco_no=loco,
+            performing_ru=ru,
+            day=day,
+            run_id=run_id,
+        )
         if gaps:
             result.extend(gaps)
             result.extend(item for item in findings if item.rule_id not in _GAP_FINDING_RULES)
@@ -96,11 +131,12 @@ def _local_blockers(con, ru_values: tuple[str, ...], date_from: date, date_to: d
                 period_start_utc=start.isoformat(sep=" "),
                 period_end_utc=end.isoformat(sep=" "),
                 message=_clean(reason) or "Lok-Tag ist im Quality Gate gesperrt.",
+                run_id=run_id,
             ))
     return result
 
 
-def _global_blockers(con, date_from: date, date_to: date) -> list[ExportBlocker]:
+def _global_blockers(con, date_from: date, date_to: date, run_id: str) -> list[ExportBlocker]:
     rows = con.execute(
         """
         select blocker_date, coalesce(rule_id, ''),
@@ -123,6 +159,7 @@ def _global_blockers(con, date_from: date, date_to: date) -> list[ExportBlocker]
             performing_ru=_clean(performing_ru),
             period_start_utc=start.isoformat(sep=" "),
             period_end_utc=end.isoformat(sep=" "), message=text,
+            run_id=run_id,
         ))
     return result
 
@@ -130,7 +167,11 @@ def _global_blockers(con, date_from: date, date_to: date) -> list[ExportBlocker]
 def list_required_export_blockers_from_connection(*, con, performing_ru_values: Iterable[str], date_from: date, date_to: date) -> list[ExportBlocker]:
     """Return deduplicated root blockers from an existing read connection."""
     values = _rus(performing_ru_values)
-    blockers = [*_local_blockers(con, values, date_from, date_to), *_global_blockers(con, date_from, date_to)]
+    run_id = _current_run_id(con)
+    blockers = [
+        *_local_blockers(con, values, date_from, date_to, run_id),
+        *_global_blockers(con, date_from, date_to, run_id),
+    ]
     return sorted({item.fingerprint: item for item in blockers}.values(), key=lambda item: (item.rule_id, item.loco_no, item.period_start_utc))
 
 
