@@ -22,7 +22,7 @@ from local_auth_module import (
 )
 
 
-PHASE9C_EXCEPTION_STATE_MARKER = "NETZENTGELT_EXPORT_EXCEPTION_STATE_PHASE9C_V1_20260610"
+PHASE9C_EXCEPTION_STATE_MARKER = "NETZENTGELT_EXPORT_EXCEPTION_STATE_PHASE9C_V2_20260610"
 
 
 @dataclass(frozen=True)
@@ -35,6 +35,7 @@ class ExportBlocker:
     period_start_utc: str
     period_end_utc: str
     message: str
+    run_id: str = ""
 
     def label(self) -> str:
         parts = [self.rule_id or self.blocker_type]
@@ -65,6 +66,7 @@ def stable_blocker_fingerprint(
     period_start_utc: str = "",
     period_end_utc: str = "",
     message: str = "",
+    run_id: str = "",
 ) -> str:
     payload = {
         "blocker_type": str(blocker_type or "").strip().upper(),
@@ -74,6 +76,7 @@ def stable_blocker_fingerprint(
         "period_start_utc": str(period_start_utc or "").strip(),
         "period_end_utc": str(period_end_utc or "").strip(),
         "message": str(message or "").strip(),
+        "run_id": str(run_id or "").strip(),
     }
     canonical = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
@@ -88,6 +91,7 @@ def make_blocker(
     period_start_utc: str = "",
     period_end_utc: str = "",
     message: str = "",
+    run_id: str = "",
 ) -> ExportBlocker:
     return ExportBlocker(
         fingerprint=stable_blocker_fingerprint(
@@ -98,6 +102,7 @@ def make_blocker(
             period_start_utc=period_start_utc,
             period_end_utc=period_end_utc,
             message=message,
+            run_id=run_id,
         ),
         blocker_type=str(blocker_type or "").strip().upper(),
         rule_id=str(rule_id or "").strip().upper(),
@@ -106,6 +111,7 @@ def make_blocker(
         period_start_utc=str(period_start_utc or "").strip(),
         period_end_utc=str(period_end_utc or "").strip(),
         message=str(message or "").strip(),
+        run_id=str(run_id or "").strip(),
     )
 
 
@@ -117,6 +123,15 @@ def _connect(db_path: Path | str | None = None) -> sqlite3.Connection:
     connection.execute("pragma foreign_keys = on")
     connection.execute("pragma busy_timeout = 5000")
     return connection
+
+
+def _columns(connection: sqlite3.Connection, table_name: str) -> set[str]:
+    return {str(row[1]) for row in connection.execute(f"pragma table_info({table_name})").fetchall()}
+
+
+def _ensure_column(connection: sqlite3.Connection, table_name: str, column_name: str, ddl: str) -> None:
+    if column_name not in _columns(connection, table_name):
+        connection.execute(f"alter table {table_name} add column {column_name} {ddl}")
 
 
 def ensure_exception_state(db_path: Path | str | None = None) -> Path:
@@ -141,7 +156,8 @@ def ensure_exception_state(db_path: Path | str | None = None) -> Path:
                 revoked_by text,
                 revoked_at_utc text,
                 revocation_comment text,
-                installation_id text not null
+                installation_id text not null,
+                run_id text not null default ''
             );
 
             create index if not exists idx_finding_exception_active
@@ -160,10 +176,13 @@ def ensure_exception_state(db_path: Path | str | None = None) -> Path:
                 exception_ids_json text not null,
                 file_name text not null,
                 sha256 text not null,
-                installation_id text not null
+                installation_id text not null,
+                run_id text not null default ''
             );
             """
         )
+        _ensure_column(connection, "finding_exception", "run_id", "text not null default ''")
+        _ensure_column(connection, "export_release", "run_id", "text not null default ''")
     return path
 
 
@@ -225,8 +244,8 @@ def create_exception(
             insert into finding_exception (
                 exception_id, finding_fingerprint, blocker_type, rule_id, loco_no,
                 performing_ru, period_start_utc, period_end_utc, comment, status,
-                created_by, created_at_utc, installation_id
-            ) values (?, ?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE', ?, ?, ?)
+                created_by, created_at_utc, installation_id, run_id
+            ) values (?, ?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE', ?, ?, ?, ?)
             """,
             [
                 exception_id,
@@ -241,6 +260,7 @@ def create_exception(
                 actor.username,
                 utc_now_text(),
                 installation_id,
+                blocker.run_id,
             ],
         )
     append_audit_event(
@@ -315,6 +335,7 @@ def record_export_release(
     file_name: str,
     content: bytes,
     exception_ids: Iterable[str],
+    run_id: str = "",
     db_path: Path | str | None = None,
 ) -> str:
     ensure_exception_state(db_path)
@@ -328,8 +349,8 @@ def record_export_release(
                 export_release_id, export_kind, export_label, performed_by,
                 performed_role, created_at_utc, date_from, date_to,
                 exception_count, exception_ids_json, file_name, sha256,
-                installation_id
-            ) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                installation_id, run_id
+            ) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             [
                 release_id,
@@ -345,6 +366,7 @@ def record_export_release(
                 str(file_name),
                 digest,
                 get_installation_id(db_path),
+                str(run_id or "").strip(),
             ],
         )
     append_audit_event(
@@ -359,6 +381,7 @@ def record_export_release(
             "file_name": str(file_name),
             "sha256": digest,
             "exception_ids": ids,
+            "run_id": str(run_id or "").strip(),
         },
         db_path=db_path,
     )
