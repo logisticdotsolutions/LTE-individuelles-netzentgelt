@@ -8,15 +8,15 @@ from typing import Any, Iterator
 import pandas as pd
 import streamlit as st
 
-from manual_override_guidance_module import guidance_for
+from manual_override_guidance_module import current_value_for, guidance_for
 
 
-GUIDED_CORRECTION_RUNTIME_MARKER = "NETZENTGELT_GUIDED_CORRECTION_RUNTIME_PHASE9D_V2_20260610"
+GUIDED_CORRECTION_RUNTIME_MARKER = "NETZENTGELT_GUIDED_CORRECTION_RUNTIME_PHASE9D_V3_20260610"
 
 
 @contextmanager
-def guided_correction_widgets() -> Iterator[None]:
-    """Temporarily improve labels, help text and confirmation in the legacy form."""
+def guided_correction_widgets(timeline: pd.DataFrame | None = None) -> Iterator[None]:
+    """Temporarily improve labels, visibility, help text and confirmation."""
     original_selectbox = st.selectbox
     original_text_input = st.text_input
     original_text_area = st.text_area
@@ -38,19 +38,21 @@ def guided_correction_widgets() -> Iterator[None]:
         kind = str(state.get("override_type") or "SET_PERFORMING_RU")
         return guidance_for(kind)
 
+    def hidden_value(options: dict[str, Any]) -> str:
+        return str(options.get("value") or "")
+
     def current_value() -> str:
         kind = str(state.get("override_type") or "")
-        if kind == "SET_LOCO_NO":
-            return str(state.get("target_loco_no") or "Nicht vorhanden / nicht eindeutig")
-        if kind == "SET_ACTUAL_DEPARTURE":
-            return str(state.get("departure") or "Nicht vorhanden / nicht eindeutig")
-        if kind == "SET_ACTUAL_ARRIVAL":
-            return str(state.get("arrival") or "Nicht vorhanden / nicht eindeutig")
-        if kind == "SET_SEQUENCE_TS":
-            return str(state.get("departure") or state.get("arrival") or "Nicht vorhanden / nicht eindeutig")
         if kind in {"CLASSIFY_GAP", "CASE_NOTE", "MARK_DUMMY_LOCOMOTIVE"}:
             return "Keine technische Wertänderung"
-        return "Aus dem ausgewählten Prüffall ableiten / fachlich prüfen"
+        return current_value_for(
+            kind,
+            timeline if isinstance(timeline, pd.DataFrame) else pd.DataFrame(),
+            transport_number=str(state.get("transport_number") or ""),
+            loco_no=str(state.get("target_loco_no") or ""),
+            fallback_start=str(state.get("departure") or ""),
+            fallback_end=str(state.get("arrival") or ""),
+        )
 
     def render_context() -> None:
         if state["context_rendered"]:
@@ -66,7 +68,7 @@ def guided_correction_widgets() -> Iterator[None]:
                     {"Angabe": "Bisherige Abfahrtszeit", "Aktueller Kontext": str(state.get("departure") or "-")},
                     {"Angabe": "Bisherige Ankunftszeit", "Aktueller Kontext": str(state.get("arrival") or "-")},
                     {"Angabe": "Tatsächlich zu änderndes Feld", "Aktueller Kontext": item.target_field},
-                    {"Angabe": "Aktuell bekannter Wert", "Aktueller Kontext": current_value()},
+                    {"Angabe": "Aktuell erkannter Wert", "Aktueller Kontext": current_value()},
                 ]
             )
         )
@@ -83,32 +85,45 @@ def guided_correction_widgets() -> Iterator[None]:
             return ""
         if label == "Fachliche Klassifikation":
             render_context()
-            return original_selectbox(
-                "Fachlichen Grund der Unterbrechung auswählen *",
-                *args,
-                **kwargs,
-            )
+            return original_selectbox("Fachlichen Grund der Unterbrechung auswählen *", *args, **kwargs)
         return original_selectbox(label, *args, **kwargs)
 
     def text_input(label: str, *args: Any, **kwargs: Any):
         item = guidance()
+        kind = str(state.get("override_type") or "")
         options = dict(kwargs)
         if label == "Transportnummer":
+            value = hidden_value(options)
+            state["transport_number"] = value
+            if kind not in {"SET_PERFORMING_RU", "SET_LOCO_NO", "SET_ACTUAL_DEPARTURE", "SET_ACTUAL_ARRIVAL", "SET_SEQUENCE_TS", "CASE_NOTE"}:
+                return value
             options.setdefault("help", "Dient zur eindeutigen Zuordnung der betroffenen Bewegungszeile.")
             value = original_text_input("Betroffene Transportnummer", *args, **options)
             state["transport_number"] = value
             return value
         if label == "Betroffene Loknummer":
+            value = hidden_value(options)
+            state["target_loco_no"] = value
+            if kind not in {"SET_LOCO_NO", "SET_SEQUENCE_TS", "CLASSIFY_GAP", "CASE_NOTE", "MARK_DUMMY_LOCOMOTIVE"}:
+                return value
             options.setdefault("help", "Das ist die aktuell betroffene Lok. Bei einer Loknummernkorrektur kommt die neue Loknummer in das Feld darunter.")
             value = original_text_input("Betroffene bisherige Loknummer", *args, **options)
             state["target_loco_no"] = value
             return value
         if label == "Bisherige Abfahrtszeit zur Eingrenzung":
+            value = hidden_value(options)
+            state["departure"] = value
+            if kind not in {"SET_SEQUENCE_TS", "SET_ACTUAL_DEPARTURE", "SET_ACTUAL_ARRIVAL", "CASE_NOTE"}:
+                return value
             options.setdefault("help", "Optional: bestehender Wert zur genaueren Eingrenzung einer einzelnen Bewegungszeile.")
             value = original_text_input("Bisherige Abfahrtszeit zur Eingrenzung (optional)", *args, **options)
             state["departure"] = value
             return value
         if label == "Bisherige Ankunftszeit zur Dokumentation":
+            value = hidden_value(options)
+            state["arrival"] = value
+            if kind not in {"SET_SEQUENCE_TS", "SET_ACTUAL_ARRIVAL", "CASE_NOTE"}:
+                return value
             options.setdefault("help", "Optional: bisher dokumentierte Ankunftszeit des Prüffalls.")
             value = original_text_input("Bisherige Ankunftszeit zur Dokumentation (optional)", *args, **options)
             state["arrival"] = value
@@ -133,13 +148,7 @@ def guided_correction_widgets() -> Iterator[None]:
             st.markdown("##### Kontrollansicht vor dem Speichern")
             st.table(
                 pd.DataFrame(
-                    [
-                        {
-                            "Zu änderndes Feld": item.target_field,
-                            "Aktueller Wert": current_value(),
-                            "Neuer Wert / neue Einordnung": new_value,
-                        }
-                    ]
+                    [{"Zu änderndes Feld": item.target_field, "Aktueller Wert": current_value(), "Neuer Wert / neue Einordnung": new_value}]
                 )
             )
             st.info("Prüfe diese Gegenüberstellung bewusst. Erst danach darf die lokale Korrektur gespeichert werden.")
