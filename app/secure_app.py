@@ -50,6 +50,7 @@ _require_streamlit_runtime()
 if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 
+from browser_title_module import DEFAULT_BROWSER_TITLE, enforce_browser_title  # noqa: E402
 from export_exception_runtime_bridge import export_exception_runtime  # noqa: E402
 from export_exception_ui_module import (  # noqa: E402
     render_export_exception_area,
@@ -68,13 +69,15 @@ PHASE9A_SECURE_ENTRYPOINT_MARKER = "NETZENTGELT_PORTABLE_LOCAL_AUTH_ENTRYPOINT_P
 PHASE9B_SCOPE_ENTRYPOINT_MARKER = "NETZENTGELT_PORTABLE_ROLE_SCOPE_ENTRYPOINT_PHASE9B_V1_20260610"
 PHASE9C_EXCEPTION_ENTRYPOINT_MARKER = "NETZENTGELT_EXPORT_EXCEPTION_ENTRYPOINT_PHASE9C_V1_20260610"
 PHASE9C_BARE_START_GUARD_MARKER = "NETZENTGELT_STREAMLIT_BARE_START_GUARD_PHASE9C_V1_20260610"
+PHASE9D_BROWSER_TITLE_MARKER = "NETZENTGELT_BROWSER_TITLE_ENTRYPOINT_PHASE9D_V1_20260610"
 
 
 st.set_page_config(
-    page_title="Bahnstrom Deutschland - Tagesprüfung",
+    page_title=DEFAULT_BROWSER_TITLE,
     page_icon="🚆",
     layout="wide",
 )
+enforce_browser_title(DEFAULT_BROWSER_TITLE)
 
 current_user = require_local_login()
 admin_mode = render_authenticated_sidebar(current_user)
