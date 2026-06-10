@@ -30,9 +30,11 @@ from local_auth_ui_module import (  # noqa: E402
     render_authenticated_sidebar,
     require_local_login,
 )
+from role_scope_runtime_bridge import role_scoped_runtime  # noqa: E402
 
 
 PHASE9A_SECURE_ENTRYPOINT_MARKER = "NETZENTGELT_PORTABLE_LOCAL_AUTH_ENTRYPOINT_PHASE9A_V1_20260610"
+PHASE9B_SCOPE_ENTRYPOINT_MARKER = "NETZENTGELT_PORTABLE_ROLE_SCOPE_ENTRYPOINT_PHASE9B_V1_20260610"
 
 
 st.set_page_config(
@@ -60,6 +62,7 @@ _original_set_page_config = st.set_page_config
 st.set_page_config = lambda *args, **kwargs: None
 try:
     with authenticated_runtime(current_user):
-        runpy.run_path(str(LEGACY_APP_PATH), run_name="__main__")
+        with role_scoped_runtime(current_user):
+            runpy.run_path(str(LEGACY_APP_PATH), run_name="__main__")
 finally:
     st.set_page_config = _original_set_page_config
