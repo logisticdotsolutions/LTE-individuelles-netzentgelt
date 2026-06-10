@@ -16,9 +16,11 @@ from typing import Any, Iterator
 import streamlit as st
 
 from local_auth_module import DEFAULT_DB_PATH, UserContext, append_audit_event
+from manual_override_guided_runtime_bridge import guided_correction_widgets
 
 
 PHASE9A_RUNTIME_BRIDGE_MARKER = "NETZENTGELT_PORTABLE_LOCAL_AUTH_RUNTIME_BRIDGE_PHASE9A_V1_20260610"
+PHASE9D_GUIDED_CORRECTION_MARKER = "NETZENTGELT_GUIDED_CORRECTION_PHASE9D_V1_20260610"
 _LOCKED_TEXT_INPUT_LABELS = {
     "Bearbeiter",
     "Bearbeiter für Sammelübernahme",
@@ -61,6 +63,7 @@ def authenticated_runtime(
     original_append_change_log = override_ui._append_change_log
     original_run_pipeline = override_ui._run_pipeline
     original_dummy_upsert = override_ui.upsert_dummy_locomotive_mapping
+    original_render_new_override = override_ui._render_new_override
 
     def authenticated_getuser() -> str:
         return user.username
@@ -141,11 +144,16 @@ def authenticated_runtime(
         )
         return action
 
+    def guided_render_new_override(*args: Any, **kwargs: Any):
+        with guided_correction_widgets():
+            return original_render_new_override(*args, **kwargs)
+
     getpass.getuser = authenticated_getuser
     st.text_input = locked_text_input
     override_ui._append_change_log = audited_append_change_log
     override_ui._run_pipeline = audited_run_pipeline
     override_ui.upsert_dummy_locomotive_mapping = audited_dummy_upsert
+    override_ui._render_new_override = guided_render_new_override
     try:
         yield
     finally:
@@ -154,3 +162,4 @@ def authenticated_runtime(
         override_ui._append_change_log = original_append_change_log
         override_ui._run_pipeline = original_run_pipeline
         override_ui.upsert_dummy_locomotive_mapping = original_dummy_upsert
+        override_ui._render_new_override = original_render_new_override
