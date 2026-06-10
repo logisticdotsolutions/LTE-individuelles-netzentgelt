@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import re
 from typing import Iterable
 
 import pandas as pd
 
 
-GUIDED_CORRECTION_UX_MARKER = "NETZENTGELT_GUIDED_CORRECTION_UX_PHASE9D_V1_20260610"
+GUIDED_CORRECTION_UX_MARKER = "NETZENTGELT_GUIDED_CORRECTION_UX_PHASE9D_V2_20260610"
 
 
 @dataclass(frozen=True)
@@ -122,6 +123,12 @@ VALUE_COLUMN_CANDIDATES = {
 
 
 TIME_VALUE_TYPES = {"SET_SEQUENCE_TS", "SET_ACTUAL_DEPARTURE", "SET_ACTUAL_ARRIVAL"}
+_NON_VALUES = {
+    "",
+    "Nicht vorhanden / nicht eindeutig",
+    "Keine technische Wertänderung",
+    "Aus dem ausgewählten Prüffall ableiten / fachlich prüfen",
+}
 
 
 def _clean(value: object) -> str:
@@ -201,6 +208,31 @@ def current_value_for(
     return "Nicht vorhanden / nicht eindeutig"
 
 
+def _normalized_value(override_type: str, value: object) -> str:
+    """Normalize one value for no-op comparison without changing stored text."""
+    kind = str(override_type or "").strip().upper()
+    text = _clean(value)
+    if not text:
+        return ""
+    if kind in TIME_VALUE_TYPES:
+        parsed = pd.to_datetime(text, errors="coerce", utc=True)
+        if not pd.isna(parsed):
+            return pd.Timestamp(parsed).isoformat()
+    return re.sub(r"\s+", " ", text).casefold()
+
+
+def is_noop_value(override_type: str, current_value: object, new_value: object) -> bool:
+    """Return True only when a technical correction would not change a value."""
+    guidance = guidance_for(override_type)
+    current = _clean(current_value)
+    proposed = _clean(new_value)
+    if not guidance.requires_new_value or current in _NON_VALUES or not proposed:
+        return False
+    if " | " in current or "…" in current:
+        return False
+    return _normalized_value(override_type, current) == _normalized_value(override_type, proposed)
+
+
 def validate_guided_input(
     *,
     override_type: str,
@@ -210,6 +242,7 @@ def validate_guided_input(
     classification_code: str,
     comment: str,
     confirmed: bool,
+    current_value: str = "",
 ) -> list[str]:
     """Return controller-friendly validation messages for one correction form."""
     kind = str(override_type or "").strip().upper()
@@ -221,6 +254,8 @@ def validate_guided_input(
         errors.append("Bitte die betroffene Loknummer erfassen.")
     if guidance.requires_new_value and not str(override_value or "").strip():
         errors.append(f"Bitte das Feld „{guidance.input_label.replace(' *', '')}“ ausfüllen.")
+    if is_noop_value(kind, current_value, override_value):
+        errors.append("Der neue Wert entspricht bereits dem aktuell erkannten Wert. Es besteht keine tatsächliche Änderung.")
     if guidance.requires_classification and not str(classification_code or "").strip():
         errors.append("Bitte den fachlichen Grund der Unterbrechung auswählen.")
     if kind in TIME_VALUE_TYPES and str(override_value or "").strip():
