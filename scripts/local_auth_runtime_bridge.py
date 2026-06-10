@@ -20,7 +20,7 @@ from manual_override_guided_runtime_bridge import guided_correction_widgets
 
 
 PHASE9A_RUNTIME_BRIDGE_MARKER = "NETZENTGELT_PORTABLE_LOCAL_AUTH_RUNTIME_BRIDGE_PHASE9A_V1_20260610"
-PHASE9D_GUIDED_CORRECTION_MARKER = "NETZENTGELT_GUIDED_CORRECTION_PHASE9D_V1_20260610"
+PHASE9D_GUIDED_CORRECTION_MARKER = "NETZENTGELT_GUIDED_CORRECTION_PHASE9D_V2_20260610"
 _LOCKED_TEXT_INPUT_LABELS = {
     "Bearbeiter",
     "Bearbeiter für Sammelübernahme",
@@ -145,7 +145,10 @@ def authenticated_runtime(
         return action
 
     def guided_render_new_override(*args: Any, **kwargs: Any):
-        with guided_correction_widgets():
+        timeline = kwargs.get("timeline")
+        if timeline is None and len(args) >= 4:
+            timeline = args[3]
+        with guided_correction_widgets(timeline=timeline):
             return original_render_new_override(*args, **kwargs)
 
     getpass.getuser = authenticated_getuser
