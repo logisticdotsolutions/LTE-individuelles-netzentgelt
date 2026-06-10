@@ -6,11 +6,12 @@ from contextlib import contextmanager
 from typing import Any, Iterator
 
 from export_exception_query_module import _current_run_id, list_required_export_blockers_from_connection
-from export_exception_state_module import evaluate_release_status, record_export_release
+from export_exception_state_module import evaluate_release_status
+from export_release_dedup_module import record_export_release_once
 from local_auth_module import DEFAULT_DB_PATH, UserContext
 
 
-PHASE9C_EXCEPTION_RUNTIME_MARKER = "NETZENTGELT_EXPORT_EXCEPTION_RUNTIME_PHASE9C_V2_20260610"
+PHASE9C_EXCEPTION_RUNTIME_MARKER = "NETZENTGELT_EXPORT_EXCEPTION_RUNTIME_PHASE9C_V3_20260610"
 
 
 def _release_status(con, performing_ru_values, date_from, date_to):
@@ -67,7 +68,7 @@ def export_exception_runtime(user: UserContext) -> Iterator[None]:
         date_from = kwargs.get("date_from", args[3] if len(args) > 3 else None)
         date_to = kwargs.get("date_to", args[4] if len(args) > 4 else None)
         status, run_id = _status_and_run_id(db_path, ru_values, date_from, date_to)
-        record_export_release(
+        record_export_release_once(
             actor=user,
             export_kind="NUTZUNGSMELDUNG",
             export_label=str(export_label),
@@ -89,7 +90,7 @@ def export_exception_runtime(user: UserContext) -> Iterator[None]:
         date_from = kwargs.get("date_from", args[3] if len(args) > 3 else None)
         date_to = kwargs.get("date_to", args[4] if len(args) > 4 else None)
         status, run_id = _status_and_run_id(db_path, ru_values, date_from, date_to)
-        record_export_release(
+        record_export_release_once(
             actor=user,
             export_kind="AUFENTHALTSEREIGNIS",
             export_label=str(export_label),
