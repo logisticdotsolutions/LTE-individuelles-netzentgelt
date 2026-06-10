@@ -3,20 +3,28 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
+from datetime import datetime, timedelta
 from typing import Any, Iterator
 
 import pandas as pd
 import streamlit as st
 
 from manual_override_guidance_module import current_value_for, guidance_for, is_noop_value
+from manual_override_widget_value_module import (
+    EMPTY_DROPDOWN_VALUE,
+    combine_utc_picker_value,
+    parse_utc_picker_default,
+    performing_ru_options,
+)
 
 
-GUIDED_CORRECTION_RUNTIME_MARKER = "NETZENTGELT_GUIDED_CORRECTION_RUNTIME_PHASE9D_V4_20260610"
+GUIDED_CORRECTION_RUNTIME_MARKER = "NETZENTGELT_GUIDED_CORRECTION_RUNTIME_PHASE9D_V5_20260610"
+_TIME_CORRECTION_TYPES = {"SET_SEQUENCE_TS", "SET_ACTUAL_DEPARTURE", "SET_ACTUAL_ARRIVAL"}
 
 
 @contextmanager
 def guided_correction_widgets(timeline: pd.DataFrame | None = None) -> Iterator[None]:
-    """Temporarily improve labels, visibility, help text and confirmation."""
+    """Temporarily improve labels, visibility, controlled inputs and confirmation."""
     original_selectbox = st.selectbox
     original_text_input = st.text_input
     original_text_area = st.text_area
@@ -33,7 +41,6 @@ def guided_correction_widgets(timeline: pd.DataFrame | None = None) -> Iterator[
         "confirm_rendered": False,
         "context_rendered": False,
         "noop": False,
-        "identical_suggestion_cleared": False,
     }
 
     def guidance():
@@ -88,9 +95,57 @@ def guided_correction_widgets(timeline: pd.DataFrame | None = None) -> Iterator[
         if state["noop"]:
             st.warning(
                 "Der neue Wert entspricht bereits dem aktuell erkannten Wert. "
-                "Es würde keine tatsächliche Änderung gespeichert. Bitte trage nur dann einen neuen Wert ein, "
-                "wenn fachlich wirklich etwas ersetzt werden soll."
+                "Es würde keine tatsächliche Änderung gespeichert. Bitte wähle einen abweichenden Wert."
             )
+
+    def controlled_performing_ru(suggested: str) -> str:
+        current = current_value()
+        options = performing_ru_options(
+            timeline if isinstance(timeline, pd.DataFrame) else pd.DataFrame(),
+            current_value=current,
+            suggested_value=suggested,
+        )
+        default = suggested if suggested in options and not is_noop_value("SET_PERFORMING_RU", current, suggested) else EMPTY_DROPDOWN_VALUE
+        if suggested and default == EMPTY_DROPDOWN_VALUE:
+            st.warning(
+                "Der automatisch vorgeschlagene Wert entspricht bereits dem aktuell erkannten Wert. "
+                "Es ist keine Korrektur vorausgewählt."
+            )
+        selected = original_selectbox(
+            "Neues nutzendes EVU (PerformingRU) *",
+            options,
+            index=options.index(default),
+            help="Wähle ein EVU aus der konsistenten Liste. Freitext ist bewusst nicht zulässig.",
+            key="guided_override_performing_ru_select",
+        )
+        return "" if selected == EMPTY_DROPDOWN_VALUE else str(selected)
+
+    def controlled_utc_timestamp(kind: str, suggested: str) -> str:
+        current = current_value()
+        base = parse_utc_picker_default(suggested) or parse_utc_picker_default(current) or datetime.now().replace(microsecond=0)
+        if suggested and is_noop_value(kind, current, suggested):
+            st.warning(
+                "Der automatisch vorgeschlagene Zeitwert entspricht bereits dem aktuell erkannten Wert. "
+                "Bitte ändere Datum oder Uhrzeit nur, wenn fachlich wirklich ein anderer Wert gelten soll."
+            )
+        col_date, col_time = st.columns(2)
+        with col_date:
+            selected_day = st.date_input(
+                "Neues Datum (UTC) *",
+                value=base.date(),
+                format="YYYY-MM-DD",
+                key=f"guided_override_new_date_{kind}",
+            )
+        with col_time:
+            selected_time = st.time_input(
+                "Neue Uhrzeit (UTC) *",
+                value=base.time(),
+                step=timedelta(seconds=1),
+                key=f"guided_override_new_time_{kind}",
+            )
+        value = combine_utc_picker_value(selected_day, selected_time)
+        st.caption(f"Gespeicherter UTC-Wert: `{value}`")
+        return value
 
     def selectbox(label: str, *args: Any, **kwargs: Any):
         if label == "Art der Bearbeitung":
@@ -152,16 +207,20 @@ def guided_correction_widgets(timeline: pd.DataFrame | None = None) -> Iterator[
                 st.caption(item.input_help)
                 return ""
             suggested = hidden_value(options)
-            if is_noop_value(kind, current_value(), suggested):
-                options["value"] = ""
-                state["identical_suggestion_cleared"] = True
-                st.warning(
-                    "Der automatisch vorgeschlagene Wert entspricht bereits dem aktuell erkannten Wert. "
-                    "Es ist keine Korrektur vorausgefüllt. Trage nur einen abweichenden Wert ein, wenn tatsächlich etwas geändert werden soll."
-                )
-            options["help"] = f"{item.input_help} Beispiel: {item.example}"
-            options.setdefault("placeholder", item.placeholder)
-            value = original_text_input(item.input_label, *args, **options)
+            if kind == "SET_PERFORMING_RU":
+                value = controlled_performing_ru(suggested)
+            elif kind in _TIME_CORRECTION_TYPES:
+                value = controlled_utc_timestamp(kind, suggested)
+            else:
+                if is_noop_value(kind, current_value(), suggested):
+                    options["value"] = ""
+                    st.warning(
+                        "Der automatisch vorgeschlagene Wert entspricht bereits dem aktuell erkannten Wert. "
+                        "Es ist keine Korrektur vorausgefüllt."
+                    )
+                options["help"] = f"{item.input_help} Beispiel: {item.example}"
+                options.setdefault("placeholder", item.placeholder)
+                value = original_text_input(item.input_label, *args, **options)
             state["new_value"] = value
             update_noop(value)
             render_noop_warning()
@@ -197,14 +256,25 @@ def guided_correction_widgets(timeline: pd.DataFrame | None = None) -> Iterator[
                 )
                 state["confirm_rendered"] = True
             options = dict(kwargs)
-            options["disabled"] = bool(options.get("disabled", False) or not state["confirmed"] or state["noop"])
             labels = {
                 "Override speichern": "Korrektur speichern",
                 "Speichern und neu prüfen": "Korrektur speichern und sofort neu prüfen",
                 "Dummy-Lok speichern": "Dummy-Lok speichern",
                 "Dummy-Lok speichern und neu prüfen": "Dummy-Lok speichern und sofort neu prüfen",
             }
-            return original_submit(labels[label], *args, **options)
+            clicked = original_submit(labels[label], *args, **options)
+            if not clicked:
+                return False
+            if not state["confirmed"]:
+                st.error("Bitte bestätige, dass du den aktuellen Wert, den neuen Wert und die Auswirkung fachlich geprüft hast.")
+                return False
+            if guidance().requires_new_value and not str(state.get("new_value") or "").strip():
+                st.error("Bitte wähle oder erfasse zuerst einen tatsächlich neuen Wert.")
+                return False
+            if state["noop"]:
+                st.error("Der neue Wert entspricht bereits dem aktuell erkannten Wert. Es besteht keine tatsächliche Änderung.")
+                return False
+            return True
         return original_submit(label, *args, **kwargs)
 
     st.selectbox = selectbox
