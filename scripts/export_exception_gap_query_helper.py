@@ -7,19 +7,28 @@ from datetime import date, datetime, time, timedelta
 from export_exception_state_module import ExportBlocker, make_blocker
 
 
-PHASE9C_GAP_ROOT_MARKER = "NETZENTGELT_EXPORT_EXCEPTION_GAP_ROOT_PHASE9C_V2_20260610"
+PHASE9C_GAP_ROOT_MARKER = "NETZENTGELT_EXPORT_EXCEPTION_GAP_ROOT_PHASE9C_V3_20260610"
 
 
 def _clean(value: object) -> str:
     return "" if value is None else str(value).strip()
 
 
-def list_gap_root_blockers(con, *, loco_no: str, performing_ru: str, day: date) -> list[ExportBlocker]:
+def list_gap_root_blockers(
+    con,
+    *,
+    loco_no: str,
+    performing_ru: str,
+    day: date,
+    run_id: str = "",
+) -> list[ExportBlocker]:
     """Return full timeline GAP intervals crossing one blocked locomotive day.
 
     The root fingerprint is intentionally independent of the RU/day context.
     One physical interruption therefore needs only one documented exception,
     even when several calendar days or RU-gate rows reference the same GAP.
+    The pipeline run id remains part of the fingerprint so a fresh calculation
+    requires a fresh fachliche review.
     """
     start = datetime.combine(day, time.min)
     end = start + timedelta(days=1)
@@ -56,6 +65,7 @@ def list_gap_root_blockers(con, *, loco_no: str, performing_ru: str, day: date) 
                 period_start_utc=_clean(period_start),
                 period_end_utc=_clean(period_end),
                 message=details,
+                run_id=_clean(run_id),
             )
         )
     return result
