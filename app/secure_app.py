@@ -20,6 +20,33 @@ BASE_DIR = Path(__file__).resolve().parents[1]
 SCRIPTS_DIR = BASE_DIR / "scripts"
 LEGACY_APP_PATH = BASE_DIR / "app" / "app.py"
 
+
+def _require_streamlit_runtime() -> None:
+    """Reject direct Python execution before Streamlit UI code is evaluated."""
+    try:
+        from streamlit.runtime.scriptrunner_utils.script_run_context import (
+            get_script_run_ctx,
+        )
+    except ImportError:
+        return
+
+    try:
+        context = get_script_run_ctx(suppress_warning=True)
+    except TypeError:
+        context = get_script_run_ctx()
+
+    if context is None:
+        raise SystemExit(
+            "FEHLER: Die Netzentgelt-Anwendung ist eine Streamlit-App und darf "
+            "nicht direkt mit Python gestartet werden.\n"
+            "Starte im Projektordner: .\\RUN_TOOL.bat\n"
+            "Alternativ: .venv\\Scripts\\python.exe -m streamlit run "
+            "app\\secure_app.py"
+        )
+
+
+_require_streamlit_runtime()
+
 if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 
@@ -40,6 +67,7 @@ from role_scope_runtime_bridge import role_scoped_runtime  # noqa: E402
 PHASE9A_SECURE_ENTRYPOINT_MARKER = "NETZENTGELT_PORTABLE_LOCAL_AUTH_ENTRYPOINT_PHASE9A_V1_20260610"
 PHASE9B_SCOPE_ENTRYPOINT_MARKER = "NETZENTGELT_PORTABLE_ROLE_SCOPE_ENTRYPOINT_PHASE9B_V1_20260610"
 PHASE9C_EXCEPTION_ENTRYPOINT_MARKER = "NETZENTGELT_EXPORT_EXCEPTION_ENTRYPOINT_PHASE9C_V1_20260610"
+PHASE9C_BARE_START_GUARD_MARKER = "NETZENTGELT_STREAMLIT_BARE_START_GUARD_PHASE9C_V1_20260610"
 
 
 st.set_page_config(
