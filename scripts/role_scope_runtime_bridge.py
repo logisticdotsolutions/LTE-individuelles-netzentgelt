@@ -1,44 +1,23 @@
-"""Runtime bridge enforcing LTE-DE / LTE-NL role scope in the legacy UI.
-
-The legacy Streamlit app remains unchanged. During one authenticated run this
-bridge filters generated CSV dataframes, limits visible primary export groups
-and rejects direct exports for the opposite LTE role. All monkeypatches are
-restored afterwards.
-"""
+"""Runtime bridge enforcing LTE-DE / LTE-NL role scope in the legacy UI."""
 
 from __future__ import annotations
 
 from contextlib import contextmanager
-from pathlib import Path
 from typing import Any, Iterator
 
 import pandas as pd
 
 from local_auth_module import UserContext
+from role_scope_csv_bridge import build_scoped_csv_reader
 from role_scope_module import (
     ADMIN_ROLE,
-    filter_dataframe_for_role,
     filter_mapping_rows_for_role,
     restrict_performing_ru_values_for_role,
     visible_primary_export_groups,
 )
 
 
-PHASE9B_SCOPE_RUNTIME_MARKER = "NETZENTGELT_PORTABLE_ROLE_SCOPE_RUNTIME_PHASE9B_V1_20260610"
-ROOT = Path(__file__).resolve().parents[1]
-EXPORT_DIR = (ROOT / "data" / "03_exports").resolve()
-
-
-def _is_generated_export_csv(path_like: object) -> bool:
-    try:
-        path = Path(path_like).resolve()
-    except (TypeError, ValueError, OSError):
-        return False
-    try:
-        path.relative_to(EXPORT_DIR)
-    except ValueError:
-        return False
-    return path.suffix.lower() == ".csv"
+PHASE9B_SCOPE_RUNTIME_MARKER = "NETZENTGELT_PORTABLE_ROLE_SCOPE_RUNTIME_PHASE9B_V2_20260610"
 
 
 @contextmanager
@@ -66,12 +45,7 @@ def role_scoped_runtime(user: UserContext) -> Iterator[None]:
         original_lte_groups,
         user.role_code,
     )
-
-    def scoped_read_csv(*args: Any, **kwargs: Any):
-        data = original_read_csv(*args, **kwargs)
-        if args and _is_generated_export_csv(args[0]) and isinstance(data, pd.DataFrame):
-            return filter_dataframe_for_role(data, user.role_code)
-        return data
+    scoped_read_csv = build_scoped_csv_reader(original_read_csv, user.role_code)
 
     def scoped_rest_overview(*args: Any, **kwargs: Any):
         rows = original_rest_overview(*args, **kwargs)
