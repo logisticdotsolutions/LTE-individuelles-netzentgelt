@@ -51,12 +51,16 @@ if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 
 from browser_title_module import DEFAULT_BROWSER_TITLE, enforce_browser_title  # noqa: E402
+from compact_login_ui_runtime_module import install_compact_login_views  # noqa: E402
 from export_exception_runtime_bridge import export_exception_runtime  # noqa: E402
 from export_exception_ui_module import (  # noqa: E402
     render_export_exception_area,
     render_export_exception_sidebar_toggle,
 )
 from local_auth_runtime_bridge import authenticated_runtime  # noqa: E402
+
+install_compact_login_views()
+
 from local_auth_ui_module import (  # noqa: E402
     render_admin_area,
     render_authenticated_sidebar,
@@ -70,6 +74,7 @@ PHASE9B_SCOPE_ENTRYPOINT_MARKER = "NETZENTGELT_PORTABLE_ROLE_SCOPE_ENTRYPOINT_PH
 PHASE9C_EXCEPTION_ENTRYPOINT_MARKER = "NETZENTGELT_EXPORT_EXCEPTION_ENTRYPOINT_PHASE9C_V1_20260610"
 PHASE9C_BARE_START_GUARD_MARKER = "NETZENTGELT_STREAMLIT_BARE_START_GUARD_PHASE9C_V1_20260610"
 PHASE9D_BROWSER_TITLE_MARKER = "NETZENTGELT_BROWSER_TITLE_ENTRYPOINT_PHASE9D_V1_20260610"
+PHASE10C_COMPACT_LOGIN_ENTRYPOINT_MARKER = "NETZENTGELT_COMPACT_LOGIN_ENTRYPOINT_PHASE10C_V1_20260611"
 
 
 st.set_page_config(
