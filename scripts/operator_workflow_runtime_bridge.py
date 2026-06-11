@@ -7,7 +7,7 @@ few render functions while app/app.py is executed by the secure wrapper.
 from __future__ import annotations
 
 from contextlib import contextmanager, nullcontext
-from typing import Any, Iterator
+from typing import Any, Callable, Iterator
 
 import pandas as pd
 import streamlit as st
@@ -21,7 +21,7 @@ from operator_case_workspace_module import (
 )
 
 
-PHASE10B_WORKFLOW_RUNTIME_MARKER = "NETZENTGELT_OPERATOR_WORKFLOW_RUNTIME_PHASE10B_V1_20260611"
+PHASE11A_WORKFLOW_RUNTIME_MARKER = "NETZENTGELT_OPERATOR_WORKFLOW_RUNTIME_PHASE11A_V1_20260611"
 _PIPELINE_TAB_LABEL = "⚙️ Technik: Pipeline"
 
 
@@ -34,6 +34,16 @@ def _non_empty_locos(table: pd.DataFrame) -> list[str]:
         if str(value).strip()
     }
     return sorted(values)
+
+
+def load_case_timeline_once(
+    cache: dict[str, pd.DataFrame],
+    loader: Callable[[], pd.DataFrame] = load_case_timeline_context,
+) -> pd.DataFrame:
+    """Load the 30-day case context at most once during one Streamlit UI run."""
+    if "timeline" not in cache:
+        cache["timeline"] = loader()
+    return cache["timeline"]
 
 
 def _render_direct_case_open(table: pd.DataFrame, *, key_suffix: str) -> None:
@@ -124,7 +134,15 @@ def _render_compact_dashboard(*, operator_ui, export_gate, global_export_blocker
         st.write(f"Nicht blockierende Hinweise: **{summary.info_findings}**")
 
 
-def _render_sorted_open_tasks(*, operator_ui, user: UserContext, export_gate, global_export_blockers, findings) -> None:
+def _render_sorted_open_tasks(
+    *,
+    operator_ui,
+    user: UserContext,
+    case_timeline_loader: Callable[[], pd.DataFrame],
+    export_gate,
+    global_export_blockers,
+    findings,
+) -> None:
     st.subheader("Offene Aufgaben")
     st.caption(
         "Bearbeite zuerst alle blockierenden Probleme. Die Tabellen sind nach Loknummer sortiert. "
@@ -184,7 +202,8 @@ def _render_sorted_open_tasks(*, operator_ui, user: UserContext, export_gate, gl
                 mime="text/csv",
                 key="download_operator_tasks_csv_phase10a",
             )
-    render_case_workspace(user=user, findings=findings, timeline=load_case_timeline_context())
+    timeline = case_timeline_loader() if st.session_state.get(SESSION_CASE_LOCO_KEY) else pd.DataFrame()
+    render_case_workspace(user=user, findings=findings, timeline=timeline)
 
 
 def _without_legacy_override_info(original_info):
@@ -208,12 +227,21 @@ def operator_workflow_runtime(user: UserContext) -> Iterator[None]:
     original_cockpit = override_ui.render_manual_override_cockpit
     original_pipeline = pipeline_ui.render_pipeline_test_controller
     original_tabs = st.tabs
+    case_timeline_cache: dict[str, pd.DataFrame] = {}
+
+    def case_timeline() -> pd.DataFrame:
+        return load_case_timeline_once(case_timeline_cache)
 
     def compact_dashboard(**kwargs: Any) -> None:
         _render_compact_dashboard(operator_ui=operator_ui, **kwargs)
 
     def sorted_tasks(**kwargs: Any) -> None:
-        _render_sorted_open_tasks(operator_ui=operator_ui, user=user, **kwargs)
+        _render_sorted_open_tasks(
+            operator_ui=operator_ui,
+            user=user,
+            case_timeline_loader=case_timeline,
+            **kwargs,
+        )
 
     def cockpit(*args: Any, **kwargs: Any):
         original_info = st.info
@@ -222,10 +250,11 @@ def operator_workflow_runtime(user: UserContext) -> Iterator[None]:
             result = original_cockpit(*args, **kwargs)
         finally:
             st.info = original_info
+        timeline = case_timeline() if st.session_state.get(SESSION_CASE_LOCO_KEY) else pd.DataFrame()
         render_case_workspace(
             user=user,
             findings=kwargs.get("findings"),
-            timeline=load_case_timeline_context(),
+            timeline=timeline,
             compact=True,
         )
         return result
