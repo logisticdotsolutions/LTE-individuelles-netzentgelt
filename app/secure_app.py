@@ -67,6 +67,10 @@ from local_auth_ui_module import (  # noqa: E402
     require_local_login,
 )
 from role_scope_runtime_bridge import role_scoped_runtime  # noqa: E402
+from zuordnungen_ui_runtime_bridge import (  # noqa: E402
+    install_zuordnungen_export_tab_extension,
+    restore_zuordnungen_export_tab_extension,
+)
 
 
 PHASE9A_SECURE_ENTRYPOINT_MARKER = "NETZENTGELT_PORTABLE_LOCAL_AUTH_ENTRYPOINT_PHASE9A_V1_20260610"
@@ -75,6 +79,7 @@ PHASE9C_EXCEPTION_ENTRYPOINT_MARKER = "NETZENTGELT_EXPORT_EXCEPTION_ENTRYPOINT_P
 PHASE9C_BARE_START_GUARD_MARKER = "NETZENTGELT_STREAMLIT_BARE_START_GUARD_PHASE9C_V1_20260610"
 PHASE9D_BROWSER_TITLE_MARKER = "NETZENTGELT_BROWSER_TITLE_ENTRYPOINT_PHASE9D_V1_20260610"
 PHASE10C_COMPACT_LOGIN_ENTRYPOINT_MARKER = "NETZENTGELT_COMPACT_LOGIN_ENTRYPOINT_PHASE10C_V1_20260611"
+PHASE11A_ZUORDNUNGEN_EXPORT_UI_MARKER = "NETZENTGELT_UKL_ZUORDNUNGEN_EXPORT_UI_PHASE11A_V1_20260611"
 
 
 st.set_page_config(
@@ -105,6 +110,7 @@ if not LEGACY_APP_PATH.exists():
 # Streamlit-Befehl gesetzt. Der zweite Aufruf wird daher ausschließlich während
 # der Ausführung der Fachanwendung kontrolliert ignoriert.
 _original_set_page_config = st.set_page_config
+_original_tabs = install_zuordnungen_export_tab_extension()
 st.set_page_config = lambda *args, **kwargs: None
 try:
     with authenticated_runtime(current_user):
@@ -112,4 +118,5 @@ try:
             with export_exception_runtime(current_user):
                 runpy.run_path(str(LEGACY_APP_PATH), run_name="__main__")
 finally:
+    restore_zuordnungen_export_tab_extension(_original_tabs)
     st.set_page_config = _original_set_page_config
