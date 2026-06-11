@@ -8,14 +8,14 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any, Callable, Iterator
 
 import pandas as pd
 import streamlit as st
 
 from dummy_locomotive_module import _read_mapping_rows
 
-PHASE11A_TECHNICAL_LOCO_FALLBACK_MARKER = "NETZENTGELT_TECHNICAL_LOCO_FALLBACK_PHASE11A_V1_20260611"
+PHASE11B_TECHNICAL_LOCO_FALLBACK_MARKER = "NETZENTGELT_TECHNICAL_LOCO_FALLBACK_PHASE11B_V1_20260611"
 ROOT = Path(__file__).resolve().parents[1]
 FINDINGS_PATH = ROOT / "data" / "03_exports" / "dq_findings.csv"
 _EMPTY_MESSAGE = "Keine auffälligen Transporte gefunden."
@@ -148,15 +148,26 @@ def build_technical_loco_fallback(findings_path: Path = FINDINGS_PATH) -> pd.Dat
     )
 
 
+def load_technical_loco_fallback_once(
+    cache: dict[str, pd.DataFrame],
+    loader: Callable[[], pd.DataFrame] = build_technical_loco_fallback,
+) -> pd.DataFrame:
+    """Build the fallback table only once and only when the legacy empty state is hit."""
+    if "fallback" not in cache:
+        cache["fallback"] = loader()
+    return cache["fallback"]
+
+
 def _render_fallback(
     original_success,
     body: object,
-    fallback: pd.DataFrame,
+    fallback_loader: Callable[[], pd.DataFrame],
     *args: Any,
     **kwargs: Any,
 ):
     if str(body).strip() != _EMPTY_MESSAGE:
         return original_success(body, *args, **kwargs)
+    fallback = fallback_loader()
     if fallback.empty:
         return original_success(body, *args, **kwargs)
     st.warning(
@@ -180,10 +191,13 @@ def _render_fallback(
 def technical_loco_fallback_runtime() -> Iterator[None]:
     """Replace only the misleading empty-state success message during one UI run."""
     original_success = st.success
-    fallback = build_technical_loco_fallback()
+    cache: dict[str, pd.DataFrame] = {}
+
+    def fallback_loader() -> pd.DataFrame:
+        return load_technical_loco_fallback_once(cache)
 
     def success_with_fallback(body: object, *args: Any, **kwargs: Any):
-        return _render_fallback(original_success, body, fallback, *args, **kwargs)
+        return _render_fallback(original_success, body, fallback_loader, *args, **kwargs)
 
     st.success = success_with_fallback
     try:
