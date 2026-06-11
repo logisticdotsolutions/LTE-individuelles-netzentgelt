@@ -17,5 +17,6 @@ def test_browser_title_script_contains_fachliche_title() -> None:
     assert "const doc = window.parent.document" in script
     assert "doc.title" in script
     assert "MutationObserver" in script
-    assert "netzentgelt-login-shell-style" in script
-    assert "Bahnstrom Deutschland - Anmeldung" in script
+    assert "doc.querySelector('title')" in script
+    assert "netzentgelt-login-shell-style" not in script
+    assert "doc.documentElement" not in script
