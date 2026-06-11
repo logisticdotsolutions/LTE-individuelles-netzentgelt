@@ -12,6 +12,7 @@ from typing import Any, Iterator
 import pandas as pd
 import streamlit as st
 
+from case_timeline_context_module import load_case_timeline_context
 from local_auth_module import UserContext
 from operator_case_workspace_module import (
     SESSION_CASE_LOCO_KEY,
@@ -20,7 +21,7 @@ from operator_case_workspace_module import (
 )
 
 
-PHASE10A_WORKFLOW_RUNTIME_MARKER = "NETZENTGELT_OPERATOR_WORKFLOW_RUNTIME_PHASE10A_V1_20260611"
+PHASE10B_WORKFLOW_RUNTIME_MARKER = "NETZENTGELT_OPERATOR_WORKFLOW_RUNTIME_PHASE10B_V1_20260611"
 _PIPELINE_TAB_LABEL = "⚙️ Technik: Pipeline"
 
 
@@ -183,7 +184,7 @@ def _render_sorted_open_tasks(*, operator_ui, user: UserContext, export_gate, gl
                 mime="text/csv",
                 key="download_operator_tasks_csv_phase10a",
             )
-    render_case_workspace(user=user, findings=findings)
+    render_case_workspace(user=user, findings=findings, timeline=load_case_timeline_context())
 
 
 def _without_legacy_override_info(original_info):
@@ -224,7 +225,7 @@ def operator_workflow_runtime(user: UserContext) -> Iterator[None]:
         render_case_workspace(
             user=user,
             findings=kwargs.get("findings"),
-            timeline=kwargs.get("timeline"),
+            timeline=load_case_timeline_context(),
             compact=True,
         )
         return result
