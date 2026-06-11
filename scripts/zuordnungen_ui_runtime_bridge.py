@@ -6,8 +6,7 @@ from typing import Iterable, Sequence
 
 import streamlit as st
 
-from export_module import list_non_lte_performing_rus, list_unconfigured_lte_performing_rus
-from rest_export_module import PRIMARY_EXPORT_GROUPS
+from rest_export_module import PRIMARY_EXPORT_GROUPS, list_rest_export_overview
 from zuordnungen_export_module import build_zuordnungen_xlsx
 
 
@@ -19,6 +18,33 @@ EXPORT_TAB_LABEL = "5. Exporte erstellen"
 def _as_date(value: object, fallback: date) -> date:
     """Streamlit-Session-Wert defensiv als Datum übernehmen."""
     return value if isinstance(value, date) else fallback
+
+
+def _list_rest_performing_rus(
+    *,
+    db_path: Path,
+    date_from_value: date,
+    date_to_value: date,
+) -> list[str]:
+    """
+    Weitere nutzende EVU aus derselben Restübersicht wie die Legacy-App liefern.
+
+    Dadurch bleiben LTE AT, LTE CH und alle sonstigen PerformingRUs außerhalb
+    der prominenten Hauptgruppen LTE DE und LTE NL vollständig downloadbar.
+    """
+    rest_rows = list_rest_export_overview(
+        db_path=db_path,
+        date_from=date_from_value,
+        date_to=date_to_value,
+    )
+
+    return sorted(
+        {
+            str(row.get("PerformingRU", "")).strip()
+            for row in rest_rows
+            if str(row.get("PerformingRU", "")).strip()
+        }
+    )
 
 
 @st.cache_data(show_spinner=False)
@@ -124,9 +150,10 @@ def render_zuordnungen_export_extension() -> None:
             key_suffix=f"primary_{group_key.lower()}",
         )
 
-    rest_values = sorted(
-        set(list_non_lte_performing_rus(DB_PATH))
-        | set(list_unconfigured_lte_performing_rus(DB_PATH))
+    rest_values = _list_rest_performing_rus(
+        db_path=DB_PATH,
+        date_from_value=date_from_value,
+        date_to_value=date_to_value,
     )
 
     if not rest_values:
@@ -141,7 +168,7 @@ def render_zuordnungen_export_extension() -> None:
 
     _render_download(
         title=f"Zuordnungen {selected_ru}",
-        export_label=selected_ru,
+        export_label=f"REST_{selected_ru}",
         performing_ru_values=(selected_ru,),
         date_from_value=date_from_value,
         date_to_value=date_to_value,
