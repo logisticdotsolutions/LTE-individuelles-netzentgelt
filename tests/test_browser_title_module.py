@@ -14,7 +14,8 @@ def test_browser_title_script_contains_fachliche_title() -> None:
     script = browser_title_script(DEFAULT_BROWSER_TITLE)
 
     assert json.dumps(DEFAULT_BROWSER_TITLE) in script
-    assert "document.title" in script
+    assert "const doc = window.parent.document" in script
+    assert "doc.title" in script
     assert "MutationObserver" in script
     assert "netzentgelt-login-shell-style" in script
     assert "Bahnstrom Deutschland - Anmeldung" in script
