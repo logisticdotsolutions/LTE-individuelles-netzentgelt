@@ -1,48 +1,69 @@
-# Netzentgelt MVP - Phase 7B Pipeline- und Testcontroller
+# Bahnstrom Deutschland – Tagesprüfung
 
-Basis: GitHub `main`, Commit `866d98c652fe1ad17e0c231c8708c58735a3d66d` (`test implementiert`).
+Lokale Streamlit-Fachanwendung zur operativen Prüfung und Exportvorbereitung für das individuelle Netzentgelt in Deutschland.
 
-## Inhalt
+## Zweck
 
-Der Patch integriert im bestehenden Streamlit-Tab **⚙️ Technik: Pipeline** drei Aktionen:
+Das Tool verarbeitet die aktuellen Rohdaten, baut die DuckDB-Datenbasis reproduzierbar neu auf und unterstützt Fachanwender bei der Prüfung auffälliger Lok-Zeitachsen. Korrekturen werden lokal, nachvollziehbar und auditierbar dokumentiert. Die importierten Original-CSVs bleiben unverändert.
 
-1. **Nur Tests starten**
-2. **Pipeline + Tests**
-3. **Azure-Download + Pipeline + Tests**
-
-Die Ergebnisanzeige enthält PASS / FAIL / WARNING, jeden einzelnen Test mit Status und Laufzeit, Fehlerdetails sowie Downloadbuttons für HTML-, JUnit-, Konsolen- und JSON-Bericht.
-
-Zusätzlich werden die sieben bekannten Phase-7A-Fixture-Probleme korrigiert und die UTF-8-Ausgabe der lokalen Testsuite gehärtet.
-
-## Sicherheitsgrenzen
-
-- Tests verändern keine produktiven Rohdaten oder produktiven DuckDB-Dateien.
-- Pipeline-Aktionen sind bewusst produktiv und verwenden weiterhin die bestehende abgesicherte Build- und Replace-Logik.
-- Der Installer überschreibt keine unbekannten lokalen Änderungen.
-- Vor Änderungen werden Backups unter `.patch_backups/` erstellt.
-
-## Anwendung
+## Normaler Start
 
 Im Repository-Stamm ausführen:
 
 ```bat
-C:\Pfad\zum\Patch\01_DRY_RUN_PHASE7B_PIPELINE_TEST_UI.bat
-C:\Pfad\zum\Patch\02_APPLY_PHASE7B_PIPELINE_TEST_UI.bat
+RUN_TOOL.bat
+```
+
+Die Anwendung startet über `app/secure_app.py`. Die lokale Anmeldung, Rollensteuerung und Auditzuordnung werden vor der eigentlichen Fachanwendung aktiviert.
+
+## Testsuite
+
+Vor und nach Änderungen ausführen:
+
+```bat
 RUN_TESTS.bat
 ```
 
-Danach Streamlit neu starten oder die Seite neu laden.
+Die Testsuite prüft:
 
-## Rollback
+- Python-Syntax
+- Test-Abhängigkeiten
+- Regelengine und Quality Gate
+- Exportlogik
+- lokale Korrekturen und Audit Trail
+- Rollen- und UI-Runtime-Bridges
+- Cleanup-Verträge für entfernte historische Artefakte
 
-```bat
-C:\Pfad\zum\Patch\03_ROLLBACK_PHASE7B_PIPELINE_TEST_UI.bat
+Testberichte werden unter `_test_reports/<UTC-Zeitstempel>/` abgelegt.
+
+## Operativer Ablauf
+
+1. Daten aktualisieren und vollständig neu berechnen.
+2. Blockierende Fälle unter **2. Offene Aufgaben** prüfen.
+3. Lok-Kontext mit Zeitachse, Grenzübertritten und GAPs öffnen.
+4. Notwendige lokale Korrektur oder fachliche Klassifikation dokumentieren.
+5. Export erst nach erfolgreicher Prüfung erstellen.
+
+## Zentrale Verzeichnisse
+
+```text
+data/00_raw       Eingangsdaten als CSV
+data/01_mapping   fachliche Mappings und lokale Overrides
+data/02_duckdb    produktive und temporäre DuckDB-Dateien
+data/03_exports   erzeugte CSV-Prüf- und Exportdaten
+data/04_logs      technische Laufprotokolle
+scripts/          produktive Python-Module
+tests/            automatisierte Regressionstests
 ```
 
-## Lokaler Commit ohne Push
+## Sicherheitsprinzipien
 
-Nach erfolgreichem Testlauf:
+- Der Neuaufbau erfolgt zuerst in einer temporären DuckDB-Datei.
+- Die produktive DuckDB wird nur nach einem vollständig erfolgreichen Lauf ersetzt.
+- Lokale Korrekturen verändern keine importierten Original-CSVs.
+- Deaktivierungen von Korrekturen erzeugen je Override einen eigenen Audit-Eintrag.
+- Pipeline-Aktionen sind nur für ADMIN sichtbar.
 
-```bat
-C:\Pfad\zum\Patch\04_CREATE_LOCAL_COMMIT.bat
-```
+## Wartung
+
+Historische Patch-Installer und reine Installer-Roundtrip-Tests gehören nicht mehr zum produktiven Repository. Neue Änderungen werden direkt auf Basis von `main` entwickelt und durch `RUN_TESTS.bat` abgesichert.
