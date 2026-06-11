@@ -9,6 +9,12 @@ from typing import Any, Iterator
 import pandas as pd
 import streamlit as st
 
+from manual_override_case_rule_module import (
+    default_override_type_for_rule,
+    format_case_option,
+    rule_description,
+    rule_id_from_case_option,
+)
 from manual_override_guidance_module import current_value_for, guidance_for, is_noop_value
 from manual_override_widget_value_module import (
     EMPTY_DROPDOWN_VALUE,
@@ -18,7 +24,7 @@ from manual_override_widget_value_module import (
 )
 
 
-GUIDED_CORRECTION_RUNTIME_MARKER = "NETZENTGELT_GUIDED_CORRECTION_RUNTIME_PHASE9D_V5_20260610"
+GUIDED_CORRECTION_RUNTIME_MARKER = "NETZENTGELT_GUIDED_CORRECTION_RUNTIME_PHASE10E_V1_20260611"
 _TIME_CORRECTION_TYPES = {"SET_SEQUENCE_TS", "SET_ACTUAL_DEPARTURE", "SET_ACTUAL_ARRIVAL"}
 
 
@@ -31,6 +37,7 @@ def guided_correction_widgets(timeline: pd.DataFrame | None = None) -> Iterator[
     original_submit = st.form_submit_button
     original_checkbox = st.checkbox
     state: dict[str, Any] = {
+        "case_rule_id": "",
         "override_type": "",
         "new_value": "",
         "transport_number": "",
@@ -148,10 +155,36 @@ def guided_correction_widgets(timeline: pd.DataFrame | None = None) -> Iterator[
         return value
 
     def selectbox(label: str, *args: Any, **kwargs: Any):
+        if label == "Prüffall oder freie Erfassung":
+            options = dict(kwargs)
+            existing_formatter = options.get("format_func")
+            options["format_func"] = (
+                lambda value: format_case_option(value)
+                if existing_formatter is None
+                else existing_formatter(format_case_option(value))
+            )
+            value = original_selectbox(label, *args, **options)
+            state["case_rule_id"] = rule_id_from_case_option(value)
+            if state["case_rule_id"]:
+                st.caption(
+                    f"Ausgewählte Regel: **{state['case_rule_id']} – {rule_description(state['case_rule_id'])}**"
+                )
+            return value
         if label == "Art der Bearbeitung":
-            value = original_selectbox("Was möchtest du korrigieren?", *args, **kwargs)
+            options = dict(kwargs)
+            values = list(args[0]) if args else list(options.get("options", []))
+            suggested_type = default_override_type_for_rule(state.get("case_rule_id"))
+            current_index = int(options.get("index", 0) or 0)
+            if suggested_type in values and current_index == 0:
+                options["index"] = values.index(suggested_type)
+            value = original_selectbox("Was möchtest du korrigieren?", *args, **options)
             state["override_type"] = value
             item = guidance()
+            if suggested_type and value == suggested_type:
+                st.caption(
+                    "Die Bearbeitungsart wurde aus dem ausgewählten Prüffall sinnvoll vorbelegt. "
+                    "Ändere sie nur, wenn fachlich eine andere Korrektur erforderlich ist."
+                )
             st.info(f"**{item.title}**\n\n{item.purpose}\n\n**Geändertes Feld:** {item.target_field}")
             return value
         if label == "Fachliche Klassifikation" and not guidance().requires_classification:
