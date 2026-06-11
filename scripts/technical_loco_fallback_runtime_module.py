@@ -15,7 +15,7 @@ import streamlit as st
 
 from dummy_locomotive_module import _read_mapping_rows
 
-PHASE10D_TECHNICAL_LOCO_FALLBACK_MARKER = "NETZENTGELT_TECHNICAL_LOCO_FALLBACK_PHASE10D_V1_20260611"
+PHASE11A_TECHNICAL_LOCO_FALLBACK_MARKER = "NETZENTGELT_TECHNICAL_LOCO_FALLBACK_PHASE11A_V1_20260611"
 ROOT = Path(__file__).resolve().parents[1]
 FINDINGS_PATH = ROOT / "data" / "03_exports" / "dq_findings.csv"
 _EMPTY_MESSAGE = "Keine auffälligen Transporte gefunden."
@@ -148,10 +148,15 @@ def build_technical_loco_fallback(findings_path: Path = FINDINGS_PATH) -> pd.Dat
     )
 
 
-def _render_fallback(original_success, body: object, *args: Any, **kwargs: Any):
+def _render_fallback(
+    original_success,
+    body: object,
+    fallback: pd.DataFrame,
+    *args: Any,
+    **kwargs: Any,
+):
     if str(body).strip() != _EMPTY_MESSAGE:
         return original_success(body, *args, **kwargs)
-    fallback = build_technical_loco_fallback()
     if fallback.empty:
         return original_success(body, *args, **kwargs)
     st.warning(
@@ -175,9 +180,10 @@ def _render_fallback(original_success, body: object, *args: Any, **kwargs: Any):
 def technical_loco_fallback_runtime() -> Iterator[None]:
     """Replace only the misleading empty-state success message during one UI run."""
     original_success = st.success
+    fallback = build_technical_loco_fallback()
 
     def success_with_fallback(body: object, *args: Any, **kwargs: Any):
-        return _render_fallback(original_success, body, *args, **kwargs)
+        return _render_fallback(original_success, body, fallback, *args, **kwargs)
 
     st.success = success_with_fallback
     try:
