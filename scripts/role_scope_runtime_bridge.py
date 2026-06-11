@@ -8,6 +8,7 @@ from typing import Any, Iterator
 import pandas as pd
 
 from local_auth_module import UserContext
+from operator_workflow_activation_module import activated_operator_workflow
 from role_scope_csv_bridge import build_scoped_csv_reader
 from role_scope_module import (
     ADMIN_ROLE,
@@ -18,13 +19,15 @@ from role_scope_module import (
 
 
 PHASE9B_SCOPE_RUNTIME_MARKER = "NETZENTGELT_PORTABLE_ROLE_SCOPE_RUNTIME_PHASE9B_V2_20260610"
+PHASE10A_OPERATOR_WORKFLOW_SCOPE_MARKER = "NETZENTGELT_OPERATOR_WORKFLOW_SCOPE_PHASE10A_V1_20260611"
 
 
 @contextmanager
 def role_scoped_runtime(user: UserContext) -> Iterator[None]:
     """Apply role-based visibility and export restrictions for one UI run."""
     if user.role_code == ADMIN_ROLE:
-        yield
+        with activated_operator_workflow(user):
+            yield
         return
 
     import export_module
@@ -82,7 +85,8 @@ def role_scoped_runtime(user: UserContext) -> Iterator[None]:
     export_module.build_nutzungsmeldung_xlsx = scoped_build_nutzungsmeldung
     export_module.build_aufenthaltsereignis_xlsx = scoped_build_aufenthalt
     try:
-        yield
+        with activated_operator_workflow(user):
+            yield
     finally:
         pd.read_csv = original_read_csv
         rest_export_module.PRIMARY_EXPORT_GROUPS = original_primary_groups
