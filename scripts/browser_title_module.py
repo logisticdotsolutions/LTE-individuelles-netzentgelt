@@ -7,16 +7,35 @@ import json
 import streamlit.components.v1 as components
 
 
-BROWSER_TITLE_MARKER = "NETZENTGELT_BROWSER_TITLE_PHASE9D_V1_20260610"
+BROWSER_TITLE_MARKER = "NETZENTGELT_BROWSER_TITLE_PHASE10B_V1_20260611"
 DEFAULT_BROWSER_TITLE = "Bahnstrom Deutschland - Tagesprüfung"
 
 
 def browser_title_script(title: str = DEFAULT_BROWSER_TITLE) -> str:
-    """Return a tiny safe script that updates the parent Streamlit tab title."""
+    """Return a small client-side guard that restores the fachliche browser title."""
     encoded = json.dumps(str(title))
-    return f"<script>window.parent.document.title = {encoded};</script>"
+    return f"""
+    <script>
+    (() => {{
+      const expected = {encoded};
+      const doc = window.parent.document;
+      const apply = () => {{
+        if (doc.title !== expected) doc.title = expected;
+      }};
+      apply();
+      window.setTimeout(apply, 250);
+      window.setTimeout(apply, 1000);
+      const titleNode = doc.querySelector('title');
+      if (titleNode && !window.parent.__netzentgeltTitleObserver) {{
+        const observer = new MutationObserver(apply);
+        observer.observe(titleNode, {{ childList: true, subtree: true, characterData: true }});
+        window.parent.__netzentgeltTitleObserver = observer;
+      }}
+    }})();
+    </script>
+    """
 
 
 def enforce_browser_title(title: str = DEFAULT_BROWSER_TITLE) -> None:
-    """Set the browser title even when Streamlit falls back to its default label."""
+    """Set and preserve the browser title when Streamlit falls back to its default label."""
     components.html(browser_title_script(title), height=0, width=0)
