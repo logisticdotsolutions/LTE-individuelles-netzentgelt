@@ -15,10 +15,19 @@ import streamlit as st
 
 from dummy_locomotive_module import _read_mapping_rows
 
-PHASE10C_TECHNICAL_LOCO_FALLBACK_MARKER = "NETZENTGELT_TECHNICAL_LOCO_FALLBACK_PHASE10C_V1_20260611"
+PHASE10D_TECHNICAL_LOCO_FALLBACK_MARKER = "NETZENTGELT_TECHNICAL_LOCO_FALLBACK_PHASE10D_V1_20260611"
 ROOT = Path(__file__).resolve().parents[1]
 FINDINGS_PATH = ROOT / "data" / "03_exports" / "dq_findings.csv"
 _EMPTY_MESSAGE = "Keine auffälligen Transporte gefunden."
+_TIMESTAMP_CANDIDATES = (
+    "period_start_utc",
+    "actual_departure_ts",
+    "ActualDeparture",
+    "period_end_utc",
+    "sequence_ts",
+    "gap_from_utc",
+    "gap_to_utc",
+)
 
 
 def _clean(value: object) -> str:
@@ -55,6 +64,26 @@ def _read_findings(path: Path = FINDINGS_PATH) -> pd.DataFrame:
     return pd.DataFrame()
 
 
+def _finding_timestamp(item: pd.Series, findings: pd.DataFrame) -> pd.Timestamp | None:
+    """Return the first usable case timestamp without inventing a catalogue date."""
+    for candidate in _TIMESTAMP_CANDIDATES:
+        column = _column(findings, (candidate,))
+        if not column:
+            continue
+        parsed = pd.to_datetime(item.get(column), errors="coerce", utc=True)
+        if pd.notna(parsed):
+            return parsed
+    return None
+
+
+def _date_text(timestamp: pd.Timestamp | None) -> str:
+    return timestamp.strftime("%d.%m.%Y") if timestamp is not None else ""
+
+
+def _timestamp_text(timestamp: pd.Timestamp | None) -> str:
+    return timestamp.strftime("%d.%m.%Y %H:%M:%S") if timestamp is not None else ""
+
+
 def build_technical_loco_fallback(findings_path: Path = FINDINGS_PATH) -> pd.DataFrame:
     """Build an auditable fallback list from R012 findings and active dummy mappings."""
     rows: list[dict[str, str]] = []
@@ -68,10 +97,13 @@ def build_technical_loco_fallback(findings_path: Path = FINDINGS_PATH) -> pd.Dat
         if rule_col:
             mask = findings[rule_col].fillna("").astype(str).str.strip().str.upper().eq("R012")
             for _, item in findings.loc[mask].iterrows():
+                timestamp = _finding_timestamp(item, findings)
                 rows.append(
                     {
                         "Quelle": "Aktuelle Regelqueue",
                         "Regel": "R012",
+                        "Datum": _date_text(timestamp),
+                        "Zeitpunkt UTC": _timestamp_text(timestamp),
                         "Loknummer": _clean(item.get(loco_col)) if loco_col else "",
                         "Transportnummer": _clean(item.get(transport_col)) if transport_col else "",
                         "Priorität": _clean(item.get(severity_col)) if severity_col else "ERROR",
@@ -84,6 +116,8 @@ def build_technical_loco_fallback(findings_path: Path = FINDINGS_PATH) -> pd.Dat
             {
                 "Quelle": "Aktiver Dummy-Katalog",
                 "Regel": "R012",
+                "Datum": "",
+                "Zeitpunkt UTC": "",
                 "Loknummer": _clean(mapping.get("loco_no")),
                 "Transportnummer": "",
                 "Priorität": "KATALOG",
@@ -93,14 +127,23 @@ def build_technical_loco_fallback(findings_path: Path = FINDINGS_PATH) -> pd.Dat
 
     result = pd.DataFrame(
         rows,
-        columns=["Quelle", "Regel", "Loknummer", "Transportnummer", "Priorität", "Hinweis"],
+        columns=[
+            "Quelle",
+            "Regel",
+            "Datum",
+            "Zeitpunkt UTC",
+            "Loknummer",
+            "Transportnummer",
+            "Priorität",
+            "Hinweis",
+        ],
     )
     if result.empty:
         return result
     return (
         result
         .drop_duplicates()
-        .sort_values(["Quelle", "Loknummer", "Transportnummer", "Hinweis"], kind="stable")
+        .sort_values(["Quelle", "Datum", "Loknummer", "Transportnummer", "Hinweis"], kind="stable")
         .reset_index(drop=True)
     )
 
@@ -114,7 +157,8 @@ def _render_fallback(original_success, body: object, *args: Any, **kwargs: Any):
     st.warning(
         "Die tagegefilterte Rohdatenprüfung enthält keine Treffer. Zusätzlich werden deshalb "
         "aktuelle R012-Findings und aktive Einträge aus dem Dummy-Katalog angezeigt. "
-        "Katalogeinträge müssen nicht zwingend im gewählten Tagesfenster vorkommen."
+        "Das Datum wird nur für konkrete R012-Fälle befüllt. Reine Katalogeinträge besitzen "
+        "bewusst kein erfundenes Auftretensdatum."
     )
     st.dataframe(fallback, use_container_width=True, hide_index=True)
     st.download_button(
