@@ -73,6 +73,11 @@ from n01_hardened_runtime_bridge import (  # noqa: E402
     install_n01_hardened_runtime,
     restore_n01_hardened_runtime,
 )
+from operational_day_filter_ui_runtime_bridge import (  # noqa: E402
+    install_operational_day_filter_runtime,
+    render_early_sidebar_operational_day_filter,
+    restore_operational_day_filter_runtime,
+)
 from ukl_vens_mapping_runtime_bridge_v2 import (  # noqa: E402
     install_vens_mapping_runtime,
     restore_vens_mapping_runtime,
@@ -113,6 +118,7 @@ PHASE11C_UKL_PREFLIGHT_MARKER = "NETZENTGELT_UKL_PREFLIGHT_PHASE11C_V1_20260612"
 PHASE11D_VENS_MAPPING_MARKER = "NETZENTGELT_UKL_VENS_MAPPING_PHASE11D_V1_20260612"
 PHASE11E_VENS_SELECTION_UI_MARKER = "NETZENTGELT_UKL_VENS_SELECTION_UI_PHASE11E_V1_20260612"
 PHASE11F_FRIENDLY_THEME_MARKER = "NETZENTGELT_FRIENDLY_THEME_PHASE11F_V1_20260612"
+PHASE11G_EARLY_DAY_FILTER_MARKER = "NETZENTGELT_EARLY_OPERATIONAL_DAY_FILTER_PHASE11G_V1_20260612"
 
 
 st.set_page_config(
@@ -141,6 +147,10 @@ if not LEGACY_APP_PATH.exists():
     st.error(f"Fachanwendung nicht gefunden: {LEGACY_APP_PATH}")
     st.stop()
 
+_operational_day_range = render_early_sidebar_operational_day_filter()
+_original_operational_day_filter = install_operational_day_filter_runtime(
+    _operational_day_range
+)
 _original_set_page_config = st.set_page_config
 _n01_runtime = install_n01_hardened_runtime()
 _ae01_runtime = install_ae01_hardened_runtime()
@@ -163,4 +173,5 @@ finally:
     restore_zuordnungen_hardened_runtime(_zuordnungen_hardened_runtime)
     restore_ae01_hardened_runtime(_ae01_runtime)
     restore_n01_hardened_runtime(_n01_runtime)
+    restore_operational_day_filter_runtime(_original_operational_day_filter)
     st.set_page_config = _original_set_page_config
