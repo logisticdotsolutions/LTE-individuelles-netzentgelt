@@ -21,16 +21,16 @@ AUDIT_DIR = ROOT / "data" / "04_audit" / "mp_id_imports"
 ROLE_PATTERNS = (
     ("ANu-vEns (Nutzer)", "ANU_VENS"),
     ("ANe-tEns (Halter)", "ANE_TENS"),
-    ("Dienstleister", "SERVICE_PROVIDER"),
-    ("Netzbetreiber", "GRID_OPERATOR"),
-    ("Stromlieferanten", "SUPPLIER"),
+    ("Messdienstleister", "METERING_SERVICE_PROVIDER"),
+    ("Übertragungsnetzbetreiber", "TSO"),
+    ("Anfordernde Netzbetreiber", "REQUESTING_GRID_OPERATOR"),
+    ("Betreiber einer technischen Ressource", "TECHNICAL_RESOURCE_OPERATOR"),
+    ("Einsatzverantwortliche", "RESPONSIBLE_PARTY"),
     ("Bilankreisverantwortliche", "BALANCING_RESPONSIBLE"),
     ("Bilanzkreisverantwortliche", "BALANCING_RESPONSIBLE"),
-    ("Übertragungsnetzbetreiber", "TSO"),
-    ("Einsatzverantwortliche", "RESPONSIBLE_PARTY"),
-    ("Betreiber einer technischen Ressource", "TECHNICAL_RESOURCE_OPERATOR"),
-    ("Anfordernde Netzbetreiber", "REQUESTING_GRID_OPERATOR"),
-    ("Messdienstleister", "METERING_SERVICE_PROVIDER"),
+    ("Stromlieferanten", "SUPPLIER"),
+    ("Dienstleister", "SERVICE_PROVIDER"),
+    ("Netzbetreiber", "GRID_OPERATOR"),
 )
 ENTRY_PATTERN = re.compile(r"^(?P<name>.+?)\s+(?P<mp_id>\d{13})$")
 DATE_PATTERN = re.compile(r"Stand:\s*(\d{2}\.\d{2}\.\d{4})")
