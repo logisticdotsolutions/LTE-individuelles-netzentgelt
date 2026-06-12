@@ -34,6 +34,15 @@ Documentation:
 
 3. `Z01` is a holder-side export and must not be generated per PerformingRU. LTE Holding is the only holder-side sender for the locomotive assignments. The export therefore consists of exactly one LTE-Holding file containing the locomotives with DE relevance in the selected period. PerformingRU remains relevant only as row-level assignment information for the target `Nutzer-vEns*`.
 
+   RailCube company label:
+   - `LTE Logistik- und Transport-GmbH (Holding)`
+
+   Known LTE Holding market partner IDs:
+   - `1900100300393`
+   - `1900100400391`
+
+   The Z01 template contains exactly one header field `Marktpartner ID`. Before the productive exporter is changed, the primary header ID or the rule for producing two separate Holding files must be confirmed.
+
 4. The remaining BNB usage-data templates are:
    - Traktionsleistung `T01`
    - Aufenthaltsabschnitt `AV01`
@@ -43,7 +52,7 @@ Documentation:
 
 ## Recommended implementation order
 
-1. Replace the current Z01 per-PerformingRU UI with one LTE-Holding assignment export filtered to DE-relevant locomotives.
+1. Replace the current Z01 per-PerformingRU UI with one LTE-Holding assignment export filtered to DE-relevant locomotives after the header-ID decision is confirmed.
 2. Harden existing N01 export against the current UKL template.
 3. Implement T01.
 4. Implement AV01.
