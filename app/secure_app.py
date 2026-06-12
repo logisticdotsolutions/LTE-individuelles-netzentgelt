@@ -57,6 +57,10 @@ from export_exception_ui_module import (  # noqa: E402
     render_export_exception_area,
     render_export_exception_sidebar_toggle,
 )
+from fallpruefung_review_runtime_bridge import (  # noqa: E402
+    install_fallpruefung_review_integration,
+    restore_fallpruefung_review_integration,
+)
 from local_auth_runtime_bridge import authenticated_runtime  # noqa: E402
 
 install_compact_login_views()
@@ -80,6 +84,7 @@ PHASE9C_BARE_START_GUARD_MARKER = "NETZENTGELT_STREAMLIT_BARE_START_GUARD_PHASE9
 PHASE9D_BROWSER_TITLE_MARKER = "NETZENTGELT_BROWSER_TITLE_ENTRYPOINT_PHASE9D_V1_20260610"
 PHASE10C_COMPACT_LOGIN_ENTRYPOINT_MARKER = "NETZENTGELT_COMPACT_LOGIN_ENTRYPOINT_PHASE10C_V1_20260611"
 PHASE11A_ZUORDNUNGEN_EXPORT_UI_MARKER = "NETZENTGELT_UKL_ZUORDNUNGEN_EXPORT_UI_PHASE11A_V1_20260611"
+PHASE11B_CASE_REVIEW_UI_MARKER = "NETZENTGELT_CASE_REVIEW_INTEGRATION_PHASE11B_V1_20260612"
 
 
 st.set_page_config(
@@ -110,6 +115,7 @@ if not LEGACY_APP_PATH.exists():
 # Streamlit-Befehl gesetzt. Der zweite Aufruf wird daher ausschließlich während
 # der Ausführung der Fachanwendung kontrolliert ignoriert.
 _original_set_page_config = st.set_page_config
+_fallpruefung_runtime = install_fallpruefung_review_integration()
 _original_tabs = install_zuordnungen_export_tab_extension()
 st.set_page_config = lambda *args, **kwargs: None
 try:
@@ -119,4 +125,5 @@ try:
                 runpy.run_path(str(LEGACY_APP_PATH), run_name="__main__")
 finally:
     restore_zuordnungen_export_tab_extension(_original_tabs)
+    restore_fallpruefung_review_integration(_fallpruefung_runtime)
     st.set_page_config = _original_set_page_config
