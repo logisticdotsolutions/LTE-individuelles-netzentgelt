@@ -18,4 +18,10 @@ def test_density_cleanup_renders_compact_css(monkeypatch):
     assert ".block-container" in css
     assert "[data-testid=\"stAlert\"]" in css
     assert "border-left: 0" in css
+    assert "[data-testid=\"stSidebar\"] .stButton > button" in css
+    assert "[data-testid=\"stExpander\"] summary" in css
+    assert "[data-testid=\"stStatusWidget\"]" in css
+    assert "[data-testid=\"stSpinner\"]" in css
+    assert "color: var(--lte-text) !important;" in css
+    assert "fill: var(--lte-accent) !important;" in css
     assert kwargs["unsafe_allow_html"] is True

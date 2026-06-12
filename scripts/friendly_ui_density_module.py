@@ -48,6 +48,34 @@ def apply_density_cleanup() -> None:
             font-size: 0.76rem !important;
         }
 
+        [data-testid="stSidebar"] .stButton > button,
+        [data-testid="stSidebar"] .stButton > button p {
+            background: var(--lte-surface) !important;
+            color: var(--lte-text) !important;
+        }
+
+        [data-testid="stExpander"] summary,
+        [data-testid="stExpander"] summary p {
+            background: var(--lte-surface-soft) !important;
+            color: var(--lte-text) !important;
+        }
+
+        [data-testid="stExpander"] summary svg {
+            color: var(--lte-text) !important;
+            fill: var(--lte-text) !important;
+        }
+
+        [data-testid="stStatusWidget"],
+        [data-testid="stSpinner"] {
+            color: var(--lte-text) !important;
+        }
+
+        [data-testid="stStatusWidget"] svg,
+        [data-testid="stSpinner"] svg {
+            color: var(--lte-accent) !important;
+            fill: var(--lte-accent) !important;
+        }
+
         h1 {
             font-size: 1.85rem !important;
             margin-bottom: 0.2rem !important;
