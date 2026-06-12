@@ -65,6 +65,7 @@ from fallpruefung_review_runtime_bridge import (  # noqa: E402
     install_fallpruefung_review_integration,
     restore_fallpruefung_review_integration,
 )
+from friendly_ui_theme_module import apply_theme, render_theme_toggle  # noqa: E402
 from local_auth_runtime_bridge import authenticated_runtime  # noqa: E402
 from n01_hardened_runtime_bridge import (  # noqa: E402
     install_n01_hardened_runtime,
@@ -108,6 +109,7 @@ PHASE11B_CASE_REVIEW_UI_MARKER = "NETZENTGELT_CASE_REVIEW_INTEGRATION_PHASE11B_V
 PHASE11C_UKL_PREFLIGHT_MARKER = "NETZENTGELT_UKL_PREFLIGHT_PHASE11C_V1_20260612"
 PHASE11D_VENS_MAPPING_MARKER = "NETZENTGELT_UKL_VENS_MAPPING_PHASE11D_V1_20260612"
 PHASE11E_VENS_SELECTION_UI_MARKER = "NETZENTGELT_UKL_VENS_SELECTION_UI_PHASE11E_V1_20260612"
+PHASE11F_FRIENDLY_THEME_MARKER = "NETZENTGELT_FRIENDLY_THEME_PHASE11F_V1_20260612"
 
 
 st.set_page_config(
@@ -116,9 +118,11 @@ st.set_page_config(
     layout="wide",
 )
 enforce_browser_title(DEFAULT_BROWSER_TITLE)
+apply_theme()
 
 current_user = require_local_login()
 admin_mode = render_authenticated_sidebar(current_user)
+render_theme_toggle()
 exception_mode = render_export_exception_sidebar_toggle()
 
 if exception_mode:
