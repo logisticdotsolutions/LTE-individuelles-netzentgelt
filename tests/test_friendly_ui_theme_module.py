@@ -46,3 +46,18 @@ def test_sidebar_toggle_reapplies_selected_theme(monkeypatch):
     assert module.render_theme_toggle() is True
     assert calls == [True]
     assert sidebar.calls[0][0] == ("Dunkelmodus",)
+
+
+def test_form_fields_enforce_readable_text_placeholder_and_autofill(monkeypatch):
+    rendered = []
+    monkeypatch.setattr(module.st, "markdown", lambda body, **kwargs: rendered.append(body))
+
+    module.apply_theme(dark_mode=False)
+
+    css = rendered[0]
+    assert '[data-baseweb="input"] input' in css
+    assert 'input::placeholder' in css
+    assert 'input:-webkit-autofill' in css
+    assert '-webkit-text-fill-color: var(--lte-text)' in css
+    assert '-webkit-text-fill-color: var(--lte-muted)' in css
+    assert 'box-shadow: 0 0 0 1000px var(--lte-surface) inset' in css
