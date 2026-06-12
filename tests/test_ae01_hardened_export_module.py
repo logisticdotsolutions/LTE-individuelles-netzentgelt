@@ -36,7 +36,7 @@ def _build(monkeypatch, tmp_path: Path, row):
     db_path = tmp_path / "netzentgelt.duckdb"
     db_path.touch()
     monkeypatch.setattr(module.duckdb, "connect", lambda *_args, **_kwargs: DummyConnection())
-    monkeypatch.setattr(module, "_fetch_hardened_ae01_rows", lambda **_kwargs: [row])
+    monkeypatch.setattr(module, "_fetch_hardened_ae01_rows", lambda *_args, **_kwargs: [row])
     monkeypatch.setattr(module, "_resolve_export_header", lambda **_kwargs: ("1900100300001", "LTE Germany GmbH"))
     return module.build_hardened_aufenthaltsereignis_xlsx(
         db_path=db_path,
