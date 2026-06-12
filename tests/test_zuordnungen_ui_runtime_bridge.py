@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import date
 from pathlib import Path
 import sys
 
@@ -80,16 +79,23 @@ def test_install_extension_leaves_unrelated_tab_sets_unchanged(monkeypatch) -> N
     assert module.st.tabs is original_tabs
 
 
-def test_render_extension_calls_both_holding_downloads(monkeypatch, tmp_path: Path) -> None:
+def test_render_extension_calls_preview_and_both_holding_downloads(monkeypatch, tmp_path: Path) -> None:
     db_path = tmp_path / "netzentgelt.duckdb"
     db_path.touch()
     rendered_ids: list[str] = []
+    preview_calls: list[str] = []
 
     monkeypatch.setattr(module, "DB_PATH", db_path)
     monkeypatch.setattr(module.st, "divider", lambda: None)
     monkeypatch.setattr(module.st, "subheader", lambda *_args, **_kwargs: None)
     monkeypatch.setattr(module.st, "caption", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(module.st, "markdown", lambda *_args, **_kwargs: None)
     monkeypatch.setattr(module.st, "session_state", {})
+    monkeypatch.setattr(
+        module,
+        "_render_preview",
+        lambda **_kwargs: preview_calls.append("preview"),
+    )
     monkeypatch.setattr(
         module,
         "_render_holding_download",
@@ -98,4 +104,5 @@ def test_render_extension_calls_both_holding_downloads(monkeypatch, tmp_path: Pa
 
     module.render_zuordnungen_export_extension()
 
+    assert preview_calls == ["preview"]
     assert rendered_ids == list(module.LTE_HOLDING_MARKET_PARTNER_IDS)
