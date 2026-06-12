@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-"""Controller-Ansichten fuer die nachrangigen Phase-6D-Prueflisten."""
+"""Controller-Ansichten für ergänzende fachliche Prüfhilfen in der Fallbearbeitung."""
 
 from typing import Iterable
 
@@ -101,14 +101,15 @@ def render_phase6d_review_lists(
     gap_context_review: pd.DataFrame,
     uncertain_gaps: pd.DataFrame,
 ) -> None:
-    st.subheader("Weitere fachliche Prüfungen")
+    st.subheader("Ergänzende Prüfhilfen zum ausgewählten Fall")
     st.caption(
-        "Diese Listen unterstützen die fachliche Sichtung. Sie erzeugen nicht automatisch "
-        "eine Meldung und verändern keine Daten in RailCube."
+        "Diese Listen sind direkt in die Fallbearbeitung integriert. Sie unterstützen die "
+        "fachliche Sichtung, erzeugen aber niemals automatisch eine Meldung und verändern "
+        "keine Daten in RailCube."
     )
 
     tab_stands, tab_border, tab_uncertain = st.tabs([
-        "Mögliche kalte Abstellungen",
+        "Kaltabstellung prüfen",
         "Grenzkontext prüfen",
         "Unsichere Unterbrechungen",
     ])
@@ -116,12 +117,13 @@ def render_phase6d_review_lists(
     with tab_stands:
         st.markdown("#### Mögliche kalte Abstellungen")
         st.caption(
-            "Die Lok stand länger als acht Stunden am selben Ort. Bitte prüfen, ob eine "
-            "kalte Abstellung vorliegt oder ob die Standzeit fachlich anders zu bewerten ist."
+            "Für DE-relevante GAPs über 120 Minuten wird in der Fallbearbeitung ein "
+            "Systemvorschlag zur Klassifikation als kalte Abstellung erzeugt. Diese Liste "
+            "zeigt ergänzend die pipelinebasierten Standkandidaten zur fachlichen Sichtung."
         )
         prepared = _prepare_stands(stand_candidates)
         if prepared.empty:
-            st.success("Im gewählten Arbeitstag wurden keine möglichen kalten Abstellungen gefunden.")
+            st.success("Im gewählten Arbeitstag wurden keine pipelinebasierten Standkandidaten gefunden.")
         else:
             st.info(f"Zu prüfen: {len(prepared)} mögliche kalte Abstellungen")
             st.dataframe(prepared, use_container_width=True, hide_index=True)
