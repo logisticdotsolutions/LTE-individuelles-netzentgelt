@@ -8,6 +8,7 @@ from manual_gap_ui_labels import GAP_REVIEW_MIN_MINUTES, clean, duration_minutes
 
 GAP_REVIEW_SUGGESTION_TYPE = "GAP_OVER_120_MANUAL_CLASSIFICATION"
 GAP_REVIEW_SUGGESTION_LABEL = "GAP über 120 Minuten fachlich bewerten"
+_LEGACY_COLD_STAND_SUGGESTER = suggestion_module._suggest_cold_stands
 
 
 def _bool_flag(value: object) -> bool:
@@ -28,6 +29,8 @@ def build_gap_review_suggestions(timeline: pd.DataFrame) -> list[object]:
     rows = timeline[
         timeline["row_type"].fillna("").astype(str).str.strip().str.upper().eq("GAP")
     ].copy()
+    if rows.empty:
+        return _LEGACY_COLD_STAND_SUGGESTER(timeline)
     if "gap_relevant_de" in rows.columns:
         rows = rows[rows["gap_relevant_de"].apply(_bool_flag)]
     suggestions = []
