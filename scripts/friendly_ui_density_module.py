@@ -65,6 +65,17 @@ def apply_density_cleanup() -> None:
             fill: var(--lte-text) !important;
         }
 
+        [data-testid="stStatusWidget"],
+        [data-testid="stSpinner"] {
+            color: var(--lte-text) !important;
+        }
+
+        [data-testid="stStatusWidget"] svg,
+        [data-testid="stSpinner"] svg {
+            color: var(--lte-accent) !important;
+            fill: var(--lte-accent) !important;
+        }
+
         h1 {
             font-size: 1.85rem !important;
             margin-bottom: 0.2rem !important;
