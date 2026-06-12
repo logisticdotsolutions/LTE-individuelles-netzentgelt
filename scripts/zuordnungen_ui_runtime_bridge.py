@@ -2,12 +2,15 @@ from __future__ import annotations
 
 from datetime import date
 from pathlib import Path
-from typing import Iterable, Sequence
+from typing import Sequence
 
 import streamlit as st
 
-from rest_export_module import PRIMARY_EXPORT_GROUPS, list_rest_export_overview
-from zuordnungen_export_module import build_zuordnungen_xlsx
+from zuordnungen_export_module import (
+    LTE_HOLDING_MARKET_PARTNER_IDS,
+    LTE_HOLDING_MARKET_PARTNER_NAME,
+    build_zuordnungen_holding_xlsx,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -20,72 +23,39 @@ def _as_date(value: object, fallback: date) -> date:
     return value if isinstance(value, date) else fallback
 
 
-def _list_rest_performing_rus(
-    *,
-    db_path: Path,
-    date_from_value: date,
-    date_to_value: date,
-) -> list[str]:
-    """
-    Weitere nutzende EVU aus derselben Restübersicht wie die Legacy-App liefern.
-
-    Dadurch bleiben LTE AT, LTE CH und alle sonstigen PerformingRUs außerhalb
-    der prominenten Hauptgruppen LTE DE und LTE NL vollständig downloadbar.
-    """
-    rest_rows = list_rest_export_overview(
-        db_path=db_path,
-        date_from=date_from_value,
-        date_to=date_to_value,
-    )
-
-    return sorted(
-        {
-            str(row.get("PerformingRU", "")).strip()
-            for row in rest_rows
-            if str(row.get("PerformingRU", "")).strip()
-        }
-    )
-
-
 @st.cache_data(show_spinner=False)
-def build_zuordnungen_download_cached(
+def build_zuordnungen_holding_download_cached(
     db_path_text: str,
     db_mtime_ns: int,
-    performing_ru_values: tuple[str, ...],
-    export_label: str,
+    holding_market_partner_id: str,
     date_from_iso: str,
     date_to_iso: str,
 ):
-    """UKL-Zuordnungen bis zur nächsten DuckDB-Änderung cachen."""
+    """Holding-Zuordnung bis zur nächsten DuckDB-Änderung cachen."""
     _ = db_mtime_ns
 
-    return build_zuordnungen_xlsx(
+    return build_zuordnungen_holding_xlsx(
         db_path=Path(db_path_text),
-        performing_ru_values=performing_ru_values,
-        export_label=export_label,
+        holding_market_partner_id=holding_market_partner_id,
         date_from=date.fromisoformat(date_from_iso),
         date_to=date.fromisoformat(date_to_iso),
     )
 
 
-def _render_download(
+def _render_holding_download(
     *,
-    title: str,
-    export_label: str,
-    performing_ru_values: Iterable[str],
+    holding_market_partner_id: str,
     date_from_value: date,
     date_to_value: date,
-    key_suffix: str,
 ) -> None:
-    """Einen RU-spezifischen Zuordnungsdownload anzeigen."""
-    st.markdown(f"#### {title}")
+    """Einen der beiden Holding-Z01-Downloads anzeigen."""
+    st.markdown(f"#### Holding-Mandant {holding_market_partner_id}")
 
     try:
-        result = build_zuordnungen_download_cached(
+        result = build_zuordnungen_holding_download_cached(
             db_path_text=str(DB_PATH),
             db_mtime_ns=DB_PATH.stat().st_mtime_ns,
-            performing_ru_values=tuple(performing_ru_values),
-            export_label=export_label,
+            holding_market_partner_id=holding_market_partner_id,
             date_from_iso=date_from_value.isoformat(),
             date_to_iso=date_to_value.isoformat(),
         )
@@ -95,7 +65,8 @@ def _render_download(
 
     st.caption(
         f"Exportzeilen: {result.row_count}. "
-        "UKL-Version: Z01. Sortierung: LocomotiveNo, danach Beginn der Zuordnung."
+        "UKL-Version: Z01. Inhalt: alle exportfähigen DE-relevanten Lok-Segmente. "
+        "Sortierung: LocomotiveNo, danach Beginn der Zuordnung."
     )
 
     if result.missing_required_field_count > 0:
@@ -105,25 +76,26 @@ def _render_download(
         )
 
     st.download_button(
-        label="XLSX-Zuordnungen herunterladen",
+        label=f"XLSX-Zuordnungen {holding_market_partner_id} herunterladen",
         data=result.content,
         file_name=result.file_name,
         mime=(
             "application/vnd.openxmlformats-officedocument."
             "spreadsheetml.sheet"
         ),
-        key=f"download_zuordnungen_{key_suffix}",
+        key=f"download_zuordnungen_holding_{holding_market_partner_id}",
         use_container_width=True,
     )
 
 
 def render_zuordnungen_export_extension() -> None:
-    """Zusätzlichen UKL-Zuordnungsbereich im bestehenden Exportreiter rendern."""
+    """Zwei feste LTE-Holding-Z01-Downloads im bestehenden Exportreiter rendern."""
     st.divider()
-    st.subheader("XLSX-Zuordnungen je nutzendem EVU")
+    st.subheader("XLSX-Zuordnungen LTE Holding")
     st.caption(
-        "Der Export basiert auf denselben freigegebenen Nutzungssegmenten wie die "
-        "Nutzungsmeldung und erzeugt die UKL-Zuordnungsvorlage in Version Z01."
+        f"Halter: {LTE_HOLDING_MARKET_PARTNER_NAME}. "
+        "Die beiden Dateien enthalten denselben DE-relevanten Datenumfang. "
+        "Sie unterscheiden sich ausschließlich durch die Marktpartner-ID im Dateikopf."
     )
 
     if not DB_PATH.exists():
@@ -140,40 +112,12 @@ def render_zuordnungen_export_extension() -> None:
         today,
     )
 
-    for group_key, group_config in PRIMARY_EXPORT_GROUPS.items():
-        _render_download(
-            title=f"Zuordnungen {group_config['title']}",
-            export_label=str(group_config["file_label"]),
-            performing_ru_values=tuple(group_config["performing_ru_values"]),
+    for holding_market_partner_id in LTE_HOLDING_MARKET_PARTNER_IDS:
+        _render_holding_download(
+            holding_market_partner_id=holding_market_partner_id,
             date_from_value=date_from_value,
             date_to_value=date_to_value,
-            key_suffix=f"primary_{group_key.lower()}",
         )
-
-    rest_values = _list_rest_performing_rus(
-        db_path=DB_PATH,
-        date_from_value=date_from_value,
-        date_to_value=date_to_value,
-    )
-
-    if not rest_values:
-        return
-
-    st.markdown("#### Zuordnungen Rest")
-    selected_ru = st.selectbox(
-        "Weiteres nutzendes EVU für Zuordnungen",
-        rest_values,
-        key="zuordnungen_rest_performing_ru",
-    )
-
-    _render_download(
-        title=f"Zuordnungen {selected_ru}",
-        export_label=f"REST_{selected_ru}",
-        performing_ru_values=(selected_ru,),
-        date_from_value=date_from_value,
-        date_to_value=date_to_value,
-        key_suffix="rest_selected",
-    )
 
 
 class _InjectedExportTab:
@@ -193,7 +137,7 @@ class _InjectedExportTab:
 
 
 def install_zuordnungen_export_tab_extension():
-    """Streamlit-Tabs so erweitern, dass Reiter 5 den UKL-Zuordnungsbereich erhält."""
+    """Streamlit-Tabs so erweitern, dass Reiter 5 den Holding-Z01-Bereich erhält."""
     original_tabs = st.tabs
 
     if getattr(original_tabs, "_zuordnungen_extension_installed", False):
