@@ -19,7 +19,10 @@ def install_vens_selection_ui_runtime() -> VEnsSelectionUIRuntime:
 
     def wrapped_renderer(*args, **kwargs):
         runtime.original_renderer(*args, **kwargs)
-        render_vens_selection_area(timeline=kwargs.get("timeline"))
+        timeline = kwargs.get("timeline")
+        if timeline is None and len(args) >= 4:
+            timeline = args[3]
+        render_vens_selection_area(timeline=timeline)
 
     cockpit.render_manual_override_cockpit = wrapped_renderer
     return runtime
