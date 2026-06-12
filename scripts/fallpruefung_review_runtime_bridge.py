@@ -30,7 +30,8 @@ class FallpruefungReviewRuntime:
     original_tabs: object
     original_renderer: object
     original_case_table_builder: object
-    original_context_table_builder: object
+    original_context_table_builder: object | None
+    had_original_context_table_builder: bool
     original_cold_stand_suggester: object
     original_cold_stand_min_minutes: int
     original_gap_review_label: str | None
@@ -42,11 +43,13 @@ class FallpruefungReviewRuntime:
 
 def install_fallpruefung_review_integration() -> FallpruefungReviewRuntime:
     """Prüflisten, verständliche Dropdowns und GAP-Einzelfallprüfung aktivieren."""
+    had_context_table = hasattr(override_ui, "_context_table")
     runtime = FallpruefungReviewRuntime(
         original_tabs=st.tabs,
         original_renderer=review_ui.render_phase6d_review_lists,
         original_case_table_builder=override_ui._build_case_table,
-        original_context_table_builder=override_ui._context_table,
+        original_context_table_builder=getattr(override_ui, "_context_table", None),
+        had_original_context_table_builder=had_context_table,
         original_cold_stand_suggester=suggestion_module._suggest_cold_stands,
         original_cold_stand_min_minutes=suggestion_module.COLD_STAND_MIN_MINUTES,
         original_gap_review_label=override_ui.SUGGESTION_TYPE_LABELS.get(GAP_REVIEW_SUGGESTION_TYPE),
@@ -59,6 +62,8 @@ def install_fallpruefung_review_integration() -> FallpruefungReviewRuntime:
         return decorate_case_table(runtime.original_case_table_builder(findings, timeline))
 
     def context_table_builder(case, override_type):
+        if not callable(runtime.original_context_table_builder):
+            return None
         original = runtime.original_context_table_builder(case, override_type)
         return decorate_context_table(original, case)
 
@@ -98,7 +103,8 @@ def install_fallpruefung_review_integration() -> FallpruefungReviewRuntime:
     suggestion_module.COLD_STAND_MIN_MINUTES = GAP_REVIEW_MIN_MINUTES
     suggestion_module._suggest_cold_stands = build_gap_review_suggestions
     override_ui._build_case_table = case_table_builder
-    override_ui._context_table = context_table_builder
+    if callable(runtime.original_context_table_builder):
+        override_ui._context_table = context_table_builder
     override_ui.SUGGESTION_TYPE_LABELS[GAP_REVIEW_SUGGESTION_TYPE] = GAP_REVIEW_SUGGESTION_LABEL
     override_ui.CLASSIFICATION_OPTIONS[NO_LTE_ASSIGNMENT_CODE] = NO_LTE_ASSIGNMENT_LABEL
     st.tabs = patched_tabs
@@ -110,7 +116,10 @@ def restore_fallpruefung_review_integration(runtime: FallpruefungReviewRuntime) 
     """Streamlit-, Renderer- und Vorschlags-Patches vollständig zurücksetzen."""
     review_ui.render_phase6d_review_lists = runtime.original_renderer
     override_ui._build_case_table = runtime.original_case_table_builder
-    override_ui._context_table = runtime.original_context_table_builder
+    if runtime.had_original_context_table_builder:
+        override_ui._context_table = runtime.original_context_table_builder
+    else:
+        override_ui.__dict__.pop("_context_table", None)
     suggestion_module._suggest_cold_stands = runtime.original_cold_stand_suggester
     suggestion_module.COLD_STAND_MIN_MINUTES = runtime.original_cold_stand_min_minutes
 
