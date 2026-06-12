@@ -65,6 +65,7 @@ from fallpruefung_review_runtime_bridge import (  # noqa: E402
     install_fallpruefung_review_integration,
     restore_fallpruefung_review_integration,
 )
+from friendly_ui_density_module import apply_density_cleanup  # noqa: E402
 from friendly_ui_theme_module import apply_theme, render_theme_toggle  # noqa: E402
 from local_auth_runtime_bridge import authenticated_runtime  # noqa: E402
 from n01_hardened_runtime_bridge import (  # noqa: E402
@@ -119,6 +120,7 @@ st.set_page_config(
 )
 enforce_browser_title(DEFAULT_BROWSER_TITLE)
 apply_theme()
+apply_density_cleanup()
 
 current_user = require_local_login()
 admin_mode = render_authenticated_sidebar(current_user)
