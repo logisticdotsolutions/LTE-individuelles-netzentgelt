@@ -188,15 +188,26 @@ def apply_no_lte_gap_release(con, run_id: str) -> int:
                 update dq_findings as target
                 set severity = 'INFO', status = 'info',
                     suggested_action = concat_ws(' | ', nullif(trim(coalesce(target.suggested_action, '')), ''), ?)
-                where upper(trim(coalesce(target.row_type, ''))) = 'GAP'
-                  and exists (
-                        select 1 from tmp_no_lte_gap_matches matched
-                        where matched.loco_no is not distinct from target.loco_no
-                          and matched.period_start_utc is not distinct from target.period_start_utc
-                          and matched.period_end_utc is not distinct from target.period_end_utc
-                          and matched.source_table is not distinct from target.source_table
-                          and matched.source_row_id is not distinct from cast(target.source_row_id as varchar)
-                  )
+                where (
+                        upper(trim(coalesce(target.row_type, ''))) = 'GAP'
+                        and exists (
+                            select 1 from tmp_no_lte_gap_matches matched
+                            where matched.loco_no is not distinct from target.loco_no
+                              and matched.period_start_utc is not distinct from target.period_start_utc
+                              and matched.period_end_utc is not distinct from target.period_end_utc
+                              and matched.source_table is not distinct from target.source_table
+                              and matched.source_row_id is not distinct from cast(target.source_row_id as varchar)
+                        )
+                      )
+                   or (
+                        upper(trim(coalesce(target.rule_id, ''))) = 'R016'
+                        and exists (
+                            select 1 from tmp_no_lte_gap_matches matched
+                            where matched.loco_no is not distinct from target.loco_no
+                              and target.period_start_utc < matched.period_end_utc
+                              and target.period_end_utc > matched.period_start_utc
+                        )
+                      )
                 """,
                 [RELEASE_MESSAGE],
             )
