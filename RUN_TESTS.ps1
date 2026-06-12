@@ -30,13 +30,15 @@ Write-Host "Berichte: $ReportDir"
 Write-Host 'Produktive Rohdaten und DuckDB-Dateien werden durch die Tests nicht verändert.'
 
 if ($InstallDependencies) {
-    Write-Section 'Installiere Test-Abhängigkeiten'
+    Write-Section 'Installiere Laufzeit- und Test-Abhängigkeiten'
+    & $Python -m pip install -r (Join-Path $Root 'requirements.txt')
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     & $Python -m pip install -r (Join-Path $Root 'requirements-test.txt')
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 }
 
 Write-Section 'Prüfe Test-Abhängigkeiten'
-& $Python -c "import duckdb, openpyxl, pytest, pytest_html; print('PASS: Test-Abhängigkeiten verfügbar.')"
+& $Python -c "import duckdb, openpyxl, pypdf, pytest, pytest_html; print('PASS: Test-Abhängigkeiten verfügbar.')"
 if ($LASTEXITCODE -ne 0) {
     Write-Host ''
     Write-Host 'FAIL: Test-Abhängigkeiten fehlen.'
