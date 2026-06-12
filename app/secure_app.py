@@ -65,6 +65,7 @@ from fallpruefung_review_runtime_bridge import (  # noqa: E402
     install_fallpruefung_review_integration,
     restore_fallpruefung_review_integration,
 )
+from friendly_ui_copy_runtime_module import install_compact_copy_runtime  # noqa: E402
 from friendly_ui_density_module import apply_density_cleanup  # noqa: E402
 from friendly_ui_theme_module import apply_theme, render_theme_toggle  # noqa: E402
 from local_auth_runtime_bridge import authenticated_runtime  # noqa: E402
@@ -81,6 +82,7 @@ from vens_selection_ui_runtime_bridge import (  # noqa: E402
     restore_vens_selection_ui_runtime,
 )
 
+install_compact_copy_runtime()
 install_compact_login_views()
 
 from local_auth_ui_module import (  # noqa: E402
