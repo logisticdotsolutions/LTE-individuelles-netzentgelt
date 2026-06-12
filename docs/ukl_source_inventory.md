@@ -32,17 +32,19 @@ Documentation:
 
 2. `Halterschaft` is a separate upload type (`H01`) and must be treated as its own upstream scope.
 
-3. The remaining BNB usage-data templates are:
+3. `Z01` is a holder-side export and must not be generated per PerformingRU. LTE Holding is the only holder-side sender for the locomotive assignments. The export therefore consists of exactly one LTE-Holding file containing the locomotives with DE relevance in the selected period. PerformingRU remains relevant only as row-level assignment information for the target `Nutzer-vEns*`.
+
+4. The remaining BNB usage-data templates are:
    - Traktionsleistung `T01`
    - Aufenthaltsabschnitt `AV01`
    - Abstellung `AB01`
 
-4. UKL imports are strict: outdated versions, wrong template types and files with at least one error are rejected as complete files.
+5. UKL imports are strict: outdated versions, wrong template types and files with at least one error are rejected as complete files.
 
 ## Recommended implementation order
 
-1. Harden existing N01 export against the current UKL template.
-2. Complete Z01 UI verification.
+1. Replace the current Z01 per-PerformingRU UI with one LTE-Holding assignment export filtered to DE-relevant locomotives.
+2. Harden existing N01 export against the current UKL template.
 3. Implement T01.
 4. Implement AV01.
 5. Implement AB01.
