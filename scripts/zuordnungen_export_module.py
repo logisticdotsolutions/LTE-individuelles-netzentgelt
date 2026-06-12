@@ -17,6 +17,8 @@ from export_module import (
     _prepare_template_rows,
     _resolve_export_header,
     _safe_file_part,
+    _to_day_bounds,
+    table_exists,
 )
 
 
@@ -27,6 +29,13 @@ ZUORDNUNGEN_HEADERS = (
     "Ende der Zuordnung",
     "Nutzer-vEns*",
     "Marktpartner ID für Nutzungsüberlassung",
+)
+
+LTE_HOLDING_MARKET_PARTNER_NAME = "LTE Logistik- und Transport-GmbH"
+LTE_HOLDING_RAILCUBE_NAME = "LTE Logistik- und Transport-GmbH (Holding)"
+LTE_HOLDING_MARKET_PARTNER_IDS = (
+    "1900100300393",
+    "1900100400391",
 )
 
 
@@ -41,15 +50,7 @@ class ZuordnungenExportResult:
 
 
 def _load_zuordnungen_workbook(template_path: Path):
-    """
-    Offizielle Zuordnungsvorlage laden und auf das definierte Schema härten.
-
-    Solange ``Vorlage_Zuordnungen.xlsx`` noch nicht im Repository versioniert ist,
-    wird die bereits vorhandene Nutzungsmeldungs-Vorlage als layoutgleiche Basis
-    verwendet. Die abweichende UKL-Version und die exakten fünf Spalten werden
-    danach explizit gesetzt. Dadurch bleibt der Export bereits nutzbar, ohne eine
-    nicht versionierte lokale Datei vorauszusetzen.
-    """
+    """Offizielle Zuordnungsvorlage laden und auf das definierte Schema härten."""
     requested_template_path = Path(template_path)
     effective_template_path = (
         requested_template_path
@@ -74,8 +75,6 @@ def _load_zuordnungen_workbook(template_path: Path):
 
     worksheet = workbook["Zuordnungsdatensatzliste"]
 
-    # Nutzungsmeldung besitzt eine sechste Spalte. Für Zuordnungen sind exakt
-    # fünf Spalten zulässig. Zusätzliche Vorlagenspalten werden entfernt.
     if worksheet.max_column > len(ZUORDNUNGEN_HEADERS):
         worksheet.delete_cols(
             len(ZUORDNUNGEN_HEADERS) + 1,
@@ -91,37 +90,159 @@ def _load_zuordnungen_workbook(template_path: Path):
     return workbook
 
 
-def build_zuordnungen_xlsx(
-    db_path: Path,
-    performing_ru_values: Iterable[str],
+def _assert_holding_export_gate_ready(
+    con,
+    date_from: date,
+    date_to: date,
+) -> None:
+    """Holding-Gesamtexport bei relevanten blockierten Lok-Tagen verhindern."""
+    required_tables = [
+        "core_usage_assignment_segments",
+        "core_usage_assignment_segment_movements",
+        "dq_export_gate_ru",
+        "dq_global_export_blockers",
+    ]
+    missing_tables = [
+        table_name
+        for table_name in required_tables
+        if not table_exists(con, table_name)
+    ]
+
+    if missing_tables:
+        raise RuntimeError(
+            "Export-Gate fehlt. Pipeline neu ausführen. Fehlende Tabellen: "
+            + ", ".join(missing_tables)
+        )
+
+    window_start, window_end_exclusive = _to_day_bounds(date_from, date_to)
+
+    local_blockers = con.execute(
+        """
+        select
+            count(*) as blocker_count,
+            string_agg(
+                distinct cast(g.coverage_date as varchar) || ': ' || g.loco_no,
+                ', '
+            ) as examples
+        from dq_export_gate_ru g
+        where g.coverage_date >= ?
+          and g.coverage_date <= ?
+          and g.gate_status = 'BLOCKED'
+          and exists (
+                select 1
+                from core_usage_assignment_segments s
+                where s.loco_no = g.loco_no
+                  and s.performing_ru is not distinct from g.performing_ru
+                  and exists (
+                        select 1
+                        from core_usage_assignment_segment_movements m
+                        where m.usage_segment_id = s.usage_segment_id
+                          and m.actual_departure_ts >= ?
+                          and m.actual_departure_ts < ?
+                  )
+          )
+        """,
+        [date_from, date_to, window_start, window_end_exclusive],
+    ).fetchone()
+
+    global_blockers = con.execute(
+        """
+        select
+            count(*) as blocker_count,
+            string_agg(
+                distinct cast(blocker_date as varchar) || ': ' || rule_id,
+                ', '
+            ) as examples
+        from dq_global_export_blockers
+        where blocker_date >= ?
+          and blocker_date <= ?
+          and gate_status = 'BLOCKED'
+        """,
+        [date_from, date_to],
+    ).fetchone()
+
+    local_count = int(local_blockers[0] or 0)
+    global_count = int(global_blockers[0] or 0)
+
+    if local_count > 0 or global_count > 0:
+        details = []
+
+        if local_count > 0:
+            details.append(
+                f"Blockierte DE-relevante Lok-Tage: {local_count}. "
+                f"Beispiele: {local_blockers[1] or '-'}"
+            )
+
+        if global_count > 0:
+            details.append(
+                f"Globale Blocker im Zeitraum: {global_count}. "
+                f"Beispiele: {global_blockers[1] or '-'}"
+            )
+
+        raise RuntimeError(
+            "Holding-Zuordnungsexport ist gesperrt, bis die blockierenden "
+            "Prüffälle geklärt sind. " + " | ".join(details)
+        )
+
+
+def _fetch_holding_assignment_segments(
+    con,
+    date_from: date,
+    date_to: date,
+) -> list[dict[str, object]]:
+    """Alle exportfähigen DE-relevanten Z01-Segmente unabhängig von PerformingRU liefern."""
+    window_start, window_end_exclusive = _to_day_bounds(date_from, date_to)
+    _assert_holding_export_gate_ready(con, date_from, date_to)
+
+    rows = con.execute(
+        """
+        select
+            cast(s.loco_no as varchar) as locomotive_no,
+            s.segment_start_utc,
+            s.segment_end_utc,
+            s.performing_ru,
+            s.movement_count,
+            coalesce(nullif(s.user_vens, ''), s.performing_ru) as user_vens,
+            coalesce(nullif(s.holder_market_partner_id, ''), s.holder_name) as holder_market_partner_id
+        from core_usage_assignment_segments s
+        where coalesce(s.export_blocking_movement_rows, 0) = 0
+          and exists (
+                select 1
+                from core_usage_assignment_segment_movements m
+                where m.usage_segment_id = s.usage_segment_id
+                  and m.actual_departure_ts >= ?
+                  and m.actual_departure_ts < ?
+          )
+        order by s.loco_no, s.segment_start_utc
+        """,
+        [window_start, window_end_exclusive],
+    ).fetchall()
+
+    return [
+        {
+            "locomotive_no": row[0],
+            "usage_start": row[1],
+            "usage_end": row[2],
+            "performing_ru": row[3],
+            "movement_count": row[4],
+            "user_vens": row[5],
+            "holder_market_partner_id": row[6],
+        }
+        for row in rows
+    ]
+
+
+def _build_zuordnungen_workbook_result(
+    *,
+    rows: list[dict[str, object]],
+    header_market_partner_id: str,
+    header_market_partner_name: str,
     export_label: str,
     date_from: date,
     date_to: date,
-    template_path: Path = ZUORDNUNGEN_TEMPLATE_PATH,
+    template_path: Path,
 ) -> ZuordnungenExportResult:
-    """UKL-XLSX-Zuordnungen je PerformingRU als Download-Bytes erzeugen."""
-    db_path = Path(db_path)
-
-    if not db_path.exists():
-        raise FileNotFoundError(f"DuckDB-Datei fehlt: {db_path}")
-
-    ru_values = _as_ru_tuple(performing_ru_values)
-    con = duckdb.connect(str(db_path), read_only=True)
-
-    try:
-        rows = _fetch_usage_segments(
-            con=con,
-            performing_ru_values=ru_values,
-            date_from=date_from,
-            date_to=date_to,
-        )
-        header_market_partner_id, header_market_partner_name = _resolve_export_header(
-            con=con,
-            performing_ru_values=ru_values,
-        )
-    finally:
-        con.close()
-
+    """Gemeinsamen XLSX-Schreibpfad für RU- und Holding-Exporte ausführen."""
     workbook = _load_zuordnungen_workbook(Path(template_path))
     worksheet = workbook["Zuordnungsdatensatzliste"]
     _prepare_template_rows(
@@ -185,4 +306,88 @@ def build_zuordnungen_xlsx(
         file_name=file_name,
         row_count=len(rows),
         missing_required_field_count=missing_required_field_count,
+    )
+
+
+def build_zuordnungen_holding_xlsx(
+    db_path: Path,
+    holding_market_partner_id: str,
+    date_from: date,
+    date_to: date,
+    template_path: Path = ZUORDNUNGEN_TEMPLATE_PATH,
+) -> ZuordnungenExportResult:
+    """Eine Z01-Datei für einen der beiden LTE-Holding-Mandanten erzeugen."""
+    db_path = Path(db_path)
+    holding_market_partner_id = str(holding_market_partner_id).strip()
+
+    if holding_market_partner_id not in LTE_HOLDING_MARKET_PARTNER_IDS:
+        raise ValueError(
+            "Unbekannte LTE-Holding-Marktpartner-ID: "
+            f"{holding_market_partner_id or '-'}"
+        )
+
+    if not db_path.exists():
+        raise FileNotFoundError(f"DuckDB-Datei fehlt: {db_path}")
+
+    con = duckdb.connect(str(db_path), read_only=True)
+
+    try:
+        rows = _fetch_holding_assignment_segments(
+            con=con,
+            date_from=date_from,
+            date_to=date_to,
+        )
+    finally:
+        con.close()
+
+    return _build_zuordnungen_workbook_result(
+        rows=rows,
+        header_market_partner_id=holding_market_partner_id,
+        header_market_partner_name=LTE_HOLDING_MARKET_PARTNER_NAME,
+        export_label=f"LTE_Holding_{holding_market_partner_id}",
+        date_from=date_from,
+        date_to=date_to,
+        template_path=template_path,
+    )
+
+
+def build_zuordnungen_xlsx(
+    db_path: Path,
+    performing_ru_values: Iterable[str],
+    export_label: str,
+    date_from: date,
+    date_to: date,
+    template_path: Path = ZUORDNUNGEN_TEMPLATE_PATH,
+) -> ZuordnungenExportResult:
+    """Bestehenden RU-spezifischen Z01-Backendpfad für Kompatibilität erhalten."""
+    db_path = Path(db_path)
+
+    if not db_path.exists():
+        raise FileNotFoundError(f"DuckDB-Datei fehlt: {db_path}")
+
+    ru_values = _as_ru_tuple(performing_ru_values)
+    con = duckdb.connect(str(db_path), read_only=True)
+
+    try:
+        rows = _fetch_usage_segments(
+            con=con,
+            performing_ru_values=ru_values,
+            date_from=date_from,
+            date_to=date_to,
+        )
+        header_market_partner_id, header_market_partner_name = _resolve_export_header(
+            con=con,
+            performing_ru_values=ru_values,
+        )
+    finally:
+        con.close()
+
+    return _build_zuordnungen_workbook_result(
+        rows=rows,
+        header_market_partner_id=header_market_partner_id,
+        header_market_partner_name=header_market_partner_name,
+        export_label=export_label,
+        date_from=date_from,
+        date_to=date_to,
+        template_path=template_path,
     )
