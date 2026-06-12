@@ -74,6 +74,10 @@ from ukl_vens_mapping_runtime_bridge_v2 import (  # noqa: E402
     install_vens_mapping_runtime,
     restore_vens_mapping_runtime,
 )
+from vens_selection_ui_runtime_bridge import (  # noqa: E402
+    install_vens_selection_ui_runtime,
+    restore_vens_selection_ui_runtime,
+)
 
 install_compact_login_views()
 
@@ -103,6 +107,7 @@ PHASE11A_ZUORDNUNGEN_EXPORT_UI_MARKER = "NETZENTGELT_UKL_ZUORDNUNGEN_EXPORT_UI_P
 PHASE11B_CASE_REVIEW_UI_MARKER = "NETZENTGELT_CASE_REVIEW_INTEGRATION_PHASE11B_V1_20260612"
 PHASE11C_UKL_PREFLIGHT_MARKER = "NETZENTGELT_UKL_PREFLIGHT_PHASE11C_V1_20260612"
 PHASE11D_VENS_MAPPING_MARKER = "NETZENTGELT_UKL_VENS_MAPPING_PHASE11D_V1_20260612"
+PHASE11E_VENS_SELECTION_UI_MARKER = "NETZENTGELT_UKL_VENS_SELECTION_UI_PHASE11E_V1_20260612"
 
 
 st.set_page_config(
@@ -133,6 +138,7 @@ _n01_runtime = install_n01_hardened_runtime()
 _ae01_runtime = install_ae01_hardened_runtime()
 _zuordnungen_hardened_runtime = install_zuordnungen_hardened_runtime()
 _vens_mapping_runtime = install_vens_mapping_runtime()
+_vens_selection_ui_runtime = install_vens_selection_ui_runtime()
 _fallpruefung_runtime = install_fallpruefung_review_integration()
 _original_tabs = install_zuordnungen_export_tab_extension()
 st.set_page_config = lambda *args, **kwargs: None
@@ -144,6 +150,7 @@ try:
 finally:
     restore_zuordnungen_export_tab_extension(_original_tabs)
     restore_fallpruefung_review_integration(_fallpruefung_runtime)
+    restore_vens_selection_ui_runtime(_vens_selection_ui_runtime)
     restore_vens_mapping_runtime(_vens_mapping_runtime)
     restore_zuordnungen_hardened_runtime(_zuordnungen_hardened_runtime)
     restore_ae01_hardened_runtime(_ae01_runtime)
