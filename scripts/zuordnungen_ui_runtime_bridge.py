@@ -11,6 +11,10 @@ from zuordnungen_export_module import (
     LTE_HOLDING_MARKET_PARTNER_NAME,
     build_zuordnungen_holding_xlsx,
 )
+from zuordnungen_preview_module import (
+    build_zuordnungen_holding_preview,
+    preview_to_xlsx_bytes,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -39,6 +43,101 @@ def build_zuordnungen_holding_download_cached(
         holding_market_partner_id=holding_market_partner_id,
         date_from=date.fromisoformat(date_from_iso),
         date_to=date.fromisoformat(date_to_iso),
+    )
+
+
+@st.cache_data(show_spinner=False)
+def build_zuordnungen_holding_preview_cached(
+    db_path_text: str,
+    db_mtime_ns: int,
+    date_from_iso: str,
+    date_to_iso: str,
+):
+    """Holding-Vorschau inklusive blockierter Zeilen bis zur DB-Änderung cachen."""
+    _ = db_mtime_ns
+
+    return build_zuordnungen_holding_preview(
+        db_path=Path(db_path_text),
+        date_from=date.fromisoformat(date_from_iso),
+        date_to=date.fromisoformat(date_to_iso),
+    )
+
+
+def _render_preview(
+    *,
+    date_from_value: date,
+    date_to_value: date,
+) -> None:
+    """Embedded-XLSX-nahe Vorschau unabhängig vom Download-Gate anzeigen."""
+    st.markdown("#### Vorschau der Holding-Zuordnungen")
+    st.caption(
+        "Die Vorschau bleibt auch bei blockierenden Fehlern sichtbar. "
+        "Blockierte Zeilen werden nicht still entfernt, sondern mit Status und Hinweis angezeigt."
+    )
+
+    try:
+        preview_df = build_zuordnungen_holding_preview_cached(
+            db_path_text=str(DB_PATH),
+            db_mtime_ns=DB_PATH.stat().st_mtime_ns,
+            date_from_iso=date_from_value.isoformat(),
+            date_to_iso=date_to_value.isoformat(),
+        )
+    except Exception as error:
+        st.error(f"Vorschau konnte nicht erzeugt werden: {error}")
+        return
+
+    if preview_df.empty:
+        st.info("Für den gewählten Zeitraum wurden keine DE-relevanten Zuordnungssegmente gefunden.")
+        return
+
+    blocked_count = int(
+        preview_df["Exportstatus"]
+        .fillna("")
+        .astype(str)
+        .str.upper()
+        .eq("BLOCKIERT")
+        .sum()
+    )
+    exportable_count = int(
+        preview_df["Exportstatus"]
+        .fillna("")
+        .astype(str)
+        .str.upper()
+        .eq("EXPORTFÄHIG")
+        .sum()
+    )
+
+    metric_all, metric_ready, metric_blocked = st.columns(3)
+    with metric_all:
+        st.metric("Vorschauzeilen", len(preview_df))
+    with metric_ready:
+        st.metric("Exportfähig", exportable_count)
+    with metric_blocked:
+        st.metric("Blockiert", blocked_count)
+
+    if blocked_count > 0:
+        st.warning(
+            "Die Vorschau enthält blockierte Zeilen. Die Daten bleiben sichtbar, "
+            "der produktive Download bleibt jedoch gesperrt, bis die Prüffälle geklärt sind."
+        )
+
+    st.dataframe(
+        preview_df,
+        use_container_width=True,
+        hide_index=True,
+        height=420,
+    )
+
+    st.download_button(
+        label="Vorschau als XLSX herunterladen",
+        data=preview_to_xlsx_bytes(preview_df),
+        file_name=(
+            "Vorschau_Zuordnungen_LTE_Holding_"
+            f"{date_from_value.isoformat()}_bis_{date_to_value.isoformat()}.xlsx"
+        ),
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        key="download_zuordnungen_holding_preview",
+        use_container_width=True,
     )
 
 
@@ -110,6 +209,18 @@ def render_zuordnungen_export_extension() -> None:
     date_to_value = _as_date(
         st.session_state.get("nutzungsmeldung_export_date_to"),
         today,
+    )
+
+    _render_preview(
+        date_from_value=date_from_value,
+        date_to_value=date_to_value,
+    )
+
+    st.divider()
+    st.markdown("### Produktive Downloads")
+    st.caption(
+        "Die Download-Buttons respektieren weiterhin die Export-Gates. "
+        "Bei blockierenden Fehlern bleibt die Vorschau sichtbar, der Download jedoch gesperrt."
     )
 
     for holding_market_partner_id in LTE_HOLDING_MARKET_PARTNER_IDS:
