@@ -80,27 +80,22 @@ def test_install_extension_leaves_unrelated_tab_sets_unchanged(monkeypatch) -> N
     assert module.st.tabs is original_tabs
 
 
-def test_list_rest_performing_rus_uses_existing_rest_overview(monkeypatch) -> None:
+def test_render_extension_calls_both_holding_downloads(monkeypatch, tmp_path: Path) -> None:
+    db_path = tmp_path / "netzentgelt.duckdb"
+    db_path.touch()
+    rendered_ids: list[str] = []
+
+    monkeypatch.setattr(module, "DB_PATH", db_path)
+    monkeypatch.setattr(module.st, "divider", lambda: None)
+    monkeypatch.setattr(module.st, "subheader", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(module.st, "caption", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(module.st, "session_state", {})
     monkeypatch.setattr(
         module,
-        "list_rest_export_overview",
-        lambda **_kwargs: [
-            {"PerformingRU": "LTE AT - LTE Austria GmbH"},
-            {"PerformingRU": "LTE CH - LTE Schweiz GmbH"},
-            {"PerformingRU": "External RU"},
-            {"PerformingRU": "LTE AT - LTE Austria GmbH"},
-            {"PerformingRU": "   "},
-        ],
+        "_render_holding_download",
+        lambda **kwargs: rendered_ids.append(kwargs["holding_market_partner_id"]),
     )
 
-    result = module._list_rest_performing_rus(
-        db_path=Path("dummy.duckdb"),
-        date_from_value=date(2026, 6, 9),
-        date_to_value=date(2026, 6, 10),
-    )
+    module.render_zuordnungen_export_extension()
 
-    assert result == [
-        "External RU",
-        "LTE AT - LTE Austria GmbH",
-        "LTE CH - LTE Schweiz GmbH",
-    ]
+    assert rendered_ids == list(module.LTE_HOLDING_MARKET_PARTNER_IDS)
