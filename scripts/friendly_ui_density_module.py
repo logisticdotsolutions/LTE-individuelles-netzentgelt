@@ -76,6 +76,34 @@ def apply_density_cleanup() -> None:
             fill: var(--lte-accent) !important;
         }
 
+        [data-testid="stStatusWidget"]::after {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 34vw;
+            height: 4px;
+            z-index: 999999;
+            border-radius: 0 3px 3px 0;
+            background: var(--lte-accent);
+            box-shadow: 0 0 8px var(--lte-accent);
+            animation: lte-view-loading-bar 1.25s ease-in-out infinite;
+        }
+
+        @keyframes lte-view-loading-bar {
+            0% {
+                transform: translateX(-110%);
+                opacity: 0.35;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(310%);
+                opacity: 0.35;
+            }
+        }
+
         h1 {
             font-size: 1.85rem !important;
             margin-bottom: 0.2rem !important;
