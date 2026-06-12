@@ -95,6 +95,46 @@ def apply_theme(*, dark_mode: bool | None = None) -> bool:
             color: var(--lte-text) !important;
         }}
 
+        [data-baseweb="input"] input,
+        [data-baseweb="textarea"] textarea,
+        [data-baseweb="select"] input,
+        [data-baseweb="select"] div,
+        input,
+        textarea {{
+            color: var(--lte-text) !important;
+            caret-color: var(--lte-text) !important;
+            -webkit-text-fill-color: var(--lte-text) !important;
+        }}
+
+        [data-baseweb="input"] input::placeholder,
+        [data-baseweb="textarea"] textarea::placeholder,
+        [data-baseweb="select"] input::placeholder,
+        input::placeholder,
+        textarea::placeholder {{
+            color: var(--lte-muted) !important;
+            opacity: 1 !important;
+            -webkit-text-fill-color: var(--lte-muted) !important;
+        }}
+
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus,
+        textarea:-webkit-autofill,
+        select:-webkit-autofill {{
+            -webkit-text-fill-color: var(--lte-text) !important;
+            caret-color: var(--lte-text) !important;
+            box-shadow: 0 0 0 1000px var(--lte-surface) inset !important;
+            -webkit-box-shadow: 0 0 0 1000px var(--lte-surface) inset !important;
+            transition: background-color 9999s ease-in-out 0s;
+        }}
+
+        [data-baseweb="input"] svg,
+        [data-baseweb="select"] svg,
+        [data-baseweb="textarea"] svg {{
+            color: var(--lte-muted) !important;
+            fill: var(--lte-muted) !important;
+        }}
+
         [data-baseweb="tab-list"] {{
             gap: 0.25rem;
             border-bottom: 1px solid var(--lte-border);
