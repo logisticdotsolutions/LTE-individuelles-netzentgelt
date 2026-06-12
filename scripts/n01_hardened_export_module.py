@@ -17,7 +17,12 @@ from export_module import (
     _resolve_export_header,
     _safe_file_part,
 )
-from ukl_preflight_module import raise_if_blocking_issues, validate_n01_rows
+from ukl_preflight_module import (
+    PreflightIssue,
+    raise_if_blocking_issues,
+    validate_n01_rows,
+)
+from zuordnungen_export_module import LTE_HOLDING_MARKET_PARTNER_IDS
 
 
 N01_TEMPLATE_PATH = TEMPLATE_DIR / "Vorlage_Übernahmeanfrage,Übergabemeldung.xlsx"
@@ -28,6 +33,28 @@ N01_HEADERS = (
     "Nutzer-vEns*",
     "Marktpartner ID für Nutzungsüberlassung*",
 )
+
+
+def _validate_lte_holding_recipients(rows: list[dict[str, object]]) -> list[PreflightIssue]:
+    """Im aktuellen LTE-Scope ausschließlich bestätigte Holding-Empfänger zulassen."""
+    issues: list[PreflightIssue] = []
+
+    for row_number, row in enumerate(rows, start=1):
+        recipient = str(row.get("holder_market_partner_id") or "").strip()
+
+        if recipient and recipient not in LTE_HOLDING_MARKET_PARTNER_IDS:
+            issues.append(
+                PreflightIssue(
+                    code="N01_RECIPIENT_NOT_LTE_HOLDING",
+                    message=(
+                        "Empfänger-Marktpartner-ID ist nicht einer der beiden bestätigten "
+                        "LTE-Holding-Mandanten zugeordnet."
+                    ),
+                    row_number=row_number,
+                )
+            )
+
+    return issues
 
 
 def build_hardened_n01_xlsx(
@@ -64,7 +91,13 @@ def build_hardened_n01_xlsx(
     finally:
         con.close()
 
-    raise_if_blocking_issues(validate_n01_rows(rows), export_name="N01-Nutzungsmeldung")
+    raise_if_blocking_issues(
+        [
+            *validate_n01_rows(rows),
+            *_validate_lte_holding_recipients(rows),
+        ],
+        export_name="N01-Nutzungsmeldung",
+    )
 
     workbook = load_workbook(template_path)
     worksheet = workbook["Zuordnungsdatensatzliste"]
