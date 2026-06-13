@@ -40,10 +40,10 @@ Stand: 2026-06-13 | Durchführung: Vollständiger technischer und fachlicher Aud
 **Fachliche Frage:**
 Ist ein GAP zwischen Grenzaustritt (AUSFAHRT) und Grenzwiedereintritt (EINFAHRT) für die LTE-Netzentgeltpflicht relevant?
 
-**Konservative Bewertung:**
-Das aktuelle Verhalten (nicht DE-relevant) ist fachlich vertretbar: Die Lücke selbst liegt außerhalb des deutschen Netzes. Änderung nur nach expliziter Bestätigung durch Fachseite.
+**Entscheidung (2026-06-13, bestätigt durch Fachanwender):**
+Das aktuelle Verhalten ist **korrekt und abgeschlossen**. Alles außerhalb Deutschlands hat keinen Einfluss auf den Report. AUSFAHRT + EINFAHRT ist bewusst nicht DE-relevant — die Lücke liegt außerhalb des deutschen Netzes und unterliegt nicht der LTE-Netzentgeltpflicht.
 
-**Empfehlung:** Bestätigung bei DB Netz / zuständiger Fachstelle einholen. Bis dahin: kein Code-Change.
+**Kein Handlungsbedarf. Implementierung bleibt unverändert.**
 
 ---
 
@@ -87,7 +87,7 @@ Das aktuelle Verhalten (nicht DE-relevant) ist fachlich vertretbar: Die Lücke s
 - Bei zwei gleichzeitigen Anwendern kann eine Korrektur verloren gehen (letzte Schreiboperation gewinnt)
 - Lösung: SQLite-Transaktion oder dateisystem-basiertes Lock-File
 
-**B003 – AUSFAHRT + EINFAHRT DE-Relevanz klären** (→ F001)
+**B003 – AUSFAHRT + EINFAHRT DE-Relevanz** (→ F001, abgeschlossen): Fachlich bestätigt am 2026-06-13, kein Handlungsbedarf.
 
 ### P3 – Spätere Optimierung
 
@@ -122,7 +122,7 @@ Integration als eigene Folgephase (B004 oben).
 
 | ID | Kategorie | Feststellung | Risiko | Status |
 |---|---|---|---|---|
-| F001 | Fachlich | AUSFAHRT+EINFAHRT nicht DE-relevant | MITTEL – könnte Lücken verbergen | Entscheidung ausstehend |
+| F001 | Fachlich | AUSFAHRT+EINFAHRT nicht DE-relevant | KEINS | **Abgeschlossen** – fachlich bestätigt 2026-06-13 |
 | F002 | Fachlich | 480 min = R010.5 INFO (korrekt) | NIEDRIG – nur Dokumentation | Durch Test abgesichert |
 | P-R012 | Technisch | R12 ist Legacy-Alias, korrekt normalisiert | NIEDRIG – läuft produktiv | Kein Handlungsbedarf |
 | P-BATCH | Technisch | Batch-Save atomar (manual_override_batch_module.py:173) | NIEDRIG | Korrekt implementiert |
@@ -141,6 +141,6 @@ Integration als eigene Folgephase (B004 oben).
 - [x] .env nicht in git (verifiziert)
 - [x] quality_gate_module: MANUAL_REVIEW-Blocking getestet
 - [x] Export-Templates gegen Vorlagen geprüft (AE01 Zeitpunkt-Lücke geschlossen)
-- [x] Offene fachliche Fragen dokumentiert (F001 AUSFAHRT+EINFAHRT)
+- [x] F001 fachlich abgeschlossen: AUSFAHRT+EINFAHRT korrekt nicht DE-relevant (außerhalb DE kein Reportbezug)
 - [x] Performance-Maßnahmen: Read-Only-Cache als P2-Backlog eingetragen
 - [x] Finale Testsuite grün (210 passed, 1 bekannte W001-Warnung)
