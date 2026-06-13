@@ -68,7 +68,7 @@ Das aktuelle Verhalten ist **korrekt und abgeschlossen**. Alles außerhalb Deuts
 
 **Wo prüfen:** `scripts/manual_gap_release_module.py` und `scripts/rule_engine_hardening_phase6d.py`
 
-**Empfehlung:** Separaten Testlauf mit `tests/test_manual_gap_release_contract.py` verifizieren.
+**Empfehlung:** Separaten Testlauf mit `tests/test_manual_gap_release_contract.py` verifizieren — steht aus (großer Testlauf folgt).
 
 ---
 
