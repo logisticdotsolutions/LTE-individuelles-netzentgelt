@@ -78,17 +78,25 @@ CONTRACTS = (
         code="USER_AV01",
         role="NUTZER",
         artifact="Vorlage_Aufenthaltsabschnitt.xlsx / AV01",
-        status=STATUS_NOT_IMPLEMENTED,
+        status=STATUS_PARTIAL,
         blocking_gap=True,
-        note="Aufenthaltsabschnitte fehlen vollständig.",
+        note=(
+            "Implementiert in av01_export_module.py. Quelle: core_loco_timeline MOVEMENT-Zeilen. "
+            "Netzstatus-Ableitung analog AE01. Ortsvalidierung gegen RIL-Codes und "
+            "vollständige fachliche Abnahme stehen noch aus."
+        ),
     ),
     UKLComplianceContract(
         code="USER_T01",
         role="NUTZER",
         artifact="Vorlage_Traktionsleistungen.xlsx / T01",
-        status=STATUS_NOT_IMPLEMENTED,
+        status=STATUS_PARTIAL,
         blocking_gap=True,
-        note="Traktionsleistungen inklusive Pflichtlogik fehlen vollständig.",
+        note=(
+            "Implementiert in t01_export_module.py. Quelle: raw_locomotivemovement mit DE-Filter. "
+            "Anreicherung via t01_mapping_module (Bestellkriterium, Verwendungsart, Höchstgeschwindigkeit). "
+            "Vollständige fachliche Abnahme inklusive Gewichtsberechnung steht noch aus."
+        ),
     ),
     UKLComplianceContract(
         code="USER_AB01",
