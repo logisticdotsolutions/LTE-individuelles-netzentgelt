@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import csv
 import getpass
+import json
 import os
 import shutil
 import subprocess
@@ -274,6 +275,7 @@ def _build_case_table(findings: pd.DataFrame, timeline: pd.DataFrame) -> pd.Data
         "period_end_utc",
         "source_table",
         "source_row_id",
+        "overlap_with_transport_number",
     ]
     rows: list[dict[str, object]] = []
 
@@ -294,6 +296,7 @@ def _build_case_table(findings: pd.DataFrame, timeline: pd.DataFrame) -> pd.Data
                     "period_end_utc": _clean(row.get("period_end_utc")),
                     "source_table": _clean(row.get("source_table")),
                     "source_row_id": _clean(row.get("source_row_id")),
+                    "overlap_with_transport_number": _clean(row.get("overlap_with_transport_number")),
                 }
             )
 
@@ -345,6 +348,7 @@ def _build_case_table(findings: pd.DataFrame, timeline: pd.DataFrame) -> pd.Data
                     "period_end_utc": end,
                     "source_table": _clean(row.get("source_table")),
                     "source_row_id": _clean(row.get("source_row_id")),
+                    "overlap_with_transport_number": "",
                 }
             )
 
@@ -358,6 +362,7 @@ def _build_case_table(findings: pd.DataFrame, timeline: pd.DataFrame) -> pd.Data
         "period_end_utc": "",
         "source_table": "",
         "source_row_id": "",
+        "overlap_with_transport_number": "",
     }
     return pd.DataFrame([free_row, *rows], columns=columns)
 
@@ -811,6 +816,11 @@ def _render_new_override(
             value=_clean(prefill.get("period_end_utc")) or _clean(selected_case.get("period_end_utc")),
             placeholder="YYYY-MM-DDTHH:MM:SS",
         )
+        # Hidden field – passes overlap transport to the guided bridge for R011.
+        st.text_input(
+            "Überlappende Transportnummer",
+            value=_clean(selected_case.get("overlap_with_transport_number")),
+        )
         override_value = st.text_input(
             "Neuer Wert",
             value=suggested_value,
@@ -859,45 +869,100 @@ def _render_new_override(
                 st.text_area("Output der Berechnung", result.stdout, height=220)
         return
 
-    now = utc_now_text()
-    override_id = "OVR_" + uuid.uuid4().hex[:12].upper()
-    new_row = {
-        "override_id": override_id,
-        "active_flag": "Y",
-        "override_type": override_type,
-        "transport_number": transport_number.strip(),
-        "target_loco_no": target_loco_no.strip(),
-        "target_actual_departure_utc": target_actual_departure.strip(),
-        "target_actual_arrival_utc": target_actual_arrival.strip(),
-        "target_source_table": _clean(prefill.get("source_table")) or _clean(selected_case.get("source_table")),
-        "target_source_row_id": _clean(prefill.get("source_row_id")) or _clean(selected_case.get("source_row_id")),
-        "override_value": override_value.strip(),
-        "classification_code": classification_code,
-        "comment": comment.strip(),
-        "created_by": created_by.strip() or getpass.getuser(),
-        "created_at_utc": now,
-        "updated_at_utc": now,
-    }
-    overrides = _read_overrides()
-    overrides = pd.concat([overrides, pd.DataFrame([new_row])], ignore_index=True)
-    _write_overrides_atomic(overrides)
-    _append_change_log(
-        action="CREATE",
-        override_id=override_id,
-        override_type=override_type,
-        changed_by=new_row["created_by"],
-        comment=new_row["comment"],
-    )
-    if prefill:
-        _append_suggestion_acceptance_log(
-            suggestion=prefill,
+    source_table = _clean(prefill.get("source_table")) or _clean(selected_case.get("source_table"))
+    source_row_id = _clean(prefill.get("source_row_id")) or _clean(selected_case.get("source_row_id"))
+    created_by_final = created_by.strip() or getpass.getuser()
+
+    if override_type == "ADJUST_OVERLAP":
+        try:
+            corrections = json.loads(override_value.strip() or "{}")
+        except Exception:
+            st.error("Interner Fehler: Überschneidungskorrekturen konnten nicht verarbeitet werden.")
+            return
+        new_rows = []
+        for t_no, t_data in corrections.items():
+            for field_key, col_type in [("new_dep", "SET_ACTUAL_DEPARTURE"), ("new_arr", "SET_ACTUAL_ARRIVAL")]:
+                cur_key = "current_dep" if field_key == "new_dep" else "current_arr"
+                new_val = (t_data.get(field_key) or "").strip()
+                cur_val = (t_data.get(cur_key) or "").strip()
+                if not new_val or new_val == cur_val:
+                    continue
+                oid = "OVR_" + uuid.uuid4().hex[:12].upper()
+                now_ts = utc_now_text()
+                new_rows.append({
+                    "override_id": oid,
+                    "active_flag": "Y",
+                    "override_type": col_type,
+                    "transport_number": str(t_no),
+                    "target_loco_no": target_loco_no.strip(),
+                    "target_actual_departure_utc": cur_val if col_type == "SET_ACTUAL_DEPARTURE" else "",
+                    "target_actual_arrival_utc": cur_val if col_type == "SET_ACTUAL_ARRIVAL" else "",
+                    "target_source_table": source_table,
+                    "target_source_row_id": source_row_id,
+                    "override_value": new_val,
+                    "classification_code": "",
+                    "comment": comment.strip(),
+                    "created_by": created_by_final,
+                    "created_at_utc": now_ts,
+                    "updated_at_utc": now_ts,
+                })
+        if not new_rows:
+            st.warning("Keine Zeitkorrektur erfasst. Bitte mindestens einen Wert in der Korrekturspalte eintragen.")
+            return
+        overrides = _read_overrides()
+        overrides = pd.concat([overrides, pd.DataFrame(new_rows)], ignore_index=True)
+        _write_overrides_atomic(overrides)
+        for row in new_rows:
+            _append_change_log(
+                action="CREATE",
+                override_id=row["override_id"],
+                override_type=row["override_type"],
+                changed_by=row["created_by"],
+                comment=row["comment"],
+            )
+        if prefill:
+            st.session_state.pop("manual_override_suggestion_prefill", None)
+        st.success(f"{len(new_rows)} lokale Zeitkorrektur(en) für R011 gespeichert: {', '.join(r['override_id'] for r in new_rows)}")
+    else:
+        now = utc_now_text()
+        override_id = "OVR_" + uuid.uuid4().hex[:12].upper()
+        new_row = {
+            "override_id": override_id,
+            "active_flag": "Y",
+            "override_type": override_type,
+            "transport_number": transport_number.strip(),
+            "target_loco_no": target_loco_no.strip(),
+            "target_actual_departure_utc": target_actual_departure.strip(),
+            "target_actual_arrival_utc": target_actual_arrival.strip(),
+            "target_source_table": source_table,
+            "target_source_row_id": source_row_id,
+            "override_value": override_value.strip(),
+            "classification_code": classification_code,
+            "comment": comment.strip(),
+            "created_by": created_by_final,
+            "created_at_utc": now,
+            "updated_at_utc": now,
+        }
+        overrides = _read_overrides()
+        overrides = pd.concat([overrides, pd.DataFrame([new_row])], ignore_index=True)
+        _write_overrides_atomic(overrides)
+        _append_change_log(
+            action="CREATE",
             override_id=override_id,
-            accepted_value=override_value.strip(),
-            accepted_by=new_row["created_by"],
+            override_type=override_type,
+            changed_by=new_row["created_by"],
             comment=new_row["comment"],
         )
-        st.session_state.pop("manual_override_suggestion_prefill", None)
-    st.success(f"Lokale Korrektur {override_id} wurde gespeichert.")
+        if prefill:
+            _append_suggestion_acceptance_log(
+                suggestion=prefill,
+                override_id=override_id,
+                accepted_value=override_value.strip(),
+                accepted_by=new_row["created_by"],
+                comment=new_row["comment"],
+            )
+            st.session_state.pop("manual_override_suggestion_prefill", None)
+        st.success(f"Lokale Korrektur {override_id} wurde gespeichert.")
     if save_and_rebuild:
         with st.status("Werte werden mit der lokalen Korrektur sicher neu berechnet ...", expanded=True) as status:
             result = _run_pipeline(Path(run_all_script))

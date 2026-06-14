@@ -110,6 +110,23 @@ GUIDANCE_BY_TYPE = {
         requires_new_value=False,
         requires_loco=True,
     ),
+    "ADJUST_OVERLAP": CorrectionGuidance(
+        title="Zeitliche Überschneidung anpassen",
+        purpose=(
+            "Korrigiert Abfahrts- oder Ankunftszeiten beider überschneidender Transporte, "
+            "um die Zeitüberschneidung aufzulösen. Felder, die leer bleiben, werden nicht gespeichert."
+        ),
+        target_field="ActualDeparture / ActualArrival beider überschneidenden Transporte",
+        input_label="Zeitkorrekturen werden in der Tabelle erfasst",
+        input_help=(
+            "Trage die korrigierten Zeitwerte in die Korrekturspalte ein. "
+            "Leere Korrekturspalten werden nicht als Korrektur gespeichert."
+        ),
+        placeholder="",
+        example="2026-06-09 11:00:00",
+        requires_new_value=False,
+        requires_transport=True,
+    ),
 }
 
 
