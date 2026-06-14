@@ -201,23 +201,89 @@ def guided_correction_widgets(timeline: pd.DataFrame | None = None) -> Iterator[
             return original_selectbox("Fachlichen Grund der Unterbrechung auswählen *", *args, **kwargs)
         return original_selectbox(label, *args, **kwargs)
 
-    def _lookup_current_ts(transport_no: str, dep_or_arr: str) -> str:
-        """Return the current departure or arrival timestamp for a transport."""
-        col_type = "SET_ACTUAL_DEPARTURE" if dep_or_arr == "dep" else "SET_ACTUAL_ARRIVAL"
+    def _fmt_ts(raw: str) -> str:
+        """Normalise any timestamp string to YYYY-MM-DD HH:MM:SS, strip tz suffix."""
+        if not raw:
+            return ""
+        ts = pd.to_datetime(raw, errors="coerce", utc=True)
+        if pd.isna(ts):
+            return raw.strip()
+        return ts.strftime("%Y-%m-%d %H:%M:%S")
+
+    def _norm_t(raw: str) -> str:
+        """Strip the trailing .0 that pandas adds when a transport number is stored as float."""
+        s = raw.strip()
+        if s.endswith(".0") and s[:-2].lstrip("-").isdigit():
+            return s[:-2]
+        return s
+
+    def _find_overlap_times(t_no: str, dep_ref: str, arr_ref: str) -> tuple[str, str]:
+        """Find the ONE movement of t_no that overlaps [dep_ref, arr_ref].
+
+        Filters the timeline to rows where the movement window intersects the
+        reference window before falling back to the first row for that transport.
+        Returns (departure, arrival) as formatted strings.
+        """
         tl = timeline if isinstance(timeline, pd.DataFrame) else pd.DataFrame()
-        val = current_value_for(col_type, tl, transport_number=transport_no)
-        sentinel = "Nicht vorhanden / nicht eindeutig"
-        return val if val and val != sentinel else ""
+        if tl.empty or not t_no:
+            return "", ""
+        rows = matching_timeline_rows(tl, transport_number=t_no)
+        if rows.empty:
+            return "", ""
+
+        dep_col = next(
+            (c for c in rows.columns if str(c).lower() in {"actual_departure_ts", "actualdeparture", "actual_departure_utc"}),
+            None,
+        )
+        arr_col = next(
+            (c for c in rows.columns if str(c).lower() in {"actual_arrival_ts", "actualarrival", "actual_arrival_utc"}),
+            None,
+        )
+        if not dep_col or not arr_col:
+            return "", ""
+
+        # Narrow to the overlapping row when reference times are available.
+        if dep_ref and arr_ref:
+            dep_ref_ts = pd.to_datetime(dep_ref, errors="coerce", utc=True)
+            arr_ref_ts = pd.to_datetime(arr_ref, errors="coerce", utc=True)
+            if not pd.isna(dep_ref_ts) and not pd.isna(arr_ref_ts):
+                deps = pd.to_datetime(rows[dep_col], errors="coerce", utc=True)
+                arrs = pd.to_datetime(rows[arr_col], errors="coerce", utc=True)
+                mask = (~deps.isna()) & (~arrs.isna()) & (deps < arr_ref_ts) & (arrs > dep_ref_ts)
+                if mask.any():
+                    rows = rows[mask]
+
+        dep_vals = rows[dep_col].dropna()
+        arr_vals = rows[arr_col].dropna()
+        return (
+            _fmt_ts(str(dep_vals.iloc[0])) if not dep_vals.empty else "",
+            _fmt_ts(str(arr_vals.iloc[0])) if not arr_vals.empty else "",
+        )
 
     def _render_overlap_table() -> str:
         """Render the 2-transport correction table; return JSON with corrections."""
-        t_a = str(state.get("transport_number") or "")
-        t_b = str(state.get("overlap_transport_number") or "")
+        t_a = _norm_t(str(state.get("transport_number") or ""))
+        t_b = _norm_t(str(state.get("overlap_transport_number") or ""))
+
+        # Transport A: use the exact times from the R011 finding already in state.
+        dep_a = _fmt_ts(str(state.get("departure") or ""))
+        arr_a = _fmt_ts(str(state.get("arrival") or ""))
+
+        # Transport B: find the single overlapping movement in the timeline.
+        dep_b, arr_b = _find_overlap_times(
+            str(state.get("overlap_transport_number") or ""), dep_a, arr_a
+        )
 
         st.markdown("##### Zeitliche Überschneidung anpassen")
+        if t_a and t_b:
+            st.info(
+                f"**Transport {t_a}** (Abfahrt: {dep_a or '–'} | Ankunft: {arr_a or '–'}) "
+                f"überschneidet sich mit **Transport {t_b}** "
+                f"(Abfahrt: {dep_b or '–'} | Ankunft: {arr_b or '–'})."
+            )
         st.caption(
-            "Trage nur die Zeitwerte ein, die du ändern möchtest (Format: YYYY-MM-DD HH:MM:SS). "
-            "Leere Korrekturspalten werden nicht als Korrektur gespeichert."
+            "Trage in der Korrekturspalte nur die Zeitwerte ein, die du ändern möchtest "
+            "(Format: YYYY-MM-DD HH:MM:SS). Leere Felder werden nicht gespeichert."
         )
 
         hcols = st.columns([1.5, 2.5, 2.5, 2.5, 2.5])
@@ -229,11 +295,12 @@ def guided_correction_widgets(timeline: pd.DataFrame | None = None) -> Iterator[
             col.markdown(header)
 
         corrections: dict[str, dict[str, str]] = {}
-        for t_no, prefix in ((t_a, "a"), (t_b, "b")):
+        for t_no, cur_dep, cur_arr, prefix in [
+            (t_a, dep_a, arr_a, "a"),
+            (t_b, dep_b, arr_b, "b"),
+        ]:
             if not t_no:
                 continue
-            cur_dep = _lookup_current_ts(t_no, "dep")
-            cur_arr = _lookup_current_ts(t_no, "arr")
             row_cols = st.columns([1.5, 2.5, 2.5, 2.5, 2.5])
             row_cols[0].markdown(f"**{t_no}**")
             row_cols[1].markdown(f"`{cur_dep or '–'}`")
