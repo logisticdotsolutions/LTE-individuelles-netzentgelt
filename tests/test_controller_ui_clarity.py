@@ -24,8 +24,10 @@ def test_dummy_r012_is_rendered_with_controller_friendly_text() -> None:
 
 
 def test_real_missing_locomotive_number_remains_separate_from_dummy_case() -> None:
-    problem, _ = operator_ui._friendly_rule("R012", "Loknummer fehlt.")
-    assert problem == "Loknummer fehlt"
+    problem, action = operator_ui._friendly_rule("R012", "Loknummer fehlt.")
+    assert problem != "Dummy-Lok"  # non-dummy R012 must not collapse into dummy label
+    assert "Loknummer" in problem
+    assert "RailCube" in action
 
 
 def test_dummy_gate_row_is_rendered_with_clear_reason() -> None:

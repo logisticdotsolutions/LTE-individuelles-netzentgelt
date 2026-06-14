@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 from typing import Any, Iterator
@@ -15,7 +16,12 @@ from manual_override_case_rule_module import (
     rule_description,
     rule_id_from_case_option,
 )
-from manual_override_guidance_module import current_value_for, guidance_for, is_noop_value
+from manual_override_guidance_module import (
+    current_value_for,
+    guidance_for,
+    is_noop_value,
+    matching_timeline_rows,
+)
 from manual_override_widget_value_module import (
     EMPTY_DROPDOWN_VALUE,
     combine_utc_picker_value,
@@ -44,6 +50,7 @@ def guided_correction_widgets(timeline: pd.DataFrame | None = None) -> Iterator[
         "target_loco_no": "",
         "departure": "",
         "arrival": "",
+        "overlap_transport_number": "",
         "confirmed": False,
         "confirm_rendered": False,
         "context_rendered": False,
@@ -59,7 +66,7 @@ def guided_correction_widgets(timeline: pd.DataFrame | None = None) -> Iterator[
 
     def current_value() -> str:
         kind = str(state.get("override_type") or "")
-        if kind in {"CLASSIFY_GAP", "CASE_NOTE", "MARK_DUMMY_LOCOMOTIVE"}:
+        if kind in {"CLASSIFY_GAP", "CASE_NOTE", "MARK_DUMMY_LOCOMOTIVE", "ADJUST_OVERLAP"}:
             return "Keine technische Wertänderung"
         return current_value_for(
             kind,
@@ -194,10 +201,167 @@ def guided_correction_widgets(timeline: pd.DataFrame | None = None) -> Iterator[
             return original_selectbox("Fachlichen Grund der Unterbrechung auswählen *", *args, **kwargs)
         return original_selectbox(label, *args, **kwargs)
 
+    def _fmt_ts(raw: str) -> str:
+        """Normalise any timestamp string to YYYY-MM-DD HH:MM:SS, strip tz suffix."""
+        if not raw:
+            return ""
+        ts = pd.to_datetime(raw, errors="coerce", utc=True)
+        if pd.isna(ts):
+            return raw.strip()
+        return ts.strftime("%Y-%m-%d %H:%M:%S")
+
+    def _norm_t(raw: str) -> str:
+        """Strip the trailing .0 that pandas adds when a transport number is stored as float."""
+        s = raw.strip()
+        if s.endswith(".0") and s[:-2].lstrip("-").isdigit():
+            return s[:-2]
+        return s
+
+    def _find_overlap_times(t_no: str, dep_ref: str, arr_ref: str) -> tuple[str, str]:
+        """Find the ONE movement of t_no that overlaps [dep_ref, arr_ref].
+
+        Filters the timeline to rows where the movement window intersects the
+        reference window before falling back to the first row for that transport.
+        Returns (departure, arrival) as formatted strings.
+        """
+        tl = timeline if isinstance(timeline, pd.DataFrame) else pd.DataFrame()
+        if tl.empty or not t_no:
+            return "", ""
+        rows = matching_timeline_rows(tl, transport_number=t_no)
+        if rows.empty:
+            return "", ""
+
+        dep_col = next(
+            (c for c in rows.columns if str(c).lower() in {"actual_departure_ts", "actualdeparture", "actual_departure_utc"}),
+            None,
+        )
+        arr_col = next(
+            (c for c in rows.columns if str(c).lower() in {"actual_arrival_ts", "actualarrival", "actual_arrival_utc"}),
+            None,
+        )
+        if not dep_col or not arr_col:
+            return "", ""
+
+        # Narrow to the overlapping row when reference times are available.
+        if dep_ref and arr_ref:
+            dep_ref_ts = pd.to_datetime(dep_ref, errors="coerce", utc=True)
+            arr_ref_ts = pd.to_datetime(arr_ref, errors="coerce", utc=True)
+            if not pd.isna(dep_ref_ts) and not pd.isna(arr_ref_ts):
+                deps = pd.to_datetime(rows[dep_col], errors="coerce", utc=True)
+                arrs = pd.to_datetime(rows[arr_col], errors="coerce", utc=True)
+                mask = (~deps.isna()) & (~arrs.isna()) & (deps < arr_ref_ts) & (arrs > dep_ref_ts)
+                if mask.any():
+                    rows = rows[mask]
+
+        dep_vals = rows[dep_col].dropna()
+        arr_vals = rows[arr_col].dropna()
+        return (
+            _fmt_ts(str(dep_vals.iloc[0])) if not dep_vals.empty else "",
+            _fmt_ts(str(arr_vals.iloc[0])) if not arr_vals.empty else "",
+        )
+
+    def _render_overlap_table() -> str:
+        """Render the 2-transport correction table; return JSON with corrections."""
+        t_a = _norm_t(str(state.get("transport_number") or ""))
+        t_b = _norm_t(str(state.get("overlap_transport_number") or ""))
+
+        # Transport A: use the exact times from the R011 finding already in state.
+        dep_a = _fmt_ts(str(state.get("departure") or ""))
+        arr_a = _fmt_ts(str(state.get("arrival") or ""))
+
+        # Transport B: find the single overlapping movement in the timeline.
+        dep_b, arr_b = _find_overlap_times(
+            str(state.get("overlap_transport_number") or ""), dep_a, arr_a
+        )
+
+        st.markdown("##### Zeitliche Überschneidung anpassen")
+        if t_a and t_b:
+            st.info(
+                f"**Transport {t_a}** (Abfahrt: {dep_a or '–'} | Ankunft: {arr_a or '–'}) "
+                f"überschneidet sich mit **Transport {t_b}** "
+                f"(Abfahrt: {dep_b or '–'} | Ankunft: {arr_b or '–'})."
+            )
+        st.caption(
+            "Trage in der Korrekturspalte nur die Zeitwerte ein, die du ändern möchtest "
+            "(Format: YYYY-MM-DD HH:MM:SS). Leere Felder werden nicht gespeichert."
+        )
+
+        hcols = st.columns([1.5, 2.5, 2.5, 2.5, 2.5])
+        for col, header in zip(
+            hcols,
+            ["**Transport**", "**Akt. Abfahrt (UTC)**", "**Korr. Abfahrt (UTC)**",
+             "**Akt. Ankunft (UTC)**", "**Korr. Ankunft (UTC)**"],
+        ):
+            col.markdown(header)
+
+        corrections: dict[str, dict[str, str]] = {}
+        for t_no, cur_dep, cur_arr, prefix in [
+            (t_a, dep_a, arr_a, "a"),
+            (t_b, dep_b, arr_b, "b"),
+        ]:
+            if not t_no:
+                continue
+            row_cols = st.columns([1.5, 2.5, 2.5, 2.5, 2.5])
+            row_cols[0].markdown(f"**{t_no}**")
+            row_cols[1].markdown(f"`{cur_dep or '–'}`")
+            row_cols[3].markdown(f"`{cur_arr or '–'}`")
+            with row_cols[2]:
+                new_dep = original_text_input(
+                    f"Neue Abfahrt {t_no}",
+                    value="",
+                    placeholder=cur_dep or "YYYY-MM-DD HH:MM:SS",
+                    key=f"adjust_overlap_{prefix}_new_dep",
+                    label_visibility="collapsed",
+                )
+            with row_cols[4]:
+                new_arr = original_text_input(
+                    f"Neue Ankunft {t_no}",
+                    value="",
+                    placeholder=cur_arr or "YYYY-MM-DD HH:MM:SS",
+                    key=f"adjust_overlap_{prefix}_new_arr",
+                    label_visibility="collapsed",
+                )
+            corrections[t_no] = {
+                "current_dep": cur_dep,
+                "new_dep": new_dep.strip(),
+                "current_arr": cur_arr,
+                "new_arr": new_arr.strip(),
+            }
+        return json.dumps(corrections, ensure_ascii=False)
+
+    def _render_overlap_summary() -> None:
+        """Show a compact before/after table for the ADJUST_OVERLAP review view."""
+        try:
+            corrections = json.loads(str(state.get("new_value") or "{}"))
+        except Exception:
+            corrections = {}
+        summary_rows = []
+        for t_no, t_data in corrections.items():
+            for field_label, cur_key, new_key in [
+                ("Abfahrt", "current_dep", "new_dep"),
+                ("Ankunft", "current_arr", "new_arr"),
+            ]:
+                new_val = (t_data.get(new_key) or "").strip()
+                cur_val = t_data.get(cur_key) or "–"
+                summary_rows.append({
+                    "Transport": t_no,
+                    "Feld": field_label,
+                    "Aktueller Wert": cur_val,
+                    "Neuer Wert": new_val if new_val else "–  (keine Änderung)",
+                })
+        if summary_rows:
+            st.table(pd.DataFrame(summary_rows))
+        else:
+            st.caption("Noch keine Korrekturen erfasst.")
+
     def text_input(label: str, *args: Any, **kwargs: Any):
         item = guidance()
         kind = str(state.get("override_type") or "")
         options = dict(kwargs)
+        if label == "Überlappende Transportnummer":
+            # Hidden handshake field: capture overlap transport, never render.
+            state["overlap_transport_number"] = hidden_value(options)
+            return state["overlap_transport_number"]
         if label == "Transportnummer":
             value = hidden_value(options)
             state["transport_number"] = value
@@ -235,6 +399,10 @@ def guided_correction_widgets(timeline: pd.DataFrame | None = None) -> Iterator[
             state["arrival"] = value
             return value
         if label == "Neuer Wert":
+            if kind == "ADJUST_OVERLAP":
+                value = _render_overlap_table()
+                state["new_value"] = value
+                return value
             render_context()
             if not item.requires_new_value:
                 st.caption(item.input_help)
@@ -264,23 +432,31 @@ def guided_correction_widgets(timeline: pd.DataFrame | None = None) -> Iterator[
         if label == "Begründung / Kommentar":
             render_context()
             item = guidance()
-            new_value = str(state.get("new_value") or "Noch kein abweichender Wert erfasst")
+            kind = str(state.get("override_type") or "")
             st.markdown("##### Kontrollansicht vor dem Speichern")
-            st.table(
-                pd.DataFrame(
-                    [{"Zu änderndes Feld": item.target_field, "Aktueller Wert": current_value(), "Neuer Wert / neue Einordnung": new_value}]
+            if kind == "ADJUST_OVERLAP":
+                _render_overlap_summary()
+            else:
+                new_value = str(state.get("new_value") or "Noch kein abweichender Wert erfasst")
+                st.table(
+                    pd.DataFrame(
+                        [{"Zu änderndes Feld": item.target_field, "Aktueller Wert": current_value(), "Neuer Wert / neue Einordnung": new_value}]
+                    )
                 )
-            )
-            render_noop_warning()
+                render_noop_warning()
             st.info("Prüfe diese Gegenüberstellung bewusst. Erst danach darf die lokale Korrektur gespeichert werden.")
             options = dict(kwargs)
-            options["placeholder"] = "Warum ist diese konkrete lokale Korrektur fachlich zulässig?"
-            options["help"] = "Die Begründung wird gemeinsam mit Benutzer und Zeitstempel im Audit gespeichert."
+            options["placeholder"] = "Warum ist diese Korrektur fachlich notwendig? (mindestens 10 Zeichen)"
+            options["help"] = (
+                "Erkläre kurz den fachlichen Grund für diese Korrektur. "
+                "Die Begründung wird zusammen mit deinem Benutzernamen und dem Zeitstempel gespeichert "
+                "und ist im Änderungsverlauf jederzeit einsehbar."
+            )
             return original_text_area("Fachliche Begründung *", *args, **options)
         return original_text_area(label, *args, **kwargs)
 
     def submit(label: str, *args: Any, **kwargs: Any):
-        if label in {"Override speichern", "Speichern und neu prüfen", "Dummy-Lok speichern", "Dummy-Lok speichern und neu prüfen"}:
+        if label in {"Korrektur speichern", "Speichern und sofort neu prüfen", "Override speichern", "Speichern und neu prüfen", "Dummy-Lok speichern", "Dummy-Lok speichern und neu prüfen"}:
             if not state["confirm_rendered"]:
                 state["confirmed"] = original_checkbox(
                     "Ich habe den aktuellen Wert, den neuen Wert und die Auswirkung fachlich geprüft.",
@@ -290,6 +466,8 @@ def guided_correction_widgets(timeline: pd.DataFrame | None = None) -> Iterator[
                 state["confirm_rendered"] = True
             options = dict(kwargs)
             labels = {
+                "Korrektur speichern": "Korrektur speichern",
+                "Speichern und sofort neu prüfen": "Speichern und sofort neu prüfen",
                 "Override speichern": "Korrektur speichern",
                 "Speichern und neu prüfen": "Korrektur speichern und sofort neu prüfen",
                 "Dummy-Lok speichern": "Dummy-Lok speichern",
@@ -301,6 +479,19 @@ def guided_correction_widgets(timeline: pd.DataFrame | None = None) -> Iterator[
             if not state["confirmed"]:
                 st.error("Bitte bestätige, dass du den aktuellen Wert, den neuen Wert und die Auswirkung fachlich geprüft hast.")
                 return False
+            if str(state.get("override_type") or "") == "ADJUST_OVERLAP":
+                try:
+                    corrections = json.loads(str(state.get("new_value") or "{}"))
+                except Exception:
+                    corrections = {}
+                has_any = any(
+                    (d.get("new_dep") or "").strip() or (d.get("new_arr") or "").strip()
+                    for d in corrections.values()
+                )
+                if not has_any:
+                    st.warning("Bitte mindestens einen Zeitwert in der Korrekturspalte eintragen.")
+                    return False
+                return True
             if guidance().requires_new_value and not str(state.get("new_value") or "").strip():
                 st.error("Bitte wähle oder erfasse zuerst einen tatsächlich neuen Wert.")
                 return False

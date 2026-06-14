@@ -41,7 +41,8 @@ def test_default_override_type_is_only_set_for_unambiguous_rules() -> None:
     assert default_override_type_for_rule("R012") == "SET_LOCO_NO"
     assert default_override_type_for_rule("R007") == "SET_PERFORMING_RU"
     assert default_override_type_for_rule("GAP") == "CLASSIFY_GAP"
-    assert default_override_type_for_rule("R011") == ""
+    assert default_override_type_for_rule("R011") == "ADJUST_OVERLAP"
+    assert default_override_type_for_rule("R001") == ""
 
 
 def test_unknown_rule_remains_readable_without_false_claim() -> None:

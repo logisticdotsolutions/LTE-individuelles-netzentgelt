@@ -28,40 +28,67 @@ DAU_UX_MARKER = "NETZENTGELT_DAU_UX_PHASE3_V1_20260607"
 
 RULE_TEXT = {
     "R001": (
-        "Zeitanker der Bewegung fehlt",
-        "Zeitangaben und Grenzlogik der Bewegung pruefen.",
+        "Zeitpunkt der Grenzbewegung fehlt",
+        "Der Grenzzeitpunkt dieser Lok-Bewegung ist nicht auswertbar. "
+        "Zeitangaben in RailCube prüfen und ggf. manuell ergänzen.",
     ),
     "R002": (
-        "Abfahrtszeit fehlt oder ist ungueltig",
-        "ActualDeparture in der Quelldatei kontrollieren.",
+        "Abfahrtszeit fehlt oder ist ungültig",
+        "Die tatsächliche Abfahrtszeit ist leer oder nicht lesbar. "
+        "Abfahrtszeit in RailCube kontrollieren und korrigieren.",
     ),
     "R003": (
-        "Ankunftszeit fehlt oder ist ungueltig",
-        "ActualArrival in der Quelldatei kontrollieren.",
+        "Ankunftszeit fehlt oder ist ungültig",
+        "Die tatsächliche Ankunftszeit ist leer oder nicht lesbar. "
+        "Ankunftszeit in RailCube kontrollieren und korrigieren.",
     ),
     "R004": (
-        "Zeitraum ist unplausibel: Abfahrt liegt nach Ankunft",
-        "Zeitangaben fachlich korrigieren.",
+        "Abfahrt liegt nach Ankunft – Zeitangaben widersprüchlich",
+        "Die Abfahrtszeit liegt zeitlich nach der Ankunftszeit. "
+        "Zeitangaben in RailCube fachlich prüfen und korrigieren.",
+    ),
+    "R007": (
+        "Nutzendes EVU nicht eindeutig zuordenbar",
+        "Welches Eisenbahnverkehrsunternehmen diesen Transport durchgeführt hat, "
+        "konnte nicht eindeutig ermittelt werden. "
+        "Lok prüfen und zuständiges EVU manuell erfassen.",
     ),
     "R009": (
-        "Nutzendes EVU fehlt",
-        "Nutzendes EVU fachlich prüfen und ergänzen.",
+        "Nutzendes EVU fehlt vollständig",
+        "Für diese Bewegung ist kein nutzendes EVU eingetragen. "
+        "Zuständiges Eisenbahnverkehrsunternehmen in RailCube ergänzen.",
     ),
     "R010": (
-        "Ortskette ist laenger als 8 Stunden unterbrochen",
-        "Fehlende Bewegung oder unplausible Ortskette pruefen.",
+        "Lücke in der Lokhistorie länger als 8 Stunden – Export gesperrt",
+        "Zwischen zwei aufeinanderfolgenden Lok-Bewegungen liegt eine Unterbrechung "
+        "von mehr als 8 Stunden, ohne erkennbaren Grund. "
+        "Lok im Tab 'Lok prüfen' aufrufen, Lücke fachlich einordnen und Korrektur erfassen.",
     ),
     "R010.5": (
-        "Kurze Unterbrechung der Ortskette",
-        "Hinweis pruefen. Der Export wird dadurch nicht automatisch gesperrt.",
+        "Lücke in der Lokhistorie – kein Export-Block, aber Hinweis",
+        "Zwischen zwei Lok-Bewegungen liegt eine Unterbrechung. "
+        "Diese sperrt den Export nicht automatisch, sollte aber fachlich geprüft werden.",
     ),
     "R011": (
-        "Zeitliche Ueberschneidung bei derselben Lok",
-        "Ueberlappende Bewegungen vergleichen und fachlich bereinigen.",
+        "Zwei Transportbewegungen überschneiden sich zeitlich",
+        "Zwei Transporte derselben Lok haben überlappende Fahrzeiten. "
+        "Beide Transportzeiten im Tab 'Fall bearbeiten' vergleichen und eine Abfahrts- oder Ankunftszeit korrigieren.",
     ),
     "R012": (
-        "Loknummer fehlt",
-        "Loknummer in der Transportplanung fachlich korrigieren.",
+        "Loknummer fehlt oder ist eine Planungs-/Dummy-Loknummer",
+        "Dieser Transport hat keine echte Loknummer. "
+        "Echte Loknummer in RailCube erfassen oder Dummy-Lok im Tab 'Fall bearbeiten' kennzeichnen.",
+    ),
+    "R016": (
+        "Kein LTE-Vertrag für diesen GAP – ohne Zuweisung exportierbar",
+        "Diese Zeitlücke hat keinen zugeordneten LTE-Vertrag. "
+        "Sie sperrt den Export nicht mehr, sobald sie als 'Keine LTE-Zuweisung' freigegeben wurde. "
+        "Die Lücke selbst bleibt in der Ansicht erhalten.",
+    ),
+    "GAP": (
+        "Lücke in der Lokhistorie",
+        "An dieser Stelle fehlt eine Bewegung der Lok. "
+        "Im Tab 'Fall bearbeiten' fachlichen Grund erfassen (z. B. Abstellung, Werkstatt).",
     ),
 }
 
@@ -143,14 +170,15 @@ def _friendly_gate_reason(value: object) -> str:
 
     replacements = {
         "ERROR-Findings=": "Blockierende Fehler: ",
-        "MANUAL_REVIEW-Findings=": "Manuelle Pruefungen erforderlich: ",
-        "Overlap-Minuten=": "Ueberschneidungsminuten: ",
-        "GAPs ueber 8h=": "Unterbrechungen ueber 8 Stunden: ",
-        "Nicht exportfaehige Movements=": "Nicht exportfaehige Bewegungen: ",
-        "Ungeklaerte GAP-Minuten=": "Ungeklaerte Minuten: ",
+        "MANUAL_REVIEW-Findings=": "Manuelle Prüfungen erforderlich: ",
+        "Overlap-Minuten=": "Überschneidungsminuten: ",
+        "GAPs ueber 8h=": "Lücken über 8 Stunden: ",
+        "Nicht exportfaehige Movements=": "Nicht exportierbare Bewegungen: ",
+        "Ungeklaerte GAP-Minuten=": "Ungeklärte Lückenminuten: ",
         "INFO-Findings=": "Hinweise: ",
-        "Movement export_ready=false": "Bewegung ist nicht exportfaehig",
-        "Globaler Export-Blocker am Tag vorhanden": "Globales Problem am Tag vorhanden",
+        "Movement export_ready=false": "Bewegung ist nicht exportierbar",
+        "Globaler Export-Blocker am Tag vorhanden": "Tagesübergreifendes Problem vorhanden",
+        "Keine LTE-Zuweisung": "Keine LTE-Zuweisung (freigegeben – sperrt Export nicht mehr)",
     }
 
     for technical, friendly in replacements.items():
@@ -206,10 +234,10 @@ def _friendly_gate_table(
         "Datum",
         "Nutzendes EVU",
         "Zeitliche Abdeckung",
-        "Ungeklaerte Minuten",
-        "Ueberschneidungsminuten",
+        "Ungeklärte Minuten",
+        "Überschneidungsminuten",
         "Warum?",
-        "Naechster Schritt",
+        "Nächster Schritt",
     ]
 
     if export_gate is None or export_gate.empty:
@@ -249,14 +277,14 @@ def _friendly_gate_table(
         pd.to_numeric(work[coverage_col], errors="coerce").fillna(0).round(2).astype(str) + " %"
         if coverage_col else ""
     )
-    result["Ungeklaerte Minuten"] = pd.to_numeric(work[gap_col], errors="coerce").fillna(0).astype(int) if gap_col else 0
-    result["Ueberschneidungsminuten"] = pd.to_numeric(work[overlap_col], errors="coerce").fillna(0).astype(int) if overlap_col else 0
+    result["Ungeklärte Minuten"] = pd.to_numeric(work[gap_col], errors="coerce").fillna(0).astype(int) if gap_col else 0
+    result["Überschneidungsminuten"] = pd.to_numeric(work[overlap_col], errors="coerce").fillna(0).astype(int) if overlap_col else 0
     result["Warum?"] = reason
-    result["Naechster Schritt"] = status.str.upper().map(
+    result["Nächster Schritt"] = status.str.upper().map(
         {
             "READY": "Keine Aktion erforderlich.",
-            "WARNING": "Hinweis vor dem Export fachlich kontrollieren.",
-            "BLOCKED": "Lok im Detail pruefen und Ursache bereinigen.",
+            "WARNING": "Hinweis vor dem Export fachlich prüfen.",
+            "BLOCKED": "Lok im Tab 'Lok prüfen' öffnen und Ursache bereinigen.",
         }
     ).fillna("Weitere Details prüfen.")
 
@@ -264,13 +292,13 @@ def _friendly_gate_table(
     if dummy_loco_numbers:
         dummy_mask = result["Loknummer"].isin(dummy_loco_numbers)
         result.loc[dummy_mask, "Warum?"] = "Dummy-Lok"
-        result.loc[dummy_mask, "Naechster Schritt"] = "Echte Loknummer beziehungsweise Planung in RailCube pruefen und korrigieren."
+        result.loc[dummy_mask, "Nächster Schritt"] = "Echte Loknummer in RailCube erfassen oder Dummy-Lok im Tab 'Fall bearbeiten' kennzeichnen."
 
     return result[columns].reset_index(drop=True)
 
 
 def _friendly_global_blockers(global_export_blockers: pd.DataFrame) -> pd.DataFrame:
-    columns = ["Status", "Datum", "Problem", "Transportnummer", "Nutzendes EVU", "Naechster Schritt"]
+    columns = ["Status", "Datum", "Problem", "Transportnummer", "Nutzendes EVU", "Nächster Schritt"]
 
     if global_export_blockers is None or global_export_blockers.empty:
         return pd.DataFrame(columns=columns)
@@ -295,13 +323,13 @@ def _friendly_global_blockers(global_export_blockers: pd.DataFrame) -> pd.DataFr
     result["Problem"] = [item[0] for item in rule_result]
     result["Transportnummer"] = _normalized(work[transport_col]) if transport_col else ""
     result["Nutzendes EVU"] = _normalized(work[ru_col]) if ru_col else ""
-    result["Naechster Schritt"] = [item[1] for item in rule_result]
+    result["Nächster Schritt"] = [item[1] for item in rule_result]
     return result[columns].reset_index(drop=True)
 
 
 def _friendly_findings(findings: pd.DataFrame, include_info: bool = True) -> pd.DataFrame:
     columns = [
-        "Prioritaet",
+        "Priorität",
         "Problem",
         "Loknummer",
         "Transportnummer",
@@ -309,7 +337,7 @@ def _friendly_findings(findings: pd.DataFrame, include_info: bool = True) -> pd.
         "Von",
         "Bis",
         "Auswirkung",
-        "Naechster Schritt",
+        "Nächster Schritt",
         "Regel",
     ]
 
@@ -337,10 +365,10 @@ def _friendly_findings(findings: pd.DataFrame, include_info: bool = True) -> pd.
     rule_result = [_friendly_rule(rule, message) for rule, message in zip(rule_series, message_series)]
 
     result = pd.DataFrame(index=work.index)
-    result["Prioritaet"] = severity.map(
+    result["Priorität"] = severity.map(
         {
-            "ERROR": "⛔ Blockierend",
-            "MANUAL_REVIEW": "⛔ Manuelle Pruefung",
+            "ERROR": "⛔ Blockiert Export",
+            "MANUAL_REVIEW": "⛔ Manuelle Prüfung erforderlich",
             "WARNING": "⚠️ Hinweis",
             "INFO": "ℹ️ Information",
         }
@@ -355,11 +383,11 @@ def _friendly_findings(findings: pd.DataFrame, include_info: bool = True) -> pd.
         {
             "ERROR": "Export gesperrt",
             "MANUAL_REVIEW": "Export gesperrt",
-            "WARNING": "Export moeglich",
+            "WARNING": "Export möglich",
             "INFO": "Keine Sperre",
         }
-    ).fillna("Technisch pruefen")
-    result["Naechster Schritt"] = [item[1] for item in rule_result]
+    ).fillna("Fachlich prüfen")
+    result["Nächster Schritt"] = [item[1] for item in rule_result]
     result["Regel"] = _normalized(rule_series)
     return result[columns].reset_index(drop=True)
 
@@ -378,8 +406,8 @@ def _render_process_steps(summary: GateSummary) -> None:
     st.markdown(
         "  \n".join(
             [
-                "✅ **1. Daten aktualisieren:** letzter vollstaendiger Import vorhanden",
-                "✅ **2. Automatische Pruefung:** automatische Prüfung wurde durchgeführt",
+                "✅ **1. Daten aktualisieren:** letzter vollständiger Import vorhanden",
+                "✅ **2. Automatische Prüfung:** Prüfung wurde durchgeführt",
                 task_step,
                 export_step,
             ]
@@ -396,7 +424,7 @@ def render_operator_dashboard(
     reconciliation: pd.DataFrame,
 ) -> None:
     """DAU-taugliche Tagespruefung auf der Startseite rendern."""
-    st.subheader("Tagespruefung: Darf exportiert werden?")
+    st.subheader("Tagesprüfung – Kann heute exportiert werden?")
 
     summary = summarize_gate(
         export_gate=export_gate,
@@ -407,24 +435,24 @@ def render_operator_dashboard(
 
     if export_gate is None or export_gate.empty:
         st.info(
-            "Die Qualitaetspruefung wurde noch nicht berechnet. "
-            "Fuehre zuerst 'Daten aktualisieren und neu pruefen' aus."
+            "Die Qualitätsprüfung wurde noch nicht berechnet. "
+            "Führe zuerst 'Daten aktualisieren und neu prüfen' aus."
         )
         return
 
     if summary.export_is_blocked:
         st.error(
             "⛔ Export derzeit gesperrt. "
-            "Bearbeite zuerst die blockierenden Probleme im Tab '2. Offene Aufgaben'."
+            "Öffne den Tab '2. Offene Aufgaben' und bearbeite die blockierenden Probleme."
         )
     elif summary.warning_days > 0:
         st.warning(
-            "⚠️ Export moeglich, aber fachliche Kontrolle empfohlen. "
-            "Pruefe die Hinweise vor dem Download."
+            "⚠️ Export möglich, aber fachliche Kontrolle empfohlen. "
+            "Prüfe die Hinweise im Tab '2. Offene Aufgaben' vor dem Download."
         )
     else:
         st.success(
-            "✅ Export moeglich. Die automatische Pruefung hat keine blockierenden Probleme erkannt."
+            "✅ Export möglich. Die automatische Prüfung hat keine blockierenden Probleme erkannt."
         )
 
     col_1, col_2, col_3, col_4 = st.columns(4)
@@ -433,45 +461,44 @@ def render_operator_dashboard(
     col_3.metric("Gesperrte Lok-Tage", summary.blocked_days)
     col_4.metric("Globale Export-Sperren", summary.global_blockers)
 
-    st.markdown("#### Empfohlener Ablauf")
+    st.markdown("#### Was ist jetzt zu tun?")
     _render_process_steps(summary)
 
     blocked_days = _friendly_gate_table(export_gate, only_status="BLOCKED", findings=findings)
 
     if not blocked_days.empty:
-        st.markdown("#### Warum sind Lok-Tage gesperrt?")
+        st.markdown("#### Gesperrte Lok-Tage – Ursachen im Überblick")
         st.caption(
-            "Diese Probleme verhindern den Export. Nutze die Loknummer im Tab '4. Lok prüfen', "
-            "um die zugehoerige Zeitachse zu kontrollieren."
+            "Diese Probleme verhindern den Export. "
+            "Klicke auf eine Loknummer und öffne Tab '4. Lok prüfen', um die Ursache zu sehen."
         )
         st.dataframe(blocked_days.head(100), use_container_width=True, hide_index=True)
 
     global_table = _friendly_global_blockers(global_export_blockers)
 
     if not global_table.empty:
-        st.markdown("#### Globale Export-Sperren")
+        st.markdown("#### Tagesübergreifende Sperren")
         st.caption(
-            "Diese Probleme koennen keiner eindeutigen Lok-Zeitachse zugeordnet werden, "
-            "beispielsweise fehlende Loknummern oder Dummy-Loks."
+            "Diese Probleme betreffen nicht eine einzelne Lok, z. B. fehlende Loknummern oder Planungs-Loks."
         )
         st.dataframe(global_table.head(100), use_container_width=True, hide_index=True)
 
-    with st.expander("Technische Kennzahlen und Vollstaendigkeitspruefung anzeigen", expanded=False):
+    with st.expander("Details und Vollständigkeitsprüfung (für Experten)", expanded=False):
         st.caption(
             "Dieser Bereich dient der Nachvollziehbarkeit und Fehlersuche. "
-            "Fuer die taegliche Bedienung reichen die Ampel und der Tab 'Offene Aufgaben'."
+            "Für den täglichen Betrieb reichen die Ampel und der Tab 'Offene Aufgaben'."
         )
 
         if operational_kpis is not None and not operational_kpis.empty:
-            st.markdown("**Operative Kennzahlen**")
+            st.markdown("**Kennzahlen**")
             st.dataframe(operational_kpis, use_container_width=True, hide_index=True)
 
         if reconciliation is not None and not reconciliation.empty:
-            st.markdown("**Vollstaendigkeitspruefung der Datenmengen**")
+            st.markdown("**Vollständigkeitsprüfung der Datenmenge**")
             st.dataframe(reconciliation, use_container_width=True, hide_index=True)
 
         st.write(f"Bewusst ausgeschlossene Exportzeilen: **{summary.excluded_rows}**")
-        st.write(f"Blockierende Einzelprueffaelle: **{summary.blocking_findings}**")
+        st.write(f"Blockierende Einzelprüffälle: **{summary.blocking_findings}**")
         st.write(f"Nicht blockierende Hinweise: **{summary.info_findings}**")
 
 
@@ -483,8 +510,9 @@ def render_open_tasks(
     """Verstaendliche Arbeitsliste fuer Fachanwender rendern."""
     st.subheader("Offene Aufgaben")
     st.caption(
-        "Bearbeite zuerst alle blockierenden Probleme. Hinweise koennen anschliessend kontrolliert werden. "
-        "Regelnummern sind nur fuer die technische Nachvollziehbarkeit eingeblendet."
+        "Bearbeite zuerst alle blockierenden Probleme (⛔), bevor du exportierst. "
+        "Hinweise (⚠️) sind optional, aber empfohlen. "
+        "Die Regelnummern (R001, R011 …) sind nur für die technische Nachvollziehbarkeit sichtbar."
     )
 
     blocking_gate = _friendly_gate_table(export_gate, only_status="BLOCKED", findings=findings)
@@ -503,32 +531,32 @@ def render_open_tasks(
     tab_blocked, tab_global, tab_hints, tab_rules = st.tabs(
         [
             f"⛔ Gesperrte Lok-Tage ({len(blocking_gate)})",
-            f"⛔ Globale Sperren ({len(blockers)})",
+            f"⛔ Tagesübergreifende Sperren ({len(blockers)})",
             f"⚠️ Hinweise ({len(warning_gate) + len(hints)})",
-            f"Technische Einzelprueffaelle ({len(finding_table)})",
+            f"Alle Prüffälle im Detail ({len(finding_table)})",
         ]
     )
 
     with tab_blocked:
         if blocking_gate.empty:
-            st.success("Keine gesperrten Lok-Tage vorhanden.")
+            st.success("Keine gesperrten Lok-Tage – alles in Ordnung.")
         else:
             st.dataframe(blocking_gate, use_container_width=True, hide_index=True)
             _render_loco_shortcut(blocking_gate)
 
         if not blocking_findings.empty:
-            with st.expander("Zugehoerige blockierende Einzelprueffaelle anzeigen", expanded=False):
+            with st.expander("Blockierende Einzelprüffälle anzeigen", expanded=False):
                 st.dataframe(blocking_findings, use_container_width=True, hide_index=True)
 
     with tab_global:
         if blockers.empty:
-            st.success("Keine globalen Export-Sperren vorhanden.")
+            st.success("Keine tagesübergreifenden Sperren – alles in Ordnung.")
         else:
             st.dataframe(blockers, use_container_width=True, hide_index=True)
 
     with tab_hints:
         if warning_gate.empty and hints.empty:
-            st.success("Keine Hinweise vorhanden.")
+            st.success("Keine Hinweise – alles in Ordnung.")
         else:
             if not warning_gate.empty:
                 st.markdown("**Lok-Tage mit Hinweis**")
@@ -541,10 +569,10 @@ def render_open_tasks(
 
     with tab_rules:
         st.caption(
-            "Technische Detailansicht. Im normalen Betrieb zuerst die drei vorherigen Reiter verwenden."
+            "Detailansicht aller Prüffälle. Im täglichen Betrieb reichen die vorherigen Reiter."
         )
         if finding_table.empty:
-            st.info("Keine Einzelprueffaelle vorhanden.")
+            st.info("Keine Prüffälle vorhanden.")
         else:
             st.dataframe(finding_table, use_container_width=True, hide_index=True)
             csv = finding_table.to_csv(index=False, sep=";").encode("utf-8-sig")
@@ -573,7 +601,7 @@ def _render_loco_shortcut(table: pd.DataFrame, key_suffix: str = "blocked") -> N
     if not locos:
         return
 
-    st.markdown("**Lok direkt fuer die Detailpruefung vormerken**")
+    st.markdown("**Lok direkt für die Detailprüfung aufrufen**")
     col_select, col_button = st.columns([3, 1])
 
     with col_select:
@@ -587,9 +615,10 @@ def _render_loco_shortcut(table: pd.DataFrame, key_suffix: str = "blocked") -> N
         st.write("")
         st.write("")
         if st.button(
-            "Lok vormerken",
+            "→ Im Tab 'Lok prüfen' öffnen",
             key=f"operator_shortcut_button_{key_suffix}",
             use_container_width=True,
+            help="Öffnet die Zeitachse dieser Lok direkt im Tab '4. Lok prüfen'.",
         ):
             # NETZENTGELT_LOCO_BOOKMARK_HOTFIX_OPERATOR_V1_20260608
             # Die verbleibende Detailansicht verwendet den Widget-Key

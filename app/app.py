@@ -110,6 +110,32 @@ st.set_page_config(
     layout="wide"
 )
 
+# Ladeindikator auffälliger machen: Spinner-Text größer, alte Inhalte abdimmen
+st.markdown(
+    """
+    <style>
+    /* Spinner-Container: mehr Abstand, größere Schrift */
+    div.stSpinner > div {
+        font-size: 1.05rem !important;
+        font-weight: 500 !important;
+        gap: 0.75rem !important;
+        align-items: center !important;
+    }
+    div.stSpinner svg {
+        width: 1.75rem !important;
+        height: 1.75rem !important;
+        flex-shrink: 0 !important;
+    }
+    /* Veraltete Inhalte (Neuberechnung läuft) leicht abdimmen */
+    [data-stale="true"] {
+        opacity: 0.4 !important;
+        transition: opacity 0.15s ease !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 st.title("🚆 Bahnstrom Deutschland - Tagesprüfung")
 st.caption(
     "Operative Prüfung und Exportvorbereitung für das individuelle Netzentgelt. "
@@ -1545,84 +1571,85 @@ stand_candidates_path = EXPORT_DIR / "core_loco_stand_candidates.csv"
 gap_context_review_path = EXPORT_DIR / "dq_phase6c_gap_context_review.csv"
 uncertain_gaps_path = EXPORT_DIR / "dq_phase6c_uncertain_gaps.csv"
 
-timeline_raw = read_csv_safe(timeline_path)
-timeline_gap_relevance_ready = (
-    timeline_raw.empty
-    or "gap_relevant_de" in timeline_raw.columns
-)
-
-timeline = hide_non_relevant_gap_rows(
-    timeline_raw
-)
-findings = read_csv_safe(findings_path)
-findings = hide_non_relevant_gap_findings(
-    findings_df=findings,
-    timeline_df=timeline_raw,
-)
-rule_catalog = read_csv_safe(rule_catalog_path)
-unresolved_performing_ru_market_partner_alias = read_csv_safe(
-    unresolved_market_partner_path
-)
-vens_tens_exception = read_csv_safe(
-    vens_tens_exception_path
-)
-zuordnungen = read_csv_safe(zuordnungen_path)
-nutzungsmeldung = read_csv_safe(nutzungsmeldung_path)
-runs = read_csv_safe(run_path)
-coverage = read_csv_safe(coverage_path)
-export_gate = read_csv_safe(export_gate_path)
-export_gate_ru = read_csv_safe(export_gate_ru_path)
-global_export_blockers = read_csv_safe(global_blockers_path)
-reconciliation = read_csv_safe(reconciliation_path)
-operational_kpis = read_csv_safe(operational_kpis_path)
-excluded_export_rows = read_csv_safe(excluded_export_rows_path)
-stand_candidates = read_csv_safe(stand_candidates_path)
-gap_context_review = read_csv_safe(gap_context_review_path)
-uncertain_gaps = read_csv_safe(uncertain_gaps_path)
-
-# Datenqualitätswerte direkt aus den aktuellen Rohdaten bilden.
-# Dadurch werden sie bereits nach einem Download aktualisiert,
-# auch wenn die Pipeline noch nicht neu berechnet wurde.
-#
-# WICHTIG:
-# Die Diagnose wird defensiv gekapselt. Ein unerwarteter Fehler in einer
-# Rohdaten-Datei darf nicht mehr die gesamte Streamlit-Seite abbrechen.
-try:
-    no_loco_summary, no_loco_cases, no_loco_warnings = (
-        build_no_loco_diagnostics()
+with st.spinner("Prüfergebnisse werden geladen …"):
+    timeline_raw = read_csv_safe(timeline_path)
+    timeline_gap_relevance_ready = (
+        timeline_raw.empty
+        or "gap_relevant_de" in timeline_raw.columns
     )
 
-except Exception as diagnostics_error:
-    no_loco_summary = pd.DataFrame(columns=[
-        "Quelle",
-        "Prüfung",
-        "Anzahl Zeilen",
-        "Betroffene Transporte",
-        "Status",
-    ])
+    timeline = hide_non_relevant_gap_rows(
+        timeline_raw
+    )
+    findings = read_csv_safe(findings_path)
+    findings = hide_non_relevant_gap_findings(
+        findings_df=findings,
+        timeline_df=timeline_raw,
+    )
+    rule_catalog = read_csv_safe(rule_catalog_path)
+    unresolved_performing_ru_market_partner_alias = read_csv_safe(
+        unresolved_market_partner_path
+    )
+    vens_tens_exception = read_csv_safe(
+        vens_tens_exception_path
+    )
+    zuordnungen = read_csv_safe(zuordnungen_path)
+    nutzungsmeldung = read_csv_safe(nutzungsmeldung_path)
+    runs = read_csv_safe(run_path)
+    coverage = read_csv_safe(coverage_path)
+    export_gate = read_csv_safe(export_gate_path)
+    export_gate_ru = read_csv_safe(export_gate_ru_path)
+    global_export_blockers = read_csv_safe(global_blockers_path)
+    reconciliation = read_csv_safe(reconciliation_path)
+    operational_kpis = read_csv_safe(operational_kpis_path)
+    excluded_export_rows = read_csv_safe(excluded_export_rows_path)
+    stand_candidates = read_csv_safe(stand_candidates_path)
+    gap_context_review = read_csv_safe(gap_context_review_path)
+    uncertain_gaps = read_csv_safe(uncertain_gaps_path)
 
-    no_loco_cases = pd.DataFrame(columns=[
-        "Quelle",
-        "Grund",
-        "TransportNumber",
-        "PerformingRU",
-        "Erstes Datum",
-        "Anzahl Zeilen",
-    ])
-
-    no_loco_warnings = [
-        (
-            "Die Datenqualitätsprüfung 'Dummys & missing Locos' konnte nicht vollständig "
-            f"ausgeführt werden: {diagnostics_error}"
+    # Datenqualitätswerte direkt aus den aktuellen Rohdaten bilden.
+    # Dadurch werden sie bereits nach einem Download aktualisiert,
+    # auch wenn die Pipeline noch nicht neu berechnet wurde.
+    #
+    # WICHTIG:
+    # Die Diagnose wird defensiv gekapselt. Ein unerwarteter Fehler in einer
+    # Rohdaten-Datei darf nicht mehr die gesamte Streamlit-Seite abbrechen.
+    try:
+        no_loco_summary, no_loco_cases, no_loco_warnings = (
+            build_no_loco_diagnostics()
         )
-    ]
 
-    st.error(
-        "Fehler beim Aufbau der Datenqualitätsprüfung 'Dummys & missing Locos'. "
-        "Die übrigen Bereiche der Anwendung bleiben verfügbar."
-    )
+    except Exception as diagnostics_error:
+        no_loco_summary = pd.DataFrame(columns=[
+            "Quelle",
+            "Prüfung",
+            "Anzahl Zeilen",
+            "Betroffene Transporte",
+            "Status",
+        ])
 
-    st.exception(diagnostics_error)
+        no_loco_cases = pd.DataFrame(columns=[
+            "Quelle",
+            "Grund",
+            "TransportNumber",
+            "PerformingRU",
+            "Erstes Datum",
+            "Anzahl Zeilen",
+        ])
+
+        no_loco_warnings = [
+            (
+                "Die Datenqualitätsprüfung 'Dummys & missing Locos' konnte nicht vollständig "
+                f"ausgeführt werden: {diagnostics_error}"
+            )
+        ]
+
+        st.error(
+            "Fehler beim Aufbau der Datenqualitätsprüfung 'Dummys & missing Locos'. "
+            "Die übrigen Bereiche der Anwendung bleiben verfügbar."
+        )
+
+        st.exception(diagnostics_error)
 
 # ==================================================
 # NETZENTGELT_OPERATIONAL_DAY_FILTER_PHASE5C_V1_20260608
@@ -1708,9 +1735,9 @@ tab_overview, tab_tasks, tab_override, tab_timeline, tab_exports, tab_review, ta
     "4. Lok prüfen",
     "5. Exporte erstellen",
     "6. Weitere Prüfungen",
-    "⚙️ Technik: Loknummern",
-    "⚙️ Technik: Regelqueue",
-    "⚙️ Technik: Pipeline"
+    "7. Dummy-Loknummern",
+    "8. Alle Prüffälle",
+    "9. Pipeline & Tests"
 ])
 
 with tab_overview:

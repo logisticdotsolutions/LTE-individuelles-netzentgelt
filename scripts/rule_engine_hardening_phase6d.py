@@ -15,6 +15,14 @@ Quality Gates ausgefuehrt. Danach wird das Quality Gate einmal neu aufgebaut,
 damit R016 in der Tagesampel sichtbar ist.
 """
 
+from manual_gap_release_module import (
+    apply_no_lte_gap_release,
+    restore_released_gap_visibility,
+    suspend_released_gaps_for_quality_gate,
+)
+from quality_gate_module import build_quality_gate_tables
+
+
 PHASE_ID = "NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6D_V1_20260608"
 
 
@@ -279,7 +287,22 @@ def _append_exact_overlap_reason(con, table_name: str) -> None:
 
 
 def finalize_quality_gate_phase6d(con, run_id: str) -> None:
-    """Exakte Overlap-Dauer in Audit- und Gate-Tabellen ergänzen."""
+    """Freigegebene GAPs berücksichtigen und exakte Overlap-Dauer ergänzen."""
+    released_gap_rows = apply_no_lte_gap_release(con, run_id)
+    if released_gap_rows:
+        suspend_released_gaps_for_quality_gate(con)
+        try:
+            build_quality_gate_tables(con, run_id)
+        finally:
+            restore_released_gap_visibility(con)
+        _audit(
+            con,
+            run_id,
+            "manual_no_lte_gap_releases",
+            released_gap_rows,
+            "Explizit als ohne LTE-Zuweisung klassifizierte GAPs blockieren den LTE-Export nicht.",
+        )
+
     _build_exact_overlap_day_table(con, run_id)
     for table_name in ["core_loco_day_coverage", "dq_export_gate", "dq_export_gate_ru"]:
         _add_exact_overlap_columns(con, table_name)
