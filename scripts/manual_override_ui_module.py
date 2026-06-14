@@ -48,6 +48,36 @@ from dummy_locomotive_module import (
 )
 
 
+@st.cache_data(show_spinner="Systemvorschläge werden berechnet …")
+def _cached_build_suggestion_table(
+    db_path: Path, findings: pd.DataFrame, timeline: pd.DataFrame
+) -> pd.DataFrame:
+    return build_suggestion_table(db_path=db_path, findings=findings, timeline=timeline)
+
+
+@st.cache_data(show_spinner="Korrekturvorschlag wird ermittelt …")
+def _cached_suggestion_for_case(
+    db_path: Path,
+    override_type: str,
+    transport_number: str,
+    loco_no: str,
+    period_start_utc: str,
+    period_end_utc: str,
+    source_table: str,
+    source_row_id: str,
+):
+    return suggestion_for_case(
+        db_path=db_path,
+        override_type=override_type,
+        transport_number=transport_number,
+        loco_no=loco_no,
+        period_start_utc=period_start_utc,
+        period_end_utc=period_end_utc,
+        source_table=source_table,
+        source_row_id=source_row_id,
+    )
+
+
 PHASE5B_UI_MARKER = "NETZENTGELT_MANUAL_OVERRIDE_PHASE5B_UI_V1_20260607"
 # NETZENTGELT_CONTROLLER_UX_PHASE5E_V1_20260608
 PHASE5D_UI_MARKER = "NETZENTGELT_MANUAL_OVERRIDE_PHASE5D_V1_20260608"
@@ -60,26 +90,26 @@ CHANGE_LOG_PATH = MAP_DIR / "manual_override_change_log.csv"
 SUGGESTION_ACCEPTANCE_LOG_PATH = MAP_DIR / "manual_override_suggestion_acceptance_log.csv"
 
 OVERRIDE_TYPE_LABELS = {
-    "SET_PERFORMING_RU": "Nutzendes EVU ergänzen oder korrigieren",
-    "SET_LOCO_NO": "Loknummer ergänzen oder korrigieren",
-    "SET_SEQUENCE_TS": "Grenzzeitanker korrigieren",
+    "SET_PERFORMING_RU": "Nutzendes EVU (Eisenbahnunternehmen) korrigieren",
+    "SET_LOCO_NO": "Loknummer korrigieren oder ergänzen",
+    "SET_SEQUENCE_TS": "Grenzzeitpunkt korrigieren",
     "SET_ACTUAL_DEPARTURE": "Abfahrtszeit korrigieren",
     "SET_ACTUAL_ARRIVAL": "Ankunftszeit korrigieren",
-    "CLASSIFY_GAP": "Unterbrechung fachlich klassifizieren",
-    "ADJUST_OVERLAP": "Überschneidung anpassen",
-    "CASE_NOTE": "Bearbeitungsnotiz hinterlegen",
-    "MARK_DUMMY_LOCOMOTIVE": "Als Dummy-/Planungslok markieren",
+    "CLASSIFY_GAP": "Lücke in der Lokhistorie einordnen (z. B. Abstellung, Werkstatt)",
+    "ADJUST_OVERLAP": "Zeitliche Überschneidung zweier Transporte auflösen",
+    "CASE_NOTE": "Notiz hinterlegen (keine Datenänderung)",
+    "MARK_DUMMY_LOCOMOTIVE": "Als Planungs-/Dummy-Loknummer kennzeichnen",
 }
 
 CLASSIFICATION_OPTIONS = {
-    "": "Keine Klassifikation",
-    "COLD_STAND": "Mögliche kalte Abstellung",
+    "": "– Bitte Grund auswählen –",
+    "COLD_STAND": "Kalte Abstellung (Lok stand still, kein Einsatz)",
     "WORKSHOP": "Werkstattaufenthalt",
-    "OUTSIDE_DE": "Lok außerhalb Deutschlands",
-    "MISSING_MOVEMENT": "Fehlende Bewegung vermutet",
-    "SAME_RU_CONTINUITY": "Gleiches nutzendes EVU vor und nach der Unterbrechung",
-    "PLAUSIBLE_SHORT_DEVIATION": "Plausible kurze Abweichung",
-    "OTHER": "Sonstiger Grund",
+    "OUTSIDE_DE": "Lok außerhalb Deutschlands (keine DE-Relevanz)",
+    "MISSING_MOVEMENT": "Fehlende Bewegung – Datenlücke in RailCube vermutet",
+    "SAME_RU_CONTINUITY": "Kein EVU-Wechsel – gleiches Unternehmen vor und nach der Lücke",
+    "PLAUSIBLE_SHORT_DEVIATION": "Kurze, fachlich plausible Abweichung",
+    "OTHER": "Sonstiger Grund (in Begründung erläutern)",
 }
 
 CHANGE_LOG_COLUMNS = (
@@ -265,107 +295,102 @@ def _read_csv_safe(path: Path, columns: tuple[str, ...]) -> pd.DataFrame:
         return pd.DataFrame(columns=columns)
 
 
+@st.cache_data(show_spinner="Fallliste wird erstellt …")
 def _build_case_table(findings: pd.DataFrame, timeline: pd.DataFrame) -> pd.DataFrame:
     columns = [
-        "case_label",
-        "rule_id",
-        "message",
-        "transport_number",
-        "loco_no",
-        "period_start_utc",
-        "period_end_utc",
-        "source_table",
-        "source_row_id",
+        "case_label", "rule_id", "message", "transport_number", "loco_no",
+        "period_start_utc", "period_end_utc", "source_table", "source_row_id",
         "overlap_with_transport_number",
     ]
-    rows: list[dict[str, object]] = []
+
+    def _s(df: pd.DataFrame, col: str) -> pd.Series:
+        return (
+            df[col].fillna("").astype(str).str.strip()
+            if col in df.columns
+            else pd.Series("", index=df.index, dtype=str)
+        )
+
+    parts: list[pd.DataFrame] = []
 
     if findings is not None and not findings.empty:
-        for _, row in findings.iterrows():
-            rule_id = _clean(row.get("rule_id"))
-            transport = _clean(row.get("transport_number"))
-            loco = _clean(row.get("loco_no"))
-            start = _clean(row.get("period_start_utc"))
-            rows.append(
-                {
-                    "case_label": f"{rule_id or 'Finding'} | Transport {transport or '-'} | Lok {loco or '-'} | {start or '-'}",
-                    "rule_id": rule_id,
-                    "message": _clean(row.get("message")),
-                    "transport_number": transport,
-                    "loco_no": loco,
-                    "period_start_utc": start,
-                    "period_end_utc": _clean(row.get("period_end_utc")),
-                    "source_table": _clean(row.get("source_table")),
-                    "source_row_id": _clean(row.get("source_row_id")),
-                    "overlap_with_transport_number": _clean(row.get("overlap_with_transport_number")),
-                }
-            )
+        rule_id = _s(findings, "rule_id")
+        transport = _s(findings, "transport_number")
+        loco = _s(findings, "loco_no")
+        start = _s(findings, "period_start_utc")
+        parts.append(pd.DataFrame({
+            "case_label": (
+                rule_id.where(rule_id != "", "Finding")
+                + " | Transport " + transport.where(transport != "", "-")
+                + " | Lok " + loco.where(loco != "", "-")
+                + " | " + start.where(start != "", "-")
+            ),
+            "rule_id": rule_id,
+            "message": _s(findings, "message"),
+            "transport_number": transport,
+            "loco_no": loco,
+            "period_start_utc": start,
+            "period_end_utc": _s(findings, "period_end_utc"),
+            "source_table": _s(findings, "source_table"),
+            "source_row_id": _s(findings, "source_row_id"),
+            "overlap_with_transport_number": _s(findings, "overlap_with_transport_number"),
+        }))
 
-    existing_case_keys = {
-        (
-            _clean(item.get("loco_no")),
-            _clean(item.get("period_start_utc")),
-            _clean(item.get("period_end_utc")),
-            _clean(item.get("source_table")),
-            _clean(item.get("source_row_id")),
-        )
-        for item in rows
-    }
+    # Build dedup key set from findings rows
+    existing_keys: set[tuple[str, ...]] = (
+        set(zip(
+            parts[0]["loco_no"], parts[0]["period_start_utc"], parts[0]["period_end_utc"],
+            parts[0]["source_table"], parts[0]["source_row_id"],
+        ))
+        if parts else set()
+    )
 
     if timeline is not None and not timeline.empty and "row_type" in timeline.columns:
         gap_mask = timeline["row_type"].fillna("").astype(str).str.upper().eq("GAP")
         if "gap_relevant_de" in timeline.columns:
             gap_mask = gap_mask & (
-                timeline["gap_relevant_de"]
-                .fillna(False)
-                .astype(str)
-                .str.strip()
-                .str.lower()
+                timeline["gap_relevant_de"].fillna(False).astype(str).str.strip().str.lower()
                 .isin(["true", "1", "yes", "y", "ja"])
             )
         gap_rows = timeline[gap_mask]
-        for _, row in gap_rows.iterrows():
-            loco = _clean(row.get("loco_no"))
-            start = _clean(row.get("period_start_utc"))
-            end = _clean(row.get("period_end_utc"))
-            case_key = (
-                loco,
-                start,
-                end,
-                _clean(row.get("source_table")),
-                _clean(row.get("source_row_id")),
+        if not gap_rows.empty:
+            loco = _s(gap_rows, "loco_no")
+            start = _s(gap_rows, "period_start_utc")
+            end = _s(gap_rows, "period_end_utc")
+            src_t = _s(gap_rows, "source_table")
+            src_r = _s(gap_rows, "source_row_id")
+            dedup_mask = pd.Series(
+                [k not in existing_keys for k in zip(loco, start, end, src_t, src_r)],
+                index=gap_rows.index,
             )
-            if case_key in existing_case_keys:
-                continue
-            existing_case_keys.add(case_key)
-            rows.append(
-                {
-                    "case_label": f"GAP | Lok {loco or '-'} | {start or '-'} bis {end or '-'}",
+            gap_rows = gap_rows[dedup_mask]
+            if not gap_rows.empty:
+                loco = _s(gap_rows, "loco_no")
+                start = _s(gap_rows, "period_start_utc")
+                end = _s(gap_rows, "period_end_utc")
+                dq_msg = _s(gap_rows, "dq_message")
+                parts.append(pd.DataFrame({
+                    "case_label": (
+                        "GAP | Lok " + loco.where(loco != "", "-")
+                        + " | " + start.where(start != "", "-")
+                        + " bis " + end.where(end != "", "-")
+                    ),
                     "rule_id": "GAP",
-                    "message": _clean(row.get("dq_message")) or "Unterbrechung der Lok-Zeitachse",
-                    "transport_number": _clean(row.get("transport_number")),
+                    "message": dq_msg.where(dq_msg != "", "Unterbrechung der Lok-Zeitachse"),
+                    "transport_number": _s(gap_rows, "transport_number"),
                     "loco_no": loco,
                     "period_start_utc": start,
                     "period_end_utc": end,
-                    "source_table": _clean(row.get("source_table")),
-                    "source_row_id": _clean(row.get("source_row_id")),
+                    "source_table": _s(gap_rows, "source_table"),
+                    "source_row_id": _s(gap_rows, "source_row_id"),
                     "overlap_with_transport_number": "",
-                }
-            )
+                }))
 
-    free_row = {
-        "case_label": "Freie manuelle Erfassung",
-        "rule_id": "",
-        "message": "",
-        "transport_number": "",
-        "loco_no": "",
-        "period_start_utc": "",
-        "period_end_utc": "",
-        "source_table": "",
-        "source_row_id": "",
-        "overlap_with_transport_number": "",
-    }
-    return pd.DataFrame([free_row, *rows], columns=columns)
+    free_row = pd.DataFrame([{
+        "case_label": "Freie manuelle Erfassung", "rule_id": "", "message": "",
+        "transport_number": "", "loco_no": "", "period_start_utc": "", "period_end_utc": "",
+        "source_table": "", "source_row_id": "", "overlap_with_transport_number": "",
+    }])
+    return pd.concat([free_row, *parts], ignore_index=True)[columns]
 
 
 def _run_pipeline(run_all_script: Path) -> subprocess.CompletedProcess[str]:
@@ -537,7 +562,7 @@ def _render_suggestions(
         "Bereits übernommene Vorschläge verschwinden aus dieser Liste, solange der zugehörige lokale Override aktiv ist."
     )
     try:
-        suggestions = build_suggestion_table(
+        suggestions = _cached_build_suggestion_table(
             db_path=Path(db_path),
             findings=findings,
             timeline=timeline,
@@ -782,7 +807,7 @@ def _render_new_override(
             index=default_type_index,
             format_func=lambda value: OVERRIDE_TYPE_LABELS[value],
         )
-        generated = suggestion_for_case(
+        generated = _cached_suggestion_for_case(
             db_path=Path(db_path),
             override_type=override_type,
             transport_number=_clean(prefill.get("transport_number")) or _clean(selected_case.get("transport_number")),
@@ -837,8 +862,15 @@ def _render_new_override(
         )
         created_by = st.text_input("Bearbeiter", value=getpass.getuser())
         comment = st.text_area("Begründung / Kommentar")
-        save_only = st.form_submit_button("Override speichern")
-        save_and_rebuild = st.form_submit_button("Speichern und neu prüfen", type="primary")
+        save_only = st.form_submit_button(
+            "Korrektur speichern",
+            help="Speichert die Korrektur lokal. Die Berechnung und Exporte werden dabei noch nicht aktualisiert.",
+        )
+        save_and_rebuild = st.form_submit_button(
+            "Speichern und sofort neu prüfen",
+            type="primary",
+            help="Speichert die Korrektur und startet die Neuberechnung. Danach sind Qualitätsprüfung und Exporte aktuell.",
+        )
 
     if not (save_only or save_and_rebuild):
         return

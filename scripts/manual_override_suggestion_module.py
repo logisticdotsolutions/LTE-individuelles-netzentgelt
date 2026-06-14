@@ -725,10 +725,17 @@ def _suggest_broken_chain_gaps(timeline: pd.DataFrame) -> list[Suggestion]:
     gaps = _gap_rows(timeline)
     if gaps.empty:
         return []
+    # Pre-filter DE-relevant gaps vectorially before Python iteration
+    if "gap_relevant_de" in gaps.columns:
+        de_mask = (
+            gaps["gap_relevant_de"].fillna("").astype(str).str.strip().str.lower()
+            .isin({"true", "1", "yes", "y", "ja"})
+        )
+        gaps = gaps[de_mask]
+    if gaps.empty:
+        return []
     suggestions: list[Suggestion] = []
     for _, row in gaps.iterrows():
-        if not str(_clean(row.get("gap_relevant_de"))).lower() in {"true", "1", "yes", "y", "ja"}:
-            continue
         origin = _clean(row.get("origin_name"))
         destination = _clean(row.get("destination_name"))
         suggestions.append(
@@ -755,6 +762,21 @@ def _suggest_broken_chain_gaps(timeline: pd.DataFrame) -> list[Suggestion]:
 
 def _suggest_border_slot_reviews(timeline: pd.DataFrame) -> list[Suggestion]:
     movements = _movement_rows(timeline)
+    if movements.empty:
+        return []
+    # Pre-filter border movements vectorially before Python iteration
+    clean_dir_s = (
+        movements["clean_dir"].fillna("").astype(str).str.strip().str.upper()
+        if "clean_dir" in movements.columns
+        else pd.Series("", index=movements.index)
+    )
+    faulty_dir_s = (
+        movements["faulty_dir"].fillna("").astype(str).str.strip().str.upper()
+        if "faulty_dir" in movements.columns
+        else pd.Series("", index=movements.index)
+    )
+    border_mask = clean_dir_s.isin({"E", "A", "E/A"}) | faulty_dir_s.isin({"E", "A"})
+    movements = movements[border_mask]
     if movements.empty:
         return []
     suggestions: list[Suggestion] = []

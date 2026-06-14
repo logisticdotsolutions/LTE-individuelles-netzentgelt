@@ -446,13 +446,17 @@ def guided_correction_widgets(timeline: pd.DataFrame | None = None) -> Iterator[
                 render_noop_warning()
             st.info("Prüfe diese Gegenüberstellung bewusst. Erst danach darf die lokale Korrektur gespeichert werden.")
             options = dict(kwargs)
-            options["placeholder"] = "Warum ist diese konkrete lokale Korrektur fachlich zulässig?"
-            options["help"] = "Die Begründung wird gemeinsam mit Benutzer und Zeitstempel im Audit gespeichert."
+            options["placeholder"] = "Warum ist diese Korrektur fachlich notwendig? (mindestens 10 Zeichen)"
+            options["help"] = (
+                "Erkläre kurz den fachlichen Grund für diese Korrektur. "
+                "Die Begründung wird zusammen mit deinem Benutzernamen und dem Zeitstempel gespeichert "
+                "und ist im Änderungsverlauf jederzeit einsehbar."
+            )
             return original_text_area("Fachliche Begründung *", *args, **options)
         return original_text_area(label, *args, **kwargs)
 
     def submit(label: str, *args: Any, **kwargs: Any):
-        if label in {"Override speichern", "Speichern und neu prüfen", "Dummy-Lok speichern", "Dummy-Lok speichern und neu prüfen"}:
+        if label in {"Korrektur speichern", "Speichern und sofort neu prüfen", "Override speichern", "Speichern und neu prüfen", "Dummy-Lok speichern", "Dummy-Lok speichern und neu prüfen"}:
             if not state["confirm_rendered"]:
                 state["confirmed"] = original_checkbox(
                     "Ich habe den aktuellen Wert, den neuen Wert und die Auswirkung fachlich geprüft.",
@@ -462,6 +466,8 @@ def guided_correction_widgets(timeline: pd.DataFrame | None = None) -> Iterator[
                 state["confirm_rendered"] = True
             options = dict(kwargs)
             labels = {
+                "Korrektur speichern": "Korrektur speichern",
+                "Speichern und sofort neu prüfen": "Speichern und sofort neu prüfen",
                 "Override speichern": "Korrektur speichern",
                 "Speichern und neu prüfen": "Korrektur speichern und sofort neu prüfen",
                 "Dummy-Lok speichern": "Dummy-Lok speichern",
