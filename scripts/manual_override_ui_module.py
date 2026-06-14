@@ -66,6 +66,7 @@ OVERRIDE_TYPE_LABELS = {
     "SET_ACTUAL_DEPARTURE": "Abfahrtszeit korrigieren",
     "SET_ACTUAL_ARRIVAL": "Ankunftszeit korrigieren",
     "CLASSIFY_GAP": "Unterbrechung fachlich klassifizieren",
+    "ADJUST_OVERLAP": "Überschneidung anpassen",
     "CASE_NOTE": "Bearbeitungsnotiz hinterlegen",
     "MARK_DUMMY_LOCOMOTIVE": "Als Dummy-/Planungslok markieren",
 }
