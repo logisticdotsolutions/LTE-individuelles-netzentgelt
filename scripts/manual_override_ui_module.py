@@ -55,7 +55,7 @@ def _cached_build_suggestion_table(
     return build_suggestion_table(db_path=db_path, findings=findings, timeline=timeline)
 
 
-@st.cache_data(show_spinner="Korrekturvorschlag wird ermittelt …")
+@st.cache_data(show_spinner=False)
 def _cached_suggestion_for_case(
     db_path: Path,
     override_type: str,
