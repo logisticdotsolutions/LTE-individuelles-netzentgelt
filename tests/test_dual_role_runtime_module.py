@@ -13,6 +13,33 @@ import role_scope_module as scope  # noqa: E402
 from dual_role_runtime_module import DUAL_ROLE, install_dual_operator_role_runtime  # noqa: E402
 
 
+def test_core_scope_knows_dual_role_without_runtime_patch() -> None:
+    assert scope.LTE_DE_NL_ROLE == DUAL_ROLE
+    assert scope.LTE_DE_NL_ROLE in scope.OPERATIONAL_ROLES
+
+
+def test_core_scope_dual_role_sees_de_nl_and_shared_rows() -> None:
+    data = pd.DataFrame(
+        [
+            {"transport_number": "DE1", "performing_ru": "LTE DE - LTE Germany GmbH"},
+            {"transport_number": "NL1", "performing_ru": "LTE NL - LTE Netherlands B.V."},
+            {"transport_number": "XX1", "performing_ru": "UNKNOWN RU"},
+        ]
+    )
+    visible = scope.filter_dataframe_for_role(data, scope.LTE_DE_NL_ROLE)
+    assert visible["transport_number"].tolist() == ["DE1", "NL1", "XX1"]
+
+
+def test_core_scope_dual_role_gets_both_export_groups() -> None:
+    groups = {
+        "LTE_DE": {"label": "Germany"},
+        "LTE_NL": {"label": "Netherlands"},
+        "OTHER": {"label": "Other"},
+    }
+    visible = scope.visible_primary_export_groups(groups, scope.LTE_DE_NL_ROLE)
+    assert list(visible.keys()) == ["LTE_DE", "LTE_NL"]
+
+
 def test_dual_role_is_allowed_but_not_admin() -> None:
     install_dual_operator_role_runtime()
     assert DUAL_ROLE in auth.ALLOWED_ROLES
