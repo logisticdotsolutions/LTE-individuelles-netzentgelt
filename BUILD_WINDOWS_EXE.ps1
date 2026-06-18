@@ -17,7 +17,11 @@ $Launcher = Join-Path $Root 'packaging\streamlit_exe_launcher.py'
 $EntryConfig = Join-Path $Root 'packaging\netzentgelt_entrypoint.txt'
 $DistRoot = Join-Path $Root 'dist'
 $DistDir = Join-Path $DistRoot 'NetzentgeltMVP'
-$ZipPath = Join-Path $DistRoot 'NetzentgeltMVP_Windows_Portable.zip'
+$InternalZipPath = Join-Path $DistRoot 'NetzentgeltMVP_Windows_Portable.zip'
+$KeyUserRoot = Join-Path $Root '_keyuser_package'
+$KeyUserDir = Join-Path $KeyUserRoot 'NetzentgeltMVP_KeyUser'
+$KeyUserZipPath = Join-Path $KeyUserRoot 'NetzentgeltMVP_KeyUser.zip'
+$KeyUserReadme = Join-Path $KeyUserDir 'START_HIER.txt'
 
 function Write-Section([string]$Text) {
     Write-Host ''
@@ -37,6 +41,30 @@ function Add-DataIfExists([System.Collections.Generic.List[string]]$Args, [strin
         $Args.Add('--add-data')
         $Args.Add("$FullPath;$Destination")
     }
+}
+
+function Write-KeyUserReadme([string]$Path) {
+    $Text = @'
+NETZENTGELT MVP - STARTANLEITUNG FUER KEY USER
+
+1. Diesen gesamten Ordner lokal entpacken bzw. kopieren.
+   Beispiel: C:\LTE\NetzentgeltMVP_KeyUser
+
+2. NetzentgeltMVP.exe per Doppelklick starten.
+
+3. Es oeffnet sich ein Browserfenster mit der lokalen Anwendung.
+   Falls kein Browser aufgeht, im Konsolenfenster die angezeigte Adresse oeffnen.
+   Beispiel: http://127.0.0.1:8501
+
+4. Wichtig:
+   - Nicht direkt aus dem ZIP starten.
+   - Den gesamten Ordner zusammenlassen.
+   - Keine Dateien aus Unterordnern loeschen oder verschieben.
+   - Fuer Speichern/Export braucht der Ordner Schreibrechte.
+
+5. Bei Problemen bitte Screenshot vom Konsolenfenster und vom Browserfehler senden.
+'@
+    Set-Content -Path $Path -Value $Text -Encoding UTF8
 }
 
 Write-Section 'Netzentgelt MVP - Windows EXE Paket bauen'
@@ -105,13 +133,30 @@ if (-not (Test-Path $DistDir)) {
     throw "Build-Ordner wurde nicht gefunden: $DistDir"
 }
 
-Write-Section 'Erzeuge portables ZIP-Paket'
-if (Test-Path $ZipPath) {
-    Remove-Item $ZipPath -Force
+Write-Section 'Erzeuge internes Build-ZIP'
+if (Test-Path $InternalZipPath) {
+    Remove-Item $InternalZipPath -Force
 }
-Compress-Archive -Path (Join-Path $DistDir '*') -DestinationPath $ZipPath -Force
+Compress-Archive -Path (Join-Path $DistDir '*') -DestinationPath $InternalZipPath -Force
 
-Write-Host "Fertig. Dieses ZIP an Kollegen senden:"
-Write-Host $ZipPath
+Write-Section 'Erzeuge gesondertes Key-User-Paket'
+if (Test-Path $KeyUserRoot) {
+    Remove-Item $KeyUserRoot -Recurse -Force
+}
+New-Item -ItemType Directory -Path $KeyUserDir -Force | Out-Null
+Copy-Item -Path (Join-Path $DistDir '*') -Destination $KeyUserDir -Recurse -Force
+Write-KeyUserReadme $KeyUserReadme
+
+if (Test-Path $KeyUserZipPath) {
+    Remove-Item $KeyUserZipPath -Force
+}
+Compress-Archive -Path $KeyUserDir -DestinationPath $KeyUserZipPath -Force
+
 Write-Host ''
-Write-Host 'Kollege: ZIP entpacken und NetzentgeltMVP.exe starten.'
+Write-Host 'FERTIG.'
+Write-Host ''
+Write-Host 'NUR DIESEN ORDNER / DIESES ZIP AN KEY USER SENDEN:'
+Write-Host "Ordner: $KeyUserRoot"
+Write-Host "ZIP:    $KeyUserZipPath"
+Write-Host ''
+Write-Host 'Key User: ZIP entpacken, START_HIER.txt lesen, NetzentgeltMVP.exe starten.'
