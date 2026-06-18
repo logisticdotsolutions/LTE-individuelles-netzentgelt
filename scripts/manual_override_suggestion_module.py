@@ -7,14 +7,10 @@ niemals automatisch als Override gespeichert und verändern weder Rohdaten noch
 Quality Gate. Ein Fachanwender muss jeden Vorschlag im Cockpit ausdrücklich
 prüfen und übernehmen.
 
-Vorschlagsarten
----------------
-- PerformingRU aus angrenzenden Bewegungen derselben Lok
-- Loknummer aus TransportDetail / LocomotiveMovement
-- Grenzzeitanker als kontrollierter Viertelstunden-Prüfvorschlag
-- gebrochene Ortskette als vermutete fehlende Bewegung
-- PerformingRU eines GAPs aus identischen direkten Nachbarbewegungen
-- längere Standzeit am selben Ort als mögliche kalte Abstellung
+GAP-Vorschläge werden bewusst als eindeutige Prioritätenlogik gebildet:
+pro GAP entsteht höchstens ein primärer fachlicher Vorschlag. Damit werden
+widersprüchliche Doppelklassifikationen wie EVU-Übernahme plus Kaltabstellung
+oder Ortssprung plus Kaltabstellung vermieden.
 """
 
 from __future__ import annotations
@@ -35,6 +31,9 @@ PHASE5D_SUGGESTION_MARKER = "NETZENTGELT_MANUAL_OVERRIDE_PHASE5D_V1_20260608"
 COLD_STAND_MIN_MINUTES = 480
 BORDER_SLOT_MINUTES = 15
 PERFORMING_RU_NEIGHBOUR_WINDOW_HOURS = 48
+GAP_SHORT_CONTINUITY_MAX_MINUTES = 120
+NO_LTE_ASSIGNMENT_CLASSIFICATION = "NO_LTE_ASSIGNMENT"
+NO_LTE_ASSIGNMENT_VALUE = "Keine LTE-Zuweisung / nicht im Report"
 
 SUGGESTION_COLUMNS = (
     "suggestion_id",
@@ -576,90 +575,115 @@ def _gap_rows(timeline: pd.DataFrame) -> pd.DataFrame:
     ].copy()
 
 
-def _suggest_cold_stands(timeline: pd.DataFrame) -> list[Suggestion]:
-    movements = _movement_rows(timeline)
-    if movements.empty:
-        return []
-
-    suggestions: list[Suggestion] = []
-    for loco_no, group in movements.groupby("loco_no", dropna=False):
-        ordered = group.sort_values(["_sort_ts", "source_row_id"], na_position="last").reset_index(drop=True)
-        for index in range(len(ordered) - 1):
-            previous = ordered.iloc[index]
-            following = ordered.iloc[index + 1]
-            previous_end = _parse_timestamp(previous.get("period_end_utc")) or _parse_timestamp(previous.get("sequence_ts"))
-            following_start = _parse_timestamp(following.get("period_start_utc")) or _parse_timestamp(following.get("sequence_ts"))
-            if previous_end is None or following_start is None or following_start <= previous_end:
-                continue
-            duration_minutes = int((following_start - previous_end).total_seconds() // 60)
-            if duration_minutes < COLD_STAND_MIN_MINUTES:
-                continue
-            previous_location = _clean(previous.get("destination_name"))
-            following_location = _clean(following.get("origin_name"))
-            if not previous_location or _location_key(previous_location) != _location_key(following_location):
-                continue
-            previous_scope = _clean(previous.get("report_scope")).upper()
-            following_scope = _clean(following.get("report_scope")).upper()
-            if "IN_REPORT" not in {previous_scope, following_scope}:
-                continue
-
-            suggestions.append(
-                _new_suggestion(
-                    suggestion_type="POSSIBLE_COLD_STAND_SAME_LOCATION",
-                    override_type="CLASSIFY_GAP",
-                    classification_code="COLD_STAND",
-                    confidence="MEDIUM",
-                    loco_no=_clean(loco_no),
-                    transport_number=_clean(previous.get("transport_number")),
-                    period_start_utc=_timestamp_text(previous_end),
-                    period_end_utc=_timestamp_text(following_start),
-                    source_table=_clean(previous.get("source_table")),
-                    source_row_id=_clean(previous.get("source_row_id")),
-                    reason="Längere Standzeit am selben Ort erkannt. Mögliche kalte Abstellung fachlich bestätigen.",
-                    evidence=(
-                        f"Ort: {previous_location}; Dauer: {duration_minutes} Minuten; "
-                        f"Schwellwert: {COLD_STAND_MIN_MINUTES} Minuten."
-                    ),
-                )
-            )
-    return suggestions
-
-
-
 def _bool_flag(value: object) -> bool:
     return _clean(value).lower() in {"true", "1", "yes", "y", "ja"}
 
 
-def _suggest_gap_performing_ru_from_neighbours(timeline: pd.DataFrame) -> list[Suggestion]:
-    """
-    PerformingRU fuer eine DE-relevante GAP-Zeile nur dann vorschlagen, wenn
-    die unmittelbar vorherige und die unmittelbar nachfolgende Bewegung
-    derselben Lok eindeutig dieselbe PerformingRU enthalten.
-
-    Der Vorschlag dokumentiert eine lokale GAP-Klassifikation. Er schreibt
-    keine Quelldaten um und hebt keine Exportsperre automatisch auf.
-    """
+def _timeline_with_sort_columns(timeline: pd.DataFrame) -> pd.DataFrame:
     if timeline is None or timeline.empty or "row_type" not in timeline.columns:
-        return []
-
+        return pd.DataFrame()
     work = timeline.copy()
-    work["_phase5d_sort_sequence"] = pd.to_numeric(
+    work["_gap_policy_sort_sequence"] = pd.to_numeric(
         work.get("sort_sequence", pd.Series(index=work.index, dtype="object")),
         errors="coerce",
     )
-    work["_phase5d_sort_ts"] = pd.to_datetime(
+    work["_gap_policy_sort_ts"] = pd.to_datetime(
         work.get("period_start_utc", pd.Series(index=work.index, dtype="object")),
         errors="coerce",
     )
-    work["_phase5d_source_row_id"] = pd.to_numeric(
+    work["_gap_policy_source_row_id"] = pd.to_numeric(
         work.get("source_row_id", pd.Series(index=work.index, dtype="object")),
         errors="coerce",
     )
+    return work
+
+
+def _duration_minutes(row: pd.Series) -> float | None:
+    explicit = pd.to_numeric(row.get("gap_duration_minutes"), errors="coerce")
+    if not pd.isna(explicit):
+        return float(explicit)
+    start = _parse_timestamp(row.get("period_start_utc"))
+    end = _parse_timestamp(row.get("period_end_utc"))
+    if start is None or end is None or end < start:
+        return None
+    return float((end - start).total_seconds() / 60.0)
+
+
+def _nearest_movements(ordered: pd.DataFrame, index: int) -> tuple[pd.Series | None, pd.Series | None]:
+    previous = None
+    for previous_index in range(index - 1, -1, -1):
+        candidate = ordered.iloc[previous_index]
+        if _clean(candidate.get("row_type")).upper() == "MOVEMENT":
+            previous = candidate
+            break
+
+    following = None
+    for following_index in range(index + 1, len(ordered)):
+        candidate = ordered.iloc[following_index]
+        if _clean(candidate.get("row_type")).upper() == "MOVEMENT":
+            following = candidate
+            break
+
+    return previous, following
+
+
+def _location_context(
+    gap: pd.Series,
+    previous: pd.Series | None,
+    following: pd.Series | None,
+) -> tuple[str, str]:
+    before = _clean(gap.get("origin_name"))
+    after = _clean(gap.get("destination_name"))
+    if not before and previous is not None:
+        before = _clean(previous.get("destination_name")) or _clean(previous.get("origin_name"))
+    if not after and following is not None:
+        after = _clean(following.get("origin_name")) or _clean(following.get("destination_name"))
+    return before, after
+
+
+def _has_location_jump(before_location: str, after_location: str) -> bool:
+    if not before_location or not after_location:
+        return False
+    return _location_key(before_location) != _location_key(after_location)
+
+
+def _same_performing_ru(previous: pd.Series | None, following: pd.Series | None) -> str:
+    if previous is None or following is None:
+        return ""
+    previous_ru = _clean(previous.get("performing_ru"))
+    following_ru = _clean(following.get("performing_ru"))
+    if previous_ru and previous_ru == following_ru:
+        return previous_ru
+    return ""
+
+
+def _gap_common_fields(gap: pd.Series, previous: pd.Series | None = None) -> dict[str, str]:
+    return {
+        "loco_no": _clean(gap.get("loco_no")),
+        "transport_number": _clean(gap.get("transport_number")) or (_clean(previous.get("transport_number")) if previous is not None else ""),
+        "period_start_utc": _timestamp_text(gap.get("period_start_utc")),
+        "period_end_utc": _timestamp_text(gap.get("period_end_utc")),
+        "source_table": _clean(gap.get("source_table")),
+        "source_row_id": _clean(gap.get("source_row_id")),
+    }
+
+
+def _duration_text(duration_minutes: float | None) -> str:
+    if duration_minutes is None:
+        return "unbekannt"
+    return f"{duration_minutes:.0f} Minuten"
+
+
+def _suggest_gap_decisions(timeline: pd.DataFrame) -> list[Suggestion]:
+    """Build exactly one primary suggestion per relevant GAP according to the operator policy."""
+    work = _timeline_with_sort_columns(timeline)
+    if work.empty:
+        return []
 
     suggestions: list[Suggestion] = []
     for loco_no, group in work.groupby("loco_no", dropna=False):
         ordered = group.sort_values(
-            ["_phase5d_sort_sequence", "_phase5d_sort_ts", "_phase5d_source_row_id"],
+            ["_gap_policy_sort_sequence", "_gap_policy_sort_ts", "_gap_policy_source_row_id"],
             na_position="last",
         ).reset_index(drop=True)
 
@@ -669,88 +693,123 @@ def _suggest_gap_performing_ru_from_neighbours(timeline: pd.DataFrame) -> list[S
             if not _bool_flag(gap.get("gap_relevant_de")):
                 continue
 
-            previous = None
-            for previous_index in range(index - 1, -1, -1):
-                candidate = ordered.iloc[previous_index]
-                if _clean(candidate.get("row_type")).upper() == "MOVEMENT":
-                    previous = candidate
-                    break
-
-            following = None
-            for following_index in range(index + 1, len(ordered)):
-                candidate = ordered.iloc[following_index]
-                if _clean(candidate.get("row_type")).upper() == "MOVEMENT":
-                    following = candidate
-                    break
-
-            if previous is None or following is None:
-                continue
-
-            previous_ru = _clean(previous.get("performing_ru"))
-            following_ru = _clean(following.get("performing_ru"))
-            if not previous_ru or previous_ru != following_ru:
-                continue
-
-            suggestions.append(
-                _new_suggestion(
-                    suggestion_type="GAP_PERFORMING_RU_FROM_BOTH_NEIGHBOURS",
-                    override_type="CLASSIFY_GAP",
-                    classification_code="SAME_RU_CONTINUITY",
-                    confidence="HIGH",
-                    suggested_value=previous_ru,
-                    loco_no=_clean(loco_no),
-                    transport_number=_clean(gap.get("transport_number")) or _clean(previous.get("transport_number")),
-                    period_start_utc=_timestamp_text(gap.get("period_start_utc")),
-                    period_end_utc=_timestamp_text(gap.get("period_end_utc")),
-                    source_table=_clean(gap.get("source_table")),
-                    source_row_id=_clean(gap.get("source_row_id")),
-                    reason=(
-                        "Vor und nach der DE-relevanten GAP-Zeile ist dieselbe PerformingRU vorhanden. "
-                        "Lokale GAP-Klassifikation fachlich bestaetigen."
-                    ),
-                    evidence=(
-                        f"Vorherige Bewegung: Transport {_clean(previous.get('transport_number')) or '-'}, "
-                        f"PerformingRU {previous_ru}, Beginn {_timestamp_text(previous.get('period_start_utc')) or '-'}; "
-                        f"nachfolgende Bewegung: Transport {_clean(following.get('transport_number')) or '-'}, "
-                        f"PerformingRU {following_ru}, Beginn {_timestamp_text(following.get('period_start_utc')) or '-'}; "
-                        "beide direkten Nachbarn stimmen ueberein."
-                    ),
-                )
+            previous, following = _nearest_movements(ordered, index)
+            duration = _duration_minutes(gap)
+            before_location, after_location = _location_context(gap, previous, following)
+            has_jump = _has_location_jump(before_location, after_location)
+            same_ru = _same_performing_ru(previous, following)
+            open_end = following is None
+            common = _gap_common_fields(gap, previous)
+            evidence_base = (
+                f"GAP-Dauer: {_duration_text(duration)}; "
+                f"Ort davor: {before_location or '-'}; Ort danach: {after_location or '-'}; "
+                f"PerformingRU davor/danach: {same_ru or '-'}; "
+                f"offenes Ende: {'ja' if open_end else 'nein'}."
             )
 
+            # Priorität 1: Ortssprung bedeutet fachlich keine LTE-Zuweisung im Report.
+            if has_jump:
+                suggestions.append(
+                    _new_suggestion(
+                        suggestion_type="GAP_NO_LTE_ASSIGNMENT",
+                        override_type="CLASSIFY_GAP",
+                        classification_code=NO_LTE_ASSIGNMENT_CLASSIFICATION,
+                        confidence="MEDIUM",
+                        suggested_value=NO_LTE_ASSIGNMENT_VALUE,
+                        reason=(
+                            "Ortssprung zwischen vorheriger und nachfolgender Bewegung erkannt. "
+                            "Die Unterbrechung wird als keine LTE-Zuweisung / nicht im Report vorgeschlagen."
+                        ),
+                        evidence=evidence_base,
+                        **common,
+                    )
+                )
+                continue
+
+            # Priorität 2: offene lange Standzeit bis zum letzten Datenstand wird nicht LTE zugeordnet.
+            if open_end and (duration is None or duration > GAP_SHORT_CONTINUITY_MAX_MINUTES):
+                suggestions.append(
+                    _new_suggestion(
+                        suggestion_type="GAP_NO_LTE_ASSIGNMENT",
+                        override_type="CLASSIFY_GAP",
+                        classification_code=NO_LTE_ASSIGNMENT_CLASSIFICATION,
+                        confidence="MEDIUM",
+                        suggested_value=NO_LTE_ASSIGNMENT_VALUE,
+                        reason=(
+                            "Längere offene Standzeit ohne nachfolgende Bewegung erkannt. "
+                            "Bis zum letzten Datenstand steht die Lok weiterhin; Vorschlag: keine LTE-Zuweisung / nicht im Report."
+                        ),
+                        evidence=evidence_base,
+                        **common,
+                    )
+                )
+                continue
+
+            # Priorität 3: kurze GAP unter 120 Minuten mit identischem EVU davor/danach -> EVU übernehmen.
+            if duration is not None and duration < GAP_SHORT_CONTINUITY_MAX_MINUTES and same_ru:
+                suggestions.append(
+                    _new_suggestion(
+                        suggestion_type="GAP_PERFORMING_RU_FROM_BOTH_NEIGHBOURS",
+                        override_type="CLASSIFY_GAP",
+                        classification_code="SAME_RU_CONTINUITY",
+                        confidence="HIGH",
+                        suggested_value=same_ru,
+                        reason=(
+                            "GAP ist kürzer als 120 Minuten und direkt davor sowie danach ist dasselbe nutzende EVU vorhanden. "
+                            "Vorschlag: EVU für diese Unterbrechung übernehmen."
+                        ),
+                        evidence=evidence_base,
+                        **common,
+                    )
+                )
+                continue
+
+            # Priorität 4: lange GAP über 120 Minuten, kein Ortssprung, identisches EVU -> Kaltabstellung prüfen.
+            if duration is not None and duration > GAP_SHORT_CONTINUITY_MAX_MINUTES and same_ru:
+                suggestions.append(
+                    _new_suggestion(
+                        suggestion_type="POSSIBLE_COLD_STAND_SAME_LOCATION",
+                        override_type="CLASSIFY_GAP",
+                        classification_code="COLD_STAND",
+                        confidence="MEDIUM",
+                        suggested_value="Mögliche kalte Abstellung",
+                        reason=(
+                            "GAP ist länger als 120 Minuten, es liegt kein Ortssprung vor und direkt davor sowie danach ist dasselbe EVU vorhanden. "
+                            "Vorschlag: mögliche kalte Abstellung fachlich bestätigen."
+                        ),
+                        evidence=evidence_base,
+                        **common,
+                    )
+                )
+
     return suggestions
+
+
+def _suggest_cold_stands(timeline: pd.DataFrame) -> list[Suggestion]:
+    """Backward-compatible cold-stand suggester; build_suggestion_table uses the unified GAP policy."""
+    return [
+        suggestion
+        for suggestion in _suggest_gap_decisions(timeline)
+        if suggestion.suggestion_type == "POSSIBLE_COLD_STAND_SAME_LOCATION"
+    ]
+
+
+def _suggest_gap_performing_ru_from_neighbours(timeline: pd.DataFrame) -> list[Suggestion]:
+    """Backward-compatible same-RU GAP suggester; build_suggestion_table uses the unified GAP policy."""
+    return [
+        suggestion
+        for suggestion in _suggest_gap_decisions(timeline)
+        if suggestion.suggestion_type == "GAP_PERFORMING_RU_FROM_BOTH_NEIGHBOURS"
+    ]
 
 
 def _suggest_broken_chain_gaps(timeline: pd.DataFrame) -> list[Suggestion]:
-    gaps = _gap_rows(timeline)
-    if gaps.empty:
-        return []
-    suggestions: list[Suggestion] = []
-    for _, row in gaps.iterrows():
-        if not str(_clean(row.get("gap_relevant_de"))).lower() in {"true", "1", "yes", "y", "ja"}:
-            continue
-        origin = _clean(row.get("origin_name"))
-        destination = _clean(row.get("destination_name"))
-        suggestions.append(
-            _new_suggestion(
-                suggestion_type="BROKEN_LOCATION_CHAIN",
-                override_type="CLASSIFY_GAP",
-                classification_code="MISSING_MOVEMENT",
-                confidence="MEDIUM",
-                loco_no=_clean(row.get("loco_no")),
-                transport_number=_clean(row.get("transport_number")),
-                period_start_utc=_timestamp_text(row.get("period_start_utc")),
-                period_end_utc=_timestamp_text(row.get("period_end_utc")),
-                source_table=_clean(row.get("source_table")),
-                source_row_id=_clean(row.get("source_row_id")),
-                reason="Die Ortskette ist zwischen zwei Bewegungen unterbrochen. Fehlende Bewegung fachlich prüfen.",
-                evidence=(
-                    f"Vorherige Destination: {origin or '-'}; nächster Origin: {destination or '-'}; "
-                    f"Dauer: {_clean(row.get('gap_duration_minutes')) or '-'} Minuten."
-                ),
-            )
-        )
-    return suggestions
+    """Backward-compatible location-jump suggester; location jumps now become no-LTE proposals."""
+    return [
+        suggestion
+        for suggestion in _suggest_gap_decisions(timeline)
+        if suggestion.suggestion_type == "GAP_NO_LTE_ASSIGNMENT"
+    ]
 
 
 def _suggest_border_slot_reviews(timeline: pd.DataFrame) -> list[Suggestion]:
@@ -851,9 +910,7 @@ def build_suggestion_table(
             suggestions.extend(_suggest_from_findings(con, findings))
         finally:
             con.close()
-    suggestions.extend(_suggest_broken_chain_gaps(timeline))
-    suggestions.extend(_suggest_gap_performing_ru_from_neighbours(timeline))
-    suggestions.extend(_suggest_cold_stands(timeline))
+    suggestions.extend(_suggest_gap_decisions(timeline))
     suggestions.extend(_suggest_border_slot_reviews(timeline))
 
     rows = [suggestion.to_dict() for suggestion in _deduplicate(suggestions)]
