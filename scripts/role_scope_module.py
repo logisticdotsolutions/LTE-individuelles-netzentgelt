@@ -8,7 +8,8 @@ Fail-safe principle
 -------------------
 No unresolved case may disappear because a source field is missing or because
 an alias has not been mapped yet. Rows without an unambiguous LTE-DE or LTE-NL
-scope remain visible to both operational roles.
+scope remain visible to all operational roles until the process owner clarifies
+them.
 """
 
 from __future__ import annotations
@@ -20,11 +21,13 @@ from typing import Iterable, Mapping, Sequence
 import pandas as pd
 
 
-PHASE9B_ROLE_SCOPE_MARKER = "NETZENTGELT_PORTABLE_ROLE_SCOPE_PHASE9B_V1_20260610"
+PHASE9B_ROLE_SCOPE_MARKER = "NETZENTGELT_PORTABLE_ROLE_SCOPE_PHASE9B_V2_20260618"
 ADMIN_ROLE = "ADMIN"
 LTE_DE_ROLE = "LTE_DE"
 LTE_NL_ROLE = "LTE_NL"
-OPERATIONAL_ROLES = (LTE_DE_ROLE, LTE_NL_ROLE)
+LTE_DE_NL_ROLE = "LTE_DE_NL"
+BASE_OPERATIONAL_ROLES = (LTE_DE_ROLE, LTE_NL_ROLE)
+OPERATIONAL_ROLES = (LTE_DE_ROLE, LTE_NL_ROLE, LTE_DE_NL_ROLE)
 
 PERFORMING_RU_CANDIDATES = (
     "performing_ru",
@@ -85,7 +88,11 @@ class ScopeDecision:
 
     def visible_for(self, role_code: str) -> bool:
         role = normalize_role(role_code)
-        return role == ADMIN_ROLE or role in self.visible_roles
+        if role == ADMIN_ROLE:
+            return True
+        if role == LTE_DE_NL_ROLE:
+            return bool(set(self.visible_roles) & set(BASE_OPERATIONAL_ROLES))
+        return role in self.visible_roles
 
 
 def normalize_role(value: object) -> str:
@@ -157,7 +164,7 @@ def decide_scope(
 
     if matched_roles == {LTE_DE_ROLE, LTE_NL_ROLE}:
         status = "CROSS_SCOPE_CONFLICT"
-        visible_roles = OPERATIONAL_ROLES
+        visible_roles = BASE_OPERATIONAL_ROLES
     elif matched_roles == {LTE_DE_ROLE}:
         status = "ASSIGNED_LTE_DE"
         visible_roles = (LTE_DE_ROLE,)
@@ -166,9 +173,9 @@ def decide_scope(
         visible_roles = (LTE_NL_ROLE,)
     else:
         # Fail-safe: missing fields, unknown aliases and non-LTE assignments remain
-        # visible to both operational roles until the process owner clarifies them.
+        # visible to both base operational roles until the process owner clarifies them.
         status = "SHARED_UNASSIGNED"
-        visible_roles = OPERATIONAL_ROLES
+        visible_roles = BASE_OPERATIONAL_ROLES
 
     return ScopeDecision(
         visible_roles=tuple(visible_roles),
@@ -197,7 +204,6 @@ def add_scope_columns(data: pd.DataFrame) -> pd.DataFrame:
         result["_scope_status"] = pd.Series(dtype="object")
         result["_scope_visible_roles"] = pd.Series(dtype="object")
         return result
-
     performing_ru_col = _column(result, PERFORMING_RU_CANDIDATES)
     order_owner_col = _column(result, ORDER_OWNER_CANDIDATES)
     performing_ru_values = result[performing_ru_col] if performing_ru_col else pd.Series("", index=result.index)
@@ -227,9 +233,14 @@ def filter_dataframe_for_role(data: pd.DataFrame, role_code: str) -> pd.DataFram
         return data.iloc[0:0].copy()
 
     scoped = add_scope_columns(data)
-    mask = scoped["_scope_visible_roles"].fillna("").astype(str).str.split("|").apply(
-        lambda roles: role in roles
-    )
+    visible_role_series = scoped["_scope_visible_roles"].fillna("").astype(str).str.split("|")
+
+    if role == LTE_DE_NL_ROLE:
+        base_roles = set(BASE_OPERATIONAL_ROLES)
+        mask = visible_role_series.apply(lambda roles: bool(set(roles) & base_roles))
+    else:
+        mask = visible_role_series.apply(lambda roles: role in roles)
+
     return scoped.loc[mask].drop(columns=["_scope_status", "_scope_visible_roles"], errors="ignore").copy()
 
 
@@ -255,10 +266,11 @@ def restrict_performing_ru_values_for_role(
     performing_ru_values: Iterable[str],
     role_code: str,
 ) -> tuple[str, ...]:
-    """Prevent an operational role from exporting the opposite LTE group.
+    """Prevent a single-country operational role from exporting the opposite LTE group.
 
-    Unknown or non-LTE values remain allowed for both roles because they are
-    treated as shared unresolved scope during the temporary pilot.
+    Unknown or non-LTE values remain allowed for operational roles because they are
+    treated as shared unresolved scope during the temporary pilot. LTE_DE_NL is a
+    non-admin operator role and may export both LTE_DE and LTE_NL groups.
     """
     values = tuple(str(value).strip() for value in performing_ru_values if str(value).strip())
     role = normalize_role(role_code)
@@ -266,6 +278,8 @@ def restrict_performing_ru_values_for_role(
         return values
     if role not in OPERATIONAL_ROLES:
         raise PermissionError("Für diese Rolle ist kein Export zulässig.")
+    if role == LTE_DE_NL_ROLE:
+        return values
 
     matched_roles = roles_for_values(values)
     if matched_roles and role not in matched_roles:
@@ -283,6 +297,12 @@ def visible_primary_export_groups(
     role = normalize_role(role_code)
     if role == ADMIN_ROLE:
         return {str(key): dict(value) for key, value in groups.items()}
-    if role in OPERATIONAL_ROLES and role in groups:
+    if role == LTE_DE_NL_ROLE:
+        return {
+            role_key: dict(groups[role_key])
+            for role_key in BASE_OPERATIONAL_ROLES
+            if role_key in groups
+        }
+    if role in BASE_OPERATIONAL_ROLES and role in groups:
         return {role: dict(groups[role])}
     return {}
