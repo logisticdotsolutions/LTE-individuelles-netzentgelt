@@ -79,10 +79,12 @@ from operational_day_filter_ui_runtime_bridge import (  # noqa: E402
     render_early_sidebar_operational_day_filter,
     restore_operational_day_filter_runtime,
 )
+from remove_vens_runtime_module import install_remove_vens_runtime  # noqa: E402
 
 install_compact_copy_runtime()
 install_compact_login_views()
 install_gap_policy_labels()
+install_remove_vens_runtime()
 
 from local_auth_ui_module import (  # noqa: E402
     render_admin_area,
