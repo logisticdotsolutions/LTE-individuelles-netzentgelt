@@ -30,6 +30,16 @@ function Write-Section([string]$Text) {
     Write-Host ('=' * 78)
 }
 
+function Add-Argument([System.Collections.Generic.List[string]]$Args, [string]$Value) {
+    [void]$Args.Add($Value)
+}
+
+function Add-Arguments([System.Collections.Generic.List[string]]$Args, [string[]]$Values) {
+    foreach ($Value in $Values) {
+        Add-Argument $Args $Value
+    }
+}
+
 function Test-PythonModule([string]$ModuleName) {
     & $Python -c "import importlib.util, sys; sys.exit(0 if importlib.util.find_spec('$ModuleName') else 1)" | Out-Null
     return ($LASTEXITCODE -eq 0)
@@ -38,8 +48,8 @@ function Test-PythonModule([string]$ModuleName) {
 function Add-DataIfExists([System.Collections.Generic.List[string]]$Args, [string]$RelativePath, [string]$Destination) {
     $FullPath = Join-Path $Root $RelativePath
     if (Test-Path $FullPath) {
-        $Args.Add('--add-data')
-        $Args.Add("$FullPath;$Destination")
+        Add-Argument $Args '--add-data'
+        Add-Argument $Args "$FullPath;$Destination"
     }
 }
 
@@ -98,7 +108,7 @@ if (-not $SkipDependencyInstall) {
 
 Write-Section 'Baue EXE mit PyInstaller'
 $PyInstallerArgs = [System.Collections.Generic.List[string]]::new()
-$PyInstallerArgs.AddRange(@(
+Add-Arguments $PyInstallerArgs ([string[]]@(
     '-m', 'PyInstaller',
     '--noconfirm',
     '--clean',
@@ -111,8 +121,8 @@ $PyInstallerArgs.AddRange(@(
 
 foreach ($Module in @('streamlit', 'altair', 'duckdb', 'pandas', 'openpyxl', 'pypdf', 'yaml', 'pyarrow')) {
     if (Test-PythonModule $Module) {
-        $PyInstallerArgs.Add('--collect-all')
-        $PyInstallerArgs.Add($Module)
+        Add-Argument $PyInstallerArgs '--collect-all'
+        Add-Argument $PyInstallerArgs $Module
     }
 }
 
@@ -124,7 +134,7 @@ Add-DataIfExists $PyInstallerArgs 'config' 'config'
 Add-DataIfExists $PyInstallerArgs 'templates' 'templates'
 Add-DataIfExists $PyInstallerArgs '.streamlit' '.streamlit'
 
-$PyInstallerArgs.Add($Launcher)
+Add-Argument $PyInstallerArgs $Launcher
 
 & $Python @PyInstallerArgs
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
