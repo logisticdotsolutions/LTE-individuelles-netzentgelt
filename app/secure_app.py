@@ -61,10 +61,6 @@ from export_exception_ui_module import (  # noqa: E402
     render_export_exception_area,
     render_export_exception_sidebar_toggle,
 )
-from fallpruefung_review_runtime_bridge import (  # noqa: E402
-    install_fallpruefung_review_integration,
-    restore_fallpruefung_review_integration,
-)
 from friendly_ui_copy_runtime_module import install_compact_copy_runtime  # noqa: E402
 from friendly_ui_density_module import apply_density_cleanup  # noqa: E402
 from friendly_ui_theme_module import apply_theme, render_theme_toggle  # noqa: E402
@@ -115,6 +111,7 @@ PHASE11F_FRIENDLY_THEME_MARKER = "NETZENTGELT_FRIENDLY_THEME_PHASE11F_V1_2026061
 PHASE11G_EARLY_DAY_FILTER_MARKER = "NETZENTGELT_EARLY_OPERATIONAL_DAY_FILTER_PHASE11G_V1_20260612"
 PHASE11H_GAP_POLICY_LABEL_MARKER = "NETZENTGELT_GAP_POLICY_LABELS_PHASE11H_V1_20260618"
 PHASE11L_VENS_REMOVED_MARKER = "NETZENTGELT_VENS_SELECTION_REMOVED_PHASE11L_V1_20260618"
+PHASE11M_REVIEW_BLOCK_REMOVED_MARKER = "NETZENTGELT_REVIEW_BLOCK_REMOVED_PHASE11M_V1_20260618"
 
 
 st.set_page_config(
@@ -151,7 +148,6 @@ _original_set_page_config = st.set_page_config
 _n01_runtime = install_n01_hardened_runtime()
 _ae01_runtime = install_ae01_hardened_runtime()
 _zuordnungen_hardened_runtime = install_zuordnungen_hardened_runtime()
-_fallpruefung_runtime = install_fallpruefung_review_integration()
 _original_tabs = install_zuordnungen_export_tab_extension()
 st.set_page_config = lambda *args, **kwargs: None
 try:
@@ -161,7 +157,6 @@ try:
                 runpy.run_path(str(LEGACY_APP_PATH), run_name="__main__")
 finally:
     restore_zuordnungen_export_tab_extension(_original_tabs)
-    restore_fallpruefung_review_integration(_fallpruefung_runtime)
     restore_zuordnungen_hardened_runtime(_zuordnungen_hardened_runtime)
     restore_ae01_hardened_runtime(_ae01_runtime)
     restore_n01_hardened_runtime(_n01_runtime)
