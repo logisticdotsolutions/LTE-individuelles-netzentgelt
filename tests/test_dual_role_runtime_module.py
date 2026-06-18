@@ -26,6 +26,16 @@ def test_dual_role_is_allowed_but_not_admin() -> None:
     assert user.is_admin is False
 
 
+def test_dual_role_keeps_base_visible_role_representation_stable() -> None:
+    install_dual_operator_role_runtime()
+    conflict = scope.decide_scope(
+        performing_ru="LTE DE - LTE Germany GmbH",
+        order_owner="LTE NL - LTE Netherlands B.V.",
+    )
+    assert set(conflict.visible_roles) == {scope.LTE_DE_ROLE, scope.LTE_NL_ROLE}
+    assert conflict.visible_for(DUAL_ROLE) is True
+
+
 def test_dual_role_sees_lte_de_and_lte_nl_rows() -> None:
     install_dual_operator_role_runtime()
     data = pd.DataFrame(
