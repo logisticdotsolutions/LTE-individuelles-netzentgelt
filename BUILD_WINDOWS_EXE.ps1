@@ -30,13 +30,13 @@ function Write-Section([string]$Text) {
     Write-Host ('=' * 78)
 }
 
-function Add-Argument([System.Collections.Generic.List[string]]$Args, [string]$Value) {
-    [void]$Args.Add($Value)
+function Add-Argument([System.Collections.Generic.List[string]]$ArgumentList, [string]$Value) {
+    [void]$ArgumentList.Add($Value)
 }
 
-function Add-Arguments([System.Collections.Generic.List[string]]$Args, [string[]]$Values) {
+function Add-Arguments([System.Collections.Generic.List[string]]$ArgumentList, [string[]]$Values) {
     foreach ($Value in $Values) {
-        Add-Argument $Args $Value
+        Add-Argument $ArgumentList $Value
     }
 }
 
@@ -45,11 +45,11 @@ function Test-PythonModule([string]$ModuleName) {
     return ($LASTEXITCODE -eq 0)
 }
 
-function Add-DataIfExists([System.Collections.Generic.List[string]]$Args, [string]$RelativePath, [string]$Destination) {
+function Add-DataIfExists([System.Collections.Generic.List[string]]$ArgumentList, [string]$RelativePath, [string]$Destination) {
     $FullPath = Join-Path $Root $RelativePath
     if (Test-Path $FullPath) {
-        Add-Argument $Args '--add-data'
-        Add-Argument $Args "$FullPath;$Destination"
+        Add-Argument $ArgumentList '--add-data'
+        Add-Argument $ArgumentList "$FullPath;$Destination"
     }
 }
 
@@ -136,7 +136,13 @@ Add-DataIfExists $PyInstallerArgs '.streamlit' '.streamlit'
 
 Add-Argument $PyInstallerArgs $Launcher
 
-& $Python @PyInstallerArgs
+$PyInstallerArgArray = [string[]]$PyInstallerArgs.ToArray()
+if ($PyInstallerArgArray.Count -lt 3 -or $PyInstallerArgArray[0] -ne '-m' -or $PyInstallerArgArray[1] -ne 'PyInstaller') {
+    throw "Interner Buildfehler: PyInstaller-Argumente wurden nicht korrekt aufgebaut."
+}
+Write-Host "PyInstaller-Aufruf: $Python $($PyInstallerArgArray -join ' ')"
+
+& $Python @PyInstallerArgArray
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 if (-not (Test-Path $DistDir)) {
