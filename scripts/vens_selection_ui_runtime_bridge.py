@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import manual_override_ui_module as cockpit
-from vens_selection_ui_module import render_vens_selection_area
+from vens_selection_ui_module import render_vens_selection_area, reset_vens_selection_render_guard
 
 
 @dataclass(frozen=True)
@@ -13,9 +13,8 @@ class VEnsSelectionUIRuntime:
 
 def install_vens_selection_ui_runtime() -> VEnsSelectionUIRuntime:
     """vEns-Auswahl kontrolliert unterhalb der bestehenden Fallbearbeitung ergänzen."""
-    runtime = VEnsSelectionUIRuntime(
-        original_renderer=cockpit.render_manual_override_cockpit,
-    )
+    reset_vens_selection_render_guard()
+    runtime = VEnsSelectionUIRuntime(original_renderer=cockpit.render_manual_override_cockpit)
 
     def wrapped_renderer(*args, **kwargs):
         runtime.original_renderer(*args, **kwargs)
