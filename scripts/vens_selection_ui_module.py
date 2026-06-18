@@ -1,12 +1,31 @@
 from __future__ import annotations
 
-from datetime import datetime
 import getpass
 
 import pandas as pd
 import streamlit as st
 
 from vens_selection_store import candidate_label, candidates_for_performing_ru, save_mapping
+
+
+_RENDER_GUARD_KEY = "_vens_selection_ui_rendered_this_run"
+
+
+def reset_vens_selection_render_guard() -> None:
+    """Allow the vEns selection area to be rendered once during the current UI run."""
+    st.session_state[_RENDER_GUARD_KEY] = False
+
+
+def _claim_vens_selection_render() -> bool:
+    """Return True only for the first real vEns widget render of one Streamlit run."""
+    if bool(st.session_state.get(_RENDER_GUARD_KEY, False)):
+        return False
+    st.session_state[_RENDER_GUARD_KEY] = True
+    return True
+
+
+def _widget_key(key_prefix: str, name: str) -> str:
+    return f"{key_prefix}_{name}"
 
 
 def _clean(value: object) -> str:
@@ -43,7 +62,19 @@ def _case_rows(timeline: pd.DataFrame) -> pd.DataFrame:
     return rows.drop_duplicates(subset=["_label"]).reset_index(drop=True)
 
 
-def render_vens_selection_area(*, timeline: pd.DataFrame) -> None:
+def render_vens_selection_area(
+    *,
+    timeline: pd.DataFrame,
+    key_prefix: str = "vens_selection",
+) -> None:
+    cases = _case_rows(timeline)
+    if cases.empty:
+        st.info("Keine Timeline-Zeilen mit nutzendem EVU gefunden.")
+        return
+
+    if not _claim_vens_selection_render():
+        return
+
     st.divider()
     st.subheader("Nutzer-vEns auswählen oder korrigieren")
     st.caption(
@@ -51,15 +82,10 @@ def render_vens_selection_area(*, timeline: pd.DataFrame) -> None:
         "Bei mehreren gültigen Nutzer-vEns muss der fachlich passende Wert bewusst gewählt werden."
     )
 
-    cases = _case_rows(timeline)
-    if cases.empty:
-        st.info("Keine Timeline-Zeilen mit nutzendem EVU gefunden.")
-        return
-
     selected_label = st.selectbox(
         "Fall für vEns-Auswahl",
         cases["_label"].tolist(),
-        key="vens_selection_case",
+        key=_widget_key(key_prefix, "case"),
     )
     selected = cases[cases["_label"].eq(selected_label)].iloc[0]
     performing_ru = _clean(selected.get("performing_ru"))
@@ -74,29 +100,44 @@ def render_vens_selection_area(*, timeline: pd.DataFrame) -> None:
     selected_candidate_label = st.selectbox(
         "Nutzer-vEns",
         list(by_label),
-        key="vens_selection_value",
+        key=_widget_key(key_prefix, "value"),
     )
     selected_candidate = by_label[selected_candidate_label]
 
     scope = st.radio(
         "Gültigkeit der Auswahl",
         ["Nur für diesen Zeitraum", "Als Standard ab Fallbeginn"],
-        key="vens_selection_scope",
+        key=_widget_key(key_prefix, "scope"),
     )
     start_value = _clean(selected.get("period_start_utc"))
     end_value = _clean(selected.get("period_end_utc"))
-    valid_from = st.text_input("Gültig ab (UTC)", value=start_value, key="vens_selection_from")
+    valid_from = st.text_input(
+        "Gültig ab (UTC)",
+        value=start_value,
+        key=_widget_key(key_prefix, "from"),
+    )
     valid_to = st.text_input(
         "Gültig bis (UTC)",
         value=end_value if scope == "Nur für diesen Zeitraum" else "",
-        key="vens_selection_to",
+        key=_widget_key(key_prefix, "to"),
     )
     priority = 10 if scope == "Nur für diesen Zeitraum" else 100
     st.caption(f"Technische Priorität: {priority}. Kleinere Zahl gewinnt bei der Auflösung.")
-    changed_by = st.text_input("Bearbeiter", value=getpass.getuser(), key="vens_selection_by")
-    comment = st.text_area("Begründung / Kommentar", key="vens_selection_comment")
+    changed_by = st.text_input(
+        "Bearbeiter",
+        value=getpass.getuser(),
+        key=_widget_key(key_prefix, "by"),
+    )
+    comment = st.text_area(
+        "Begründung / Kommentar",
+        key=_widget_key(key_prefix, "comment"),
+    )
 
-    if st.button("vEns-Mapping speichern", type="primary", key="vens_selection_save"):
+    if st.button(
+        "vEns-Mapping speichern",
+        type="primary",
+        key=_widget_key(key_prefix, "save"),
+    ):
         try:
             action = save_mapping(
                 performing_ru=performing_ru,
