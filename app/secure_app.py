@@ -66,6 +66,7 @@ from friendly_ui_density_module import apply_density_cleanup  # noqa: E402
 from friendly_ui_theme_module import apply_theme, render_theme_toggle  # noqa: E402
 from local_auth_runtime_bridge import authenticated_runtime  # noqa: E402
 from manual_override_gap_policy_runtime_module import install_gap_policy_labels  # noqa: E402
+from manual_override_overlap_runtime_module import install_overlap_correction_workflow  # noqa: E402
 from n01_hardened_runtime_bridge import (  # noqa: E402
     install_n01_hardened_runtime,
     restore_n01_hardened_runtime,
@@ -83,6 +84,7 @@ install_compact_login_views()
 install_gap_policy_labels()
 install_remove_vens_runtime()
 install_operator_gate_detail_runtime()
+install_overlap_correction_workflow()
 
 from local_auth_ui_module import (  # noqa: E402
     render_admin_area,
@@ -115,6 +117,7 @@ PHASE11H_GAP_POLICY_LABEL_MARKER = "NETZENTGELT_GAP_POLICY_LABELS_PHASE11H_V1_20
 PHASE11L_VENS_REMOVED_MARKER = "NETZENTGELT_VENS_SELECTION_REMOVED_PHASE11L_V1_20260618"
 PHASE11M_REVIEW_BLOCK_REMOVED_MARKER = "NETZENTGELT_REVIEW_BLOCK_REMOVED_PHASE11M_V1_20260618"
 PHASE11O_GATE_DETAIL_MARKER = "NETZENTGELT_OPERATOR_GATE_DETAIL_PHASE11O_V1_20260618"
+PHASE11P_OVERLAP_WORKFLOW_MARKER = "NETZENTGELT_OVERLAP_CORRECTION_WORKFLOW_PHASE11P_V1_20260618"
 
 
 st.set_page_config(
