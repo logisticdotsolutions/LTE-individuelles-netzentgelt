@@ -146,7 +146,7 @@ def _render_sorted_open_tasks(
     st.subheader("Offene Aufgaben")
     st.caption(
         "Bearbeite zuerst alle blockierenden Probleme. Die Tabellen sind nach Loknummer sortiert. "
-        "Öffne einen Fall direkt unterhalb der jeweiligen Liste."
+        "Öffne einen Fall direkt unterhalb der jeweiligen Liste; die Bearbeitung erfolgt im Reiter '3. Fall bearbeiten'."
     )
     blocking_gate = sort_operator_table(operator_ui._friendly_gate_table(export_gate, only_status="BLOCKED", findings=findings))
     warning_gate = sort_operator_table(operator_ui._friendly_gate_table(export_gate, only_status="WARNING", findings=findings))
@@ -202,8 +202,9 @@ def _render_sorted_open_tasks(
                 mime="text/csv",
                 key="download_operator_tasks_csv_phase10a",
             )
-    timeline = case_timeline_loader() if st.session_state.get(SESSION_CASE_LOCO_KEY) else pd.DataFrame()
-    render_case_workspace(user=user, findings=findings, timeline=timeline)
+    selected_loco = str(st.session_state.get(SESSION_CASE_LOCO_KEY, "")).strip()
+    if selected_loco:
+        st.info(f"Fall Lok {selected_loco} ist geöffnet. Wechsle für Prüfung und Korrektur in den Reiter '3. Fall bearbeiten'.")
 
 
 def _without_legacy_override_info(original_info):
@@ -248,15 +249,22 @@ def operator_workflow_runtime(user: UserContext) -> Iterator[None]:
         st.info = _without_legacy_override_info(original_info)
         try:
             result = original_cockpit(*args, **kwargs)
+        except Exception as error:
+            st.error(f"Korrektur-Cockpit konnte nicht geladen werden: {error}")
+            return None
         finally:
             st.info = original_info
+
         timeline = case_timeline() if st.session_state.get(SESSION_CASE_LOCO_KEY) else pd.DataFrame()
-        render_case_workspace(
-            user=user,
-            findings=kwargs.get("findings"),
-            timeline=timeline,
-            compact=True,
-        )
+        try:
+            render_case_workspace(
+                user=user,
+                findings=kwargs.get("findings"),
+                timeline=timeline,
+                compact=True,
+            )
+        except Exception as error:
+            st.error(f"Fall-Arbeitsbereich konnte nicht geladen werden: {error}")
         return result
 
     def pipeline(*args: Any, **kwargs: Any):
