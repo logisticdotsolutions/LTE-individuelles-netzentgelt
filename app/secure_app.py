@@ -56,6 +56,7 @@ from ae01_hardened_runtime_bridge import (  # noqa: E402
 )
 from browser_title_module import DEFAULT_BROWSER_TITLE, enforce_browser_title  # noqa: E402
 from compact_login_ui_runtime_module import install_compact_login_views  # noqa: E402
+from dual_role_runtime_module import install_dual_operator_role_runtime  # noqa: E402
 from export_exception_runtime_bridge import export_exception_runtime  # noqa: E402
 from export_exception_ui_module import (  # noqa: E402
     render_export_exception_area,
@@ -85,6 +86,7 @@ from remove_vens_runtime_module import install_remove_vens_runtime  # noqa: E402
 
 install_compact_copy_runtime()
 install_compact_login_views()
+install_dual_operator_role_runtime()
 install_gap_policy_labels()
 install_remove_vens_runtime()
 install_operator_gate_detail_runtime()
@@ -123,6 +125,7 @@ PHASE11M_REVIEW_BLOCK_REMOVED_MARKER = "NETZENTGELT_REVIEW_BLOCK_REMOVED_PHASE11
 PHASE11O_GATE_DETAIL_MARKER = "NETZENTGELT_OPERATOR_GATE_DETAIL_PHASE11O_V1_20260618"
 PHASE11P_OVERLAP_WORKFLOW_MARKER = "NETZENTGELT_OVERLAP_CORRECTION_WORKFLOW_PHASE11P_V1_20260618"
 PHASE11R_REMOVE_REVIEW_TAB_MARKER = "NETZENTGELT_REMOVE_REVIEW_TAB_PHASE11R_V1_20260618"
+PHASE11S_DUAL_ROLE_MARKER = "NETZENTGELT_DUAL_OPERATOR_ROLE_PHASE11S_V1_20260618"
 
 
 st.set_page_config(
