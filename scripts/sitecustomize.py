@@ -89,8 +89,10 @@ def _patch_phase6d(module) -> None:
         original_finalize(con, run_id)
         _rebuild_exact_overlap_diff_ru(con, run_id)
         from feedback_rule_adjustments_module import apply_feedback_rule_adjustments_phase11i
+        from confirmed_gap_resolution_module import apply_confirmed_gap_resolution
 
         apply_feedback_rule_adjustments_phase11i(con, run_id)
+        apply_confirmed_gap_resolution(con, run_id)
 
     module.finalize_quality_gate_phase6d = patched_finalize_quality_gate_phase6d
     module._PHASE11I_FEEDBACK_PATCHED = True
