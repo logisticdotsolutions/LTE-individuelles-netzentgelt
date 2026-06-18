@@ -18,7 +18,8 @@ def install_gap_policy_labels() -> None:
         "POSSIBLE_COLD_STAND_SAME_LOCATION": "Kaltabstellung prüfen",
     })
 
-    if getattr(suggestion_module, "_PHASE11J_GAP_MATRIX_PATCHED", False):
+    if getattr(suggestion_module, "_PHASE11M_GAP_MATRIX_PATCHED", False):
+        override_ui.build_suggestion_table = suggestion_module.build_suggestion_table
         return
 
     original_build_suggestion_table = suggestion_module.build_suggestion_table
@@ -86,7 +87,7 @@ def install_gap_policy_labels() -> None:
                     values.append(parsed.max())
         return max(values) if values else None
 
-    def proposal_rows(timeline):
+    def movement_rows(timeline):
         if timeline is None or getattr(timeline, "empty", True) or "row_type" not in timeline.columns:
             return []
         movements = timeline[timeline["row_type"].fillna("").astype(str).str.upper().eq("MOVEMENT")].copy()
@@ -131,10 +132,54 @@ def install_gap_policy_labels() -> None:
                     rows.append(suggestion)
         return rows
 
+    def finding_gap_rows(findings, timeline):
+        if findings is None or getattr(findings, "empty", True):
+            return []
+        work = findings.copy()
+        rule_col = "rule_id" if "rule_id" in work.columns else "rule" if "rule" in work.columns else None
+        if not rule_col:
+            return []
+        rules = work[rule_col].fillna("").astype(str).str.upper()
+        work = work[rules.isin(["R010", "R010.5", "R015", "R016"])].copy()
+        if work.empty:
+            return []
+        rows = []
+        for _, row in work.iterrows():
+            loco = clean(row.get("loco_no"))
+            start = ts(row.get("period_start_utc"))
+            end = ts(row.get("period_end_utc"))
+            if not loco or start is None:
+                continue
+            duration = None if end is None else float((end - start).total_seconds() / 60.0)
+            before_ru = after_ru = before_loc = after_loc = ""
+            if timeline is not None and not timeline.empty and "loco_no" in timeline.columns:
+                movements = timeline[(timeline["loco_no"].fillna("").astype(str).str.strip() == loco) & (timeline["row_type"].fillna("").astype(str).str.upper() == "MOVEMENT")].copy()
+                if not movements.empty:
+                    movements["_start"] = pd.to_datetime(movements.get("period_start_utc"), errors="coerce")
+                    movements["_end"] = pd.to_datetime(movements.get("period_end_utc"), errors="coerce")
+                    previous = movements[movements["_end"].le(start)].sort_values("_end").tail(1)
+                    following = movements[movements["_start"].ge(start)].sort_values("_start").head(1)
+                    if not previous.empty:
+                        prow = previous.iloc[0]
+                        before_ru = clean(prow.get("performing_ru"))
+                        before_loc = clean(prow.get("destination_name")) or clean(prow.get("origin_name"))
+                    if not following.empty:
+                        frow = following.iloc[0]
+                        after_ru = clean(frow.get("performing_ru"))
+                        after_loc = clean(frow.get("origin_name")) or clean(frow.get("destination_name"))
+            same_ru = before_ru if before_ru and before_ru == after_ru else ""
+            common = {"loco_no": loco, "transport_number": clean(row.get("transport_number")), "period_start_utc": ts_text(start), "period_end_utc": ts_text(end), "source_table": clean(row.get("source_table")), "source_row_id": clean(row.get("source_row_id"))}
+            evidence = f"GAP aus Fehlerliste; Dauer: {duration:.0f} Minuten; Ort davor: {before_loc or '-'}; Ort danach: {after_loc or '-'}; EVU davor/danach: {same_ru or '-'}; Endzeit bekannt: {'ja' if end is not None else 'nein'}." if duration is not None else f"GAP aus Fehlerliste; Dauer unbekannt; Ort davor: {before_loc or '-'}; Ort danach: {after_loc or '-'}; Endzeit bekannt: nein."
+            suggestion = classify(duration, end is not None, is_jump(before_loc, after_loc), same_ru, evidence, common, open_end=end is None)
+            if suggestion:
+                rows.append(suggestion)
+        return rows
+
     def build_suggestion_table_with_gap_matrix(*args, **kwargs):
         result = original_build_suggestion_table(*args, **kwargs)
         timeline = kwargs.get("timeline") if "timeline" in kwargs else None
-        rows = proposal_rows(timeline)
+        findings = kwargs.get("findings") if "findings" in kwargs else None
+        rows = movement_rows(timeline) + finding_gap_rows(findings, timeline)
         if rows:
             extra = pd.DataFrame(rows, columns=suggestion_module.SUGGESTION_COLUMNS)
             result = extra if result is None or result.empty else pd.concat([result, extra], ignore_index=True)
@@ -144,4 +189,5 @@ def install_gap_policy_labels() -> None:
         return result[result["suggestion_type"].fillna("").astype(str).ne("BORDER_QUARTER_HOUR_REVIEW")].reset_index(drop=True)
 
     suggestion_module.build_suggestion_table = build_suggestion_table_with_gap_matrix
-    suggestion_module._PHASE11J_GAP_MATRIX_PATCHED = True
+    override_ui.build_suggestion_table = build_suggestion_table_with_gap_matrix
+    suggestion_module._PHASE11M_GAP_MATRIX_PATCHED = True
