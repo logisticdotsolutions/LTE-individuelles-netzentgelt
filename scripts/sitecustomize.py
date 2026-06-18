@@ -32,6 +32,7 @@ def _rebuild_exact_overlap_diff_ru(con, run_id: str) -> None:
                 de_period_end_utc as interval_end_utc
             from core_usage_assignment_segment_movements
             where nullif(trim(loco_no), '') is not null
+              and nullif(trim(performing_ru), '') is not null
               and de_period_start_utc is not null
               and de_period_end_utc is not null
               and de_period_end_utc > de_period_start_utc
@@ -47,7 +48,7 @@ def _rebuild_exact_overlap_diff_ru(con, run_id: str) -> None:
              and b.interval_id > a.interval_id
              and a.interval_start_utc < b.interval_end_utc
              and b.interval_start_utc < a.interval_end_utc
-             and coalesce(a.performing_ru, '#') <> coalesce(b.performing_ru, '#')
+             and trim(a.performing_ru) <> trim(b.performing_ru)
         ), day_spans as (
             select
                 o.loco_no,
@@ -81,7 +82,7 @@ def _rebuild_exact_overlap_diff_ru(con, run_id: str) -> None:
 
 
 def _patch_phase6d(module) -> None:
-    if getattr(module, "_PHASE11I_FEEDBACK_PATCHED", False):
+    if getattr(module, "_PHASE11N_OVERLAP_POLICY_PATCHED", False):
         return
     original_finalize = module.finalize_quality_gate_phase6d
 
@@ -90,12 +91,14 @@ def _patch_phase6d(module) -> None:
         _rebuild_exact_overlap_diff_ru(con, run_id)
         from feedback_rule_adjustments_module import apply_feedback_rule_adjustments_phase11i
         from confirmed_gap_resolution_module import apply_confirmed_gap_resolution
+        from overlap_policy_runtime_module import apply_overlap_policy_diff_evu_only
 
         apply_feedback_rule_adjustments_phase11i(con, run_id)
         apply_confirmed_gap_resolution(con, run_id)
+        apply_overlap_policy_diff_evu_only(con, run_id)
 
     module.finalize_quality_gate_phase6d = patched_finalize_quality_gate_phase6d
-    module._PHASE11I_FEEDBACK_PATCHED = True
+    module._PHASE11N_OVERLAP_POLICY_PATCHED = True
 
 
 def _import_hook(name, globals=None, locals=None, fromlist=(), level=0):
