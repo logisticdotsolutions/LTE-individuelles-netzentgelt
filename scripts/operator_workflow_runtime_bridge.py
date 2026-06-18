@@ -36,6 +36,36 @@ def _non_empty_locos(table: pd.DataFrame) -> list[str]:
     return sorted(values)
 
 
+def _loco_number_issue_mask(table: pd.DataFrame) -> pd.Series:
+    if table is None or table.empty:
+        return pd.Series(False, index=getattr(table, "index", []), dtype=bool)
+    mask = pd.Series(False, index=table.index, dtype=bool)
+    for column in ["Problem", "Warum?", "Naechster Schritt", "Regel", "Status", "Loknummer"]:
+        if column not in table.columns:
+            continue
+        text = table[column].fillna("").astype(str).str.strip().str.lower()
+        mask = mask | text.str.contains("dummy", regex=False)
+        mask = mask | text.str.contains("loknummer fehlt", regex=False)
+        mask = mask | text.str.contains("r012", regex=False)
+        mask = mask | text.eq("00000000000-0")
+        if column == "Loknummer":
+            mask = mask | text.eq("")
+    return mask
+
+
+def _force_blocking(table: pd.DataFrame) -> pd.DataFrame:
+    if table is None or table.empty:
+        return table
+    result = table.copy()
+    if "Status" in result.columns:
+        result["Status"] = "⛔ Gesperrt"
+    if "Auswirkung" in result.columns:
+        result["Auswirkung"] = "Export gesperrt"
+    if "Naechster Schritt" in result.columns:
+        result["Naechster Schritt"] = "Fall prüfen und jede betroffene Minute fachlich schließen."
+    return result
+
+
 def load_case_timeline_once(
     cache: dict[str, pd.DataFrame],
     loader: Callable[[], pd.DataFrame] = load_case_timeline_context,
@@ -86,42 +116,44 @@ def _render_compact_dashboard(*, operator_ui, export_gate, global_export_blocker
     if export_gate is None or export_gate.empty:
         st.info("Die Qualitätsprüfung wurde noch nicht berechnet. Führe zuerst 'Daten aktualisieren und neu prüfen' aus.")
         return
-    if summary.export_is_blocked:
-        st.error("⛔ Export derzeit gesperrt. Bearbeite die Fälle im Reiter '2. Offene Aufgaben'.")
-    elif summary.warning_days > 0:
-        st.warning("⚠️ Export möglich, aber fachliche Kontrolle empfohlen. Prüfe die Hinweise vor dem Download.")
+    if summary.export_is_blocked or summary.warning_days > 0:
+        st.error("⛔ Export derzeit gesperrt. Bearbeite alle offenen Lokbewegungs- und Loknummernfehler.")
     else:
-        st.success("✅ Export möglich. Die automatische Prüfung hat keine blockierenden Probleme erkannt.")
+        st.success("✅ Export möglich. Die automatische Prüfung hat keine offenen Sperren erkannt.")
 
     col_1, col_2, col_3, col_4 = st.columns(4)
     col_1.metric("Freigegebene Lok-Tage", summary.ready_days)
-    col_2.metric("Lok-Tage mit Hinweis", summary.warning_days)
-    col_3.metric("Gesperrte Lok-Tage", summary.blocked_days)
-    col_4.metric("Globale Export-Sperren", summary.global_blockers)
+    col_2.metric("Offene Lok-Tage", summary.blocked_days + summary.warning_days)
+    col_3.metric("Einzelne Fehler", summary.blocking_findings + summary.info_findings)
+    col_4.metric("Globale Sperren", summary.global_blockers)
 
     st.markdown("#### Empfohlener Ablauf")
     st.markdown(
         "  \n".join(
             [
                 "✅ **1. Daten aktualisieren:** aktuellen Datenstand laden und prüfen",
-                "🔎 **2. Offene Aufgaben:** blockierende Fälle direkt öffnen und bewerten",
+                "🔎 **2. Offene Aufgaben:** alle Sperren direkt öffnen und bewerten",
                 "🛠️ **3. Fall bearbeiten:** Korrektur, Klassifikation oder Ausnahme dokumentieren",
-                "📦 **4. Export erstellen:** erst nach erfolgreicher Prüfung herunterladen",
+                "📦 **4. Export erstellen:** erst nach vollständiger Klärung herunterladen",
             ]
         )
     )
 
-    with st.expander("Detailtabellen und technische Kennzahlen anzeigen", expanded=False):
-        st.caption("Diese Details dienen der Nachvollziehbarkeit. Für den täglichen Ablauf reicht die Aufgabenliste.")
+    with st.expander("Audit-Details anzeigen", expanded=False):
+        st.caption("Technische Details bleiben auditierbar. Für die tägliche Bearbeitung zählen nur die offenen Sperren.")
         blocked_days = sort_operator_table(
             operator_ui._friendly_gate_table(export_gate, only_status="BLOCKED", findings=findings)
         )
-        if not blocked_days.empty:
-            st.markdown("##### Gesperrte Lok-Tage")
-            st.dataframe(blocked_days, use_container_width=True, hide_index=True)
+        warning_days = sort_operator_table(
+            operator_ui._friendly_gate_table(export_gate, only_status="WARNING", findings=findings)
+        )
+        combined = pd.concat([blocked_days, warning_days], ignore_index=True) if not warning_days.empty else blocked_days
+        if not combined.empty:
+            st.markdown("##### Offene Lok-Tage")
+            st.dataframe(_force_blocking(combined), use_container_width=True, hide_index=True)
         global_table = operator_ui._friendly_global_blockers(global_export_blockers)
         if not global_table.empty:
-            st.markdown("##### Globale Export-Sperren")
+            st.markdown("##### Globale Sperren")
             st.dataframe(global_table, use_container_width=True, hide_index=True)
         if operational_kpis is not None and not operational_kpis.empty:
             st.markdown("##### Operative Kennzahlen")
@@ -130,8 +162,7 @@ def _render_compact_dashboard(*, operator_ui, export_gate, global_export_blocker
             st.markdown("##### Vollständigkeitsprüfung")
             st.dataframe(reconciliation, use_container_width=True, hide_index=True)
         st.write(f"Bewusst ausgeschlossene Exportzeilen: **{summary.excluded_rows}**")
-        st.write(f"Blockierende Einzelprüffälle: **{summary.blocking_findings}**")
-        st.write(f"Nicht blockierende Hinweise: **{summary.info_findings}**")
+        st.write(f"Offene Einzelprüffälle: **{summary.blocking_findings + summary.info_findings}**")
 
 
 def _render_sorted_open_tasks(
@@ -145,63 +176,54 @@ def _render_sorted_open_tasks(
 ) -> None:
     st.subheader("Offene Aufgaben")
     st.caption(
-        "Bearbeite zuerst alle blockierenden Probleme. Die Tabellen sind nach Loknummer sortiert. "
-        "Öffne einen Fall direkt unterhalb der jeweiligen Liste; die Bearbeitung erfolgt im Reiter '3. Fall bearbeiten'."
+        "Es gibt in dieser Ansicht keine Hinweise und keine technischen Nebenlisten mehr. "
+        "Alles ist eine Sperre, solange nicht jede betroffene Minute fachlich geklärt ist."
     )
     blocking_gate = sort_operator_table(operator_ui._friendly_gate_table(export_gate, only_status="BLOCKED", findings=findings))
     warning_gate = sort_operator_table(operator_ui._friendly_gate_table(export_gate, only_status="WARNING", findings=findings))
-    blockers = sort_operator_table(operator_ui._friendly_global_blockers(global_export_blockers))
-    finding_table = sort_operator_table(operator_ui._friendly_findings(findings, include_info=True))
-    blocking_findings = finding_table[finding_table["Auswirkung"].eq("Export gesperrt")].copy() if not finding_table.empty else finding_table
-    hints = finding_table[~finding_table["Auswirkung"].eq("Export gesperrt")].copy() if not finding_table.empty else finding_table
+    gate_table = pd.concat([blocking_gate, warning_gate], ignore_index=True) if not warning_gate.empty else blocking_gate
+    gate_table = _force_blocking(sort_operator_table(gate_table))
 
-    tab_blocked, tab_global, tab_hints, tab_rules = st.tabs(
-        [
-            f"⛔ Gesperrte Lok-Tage ({len(blocking_gate)})",
-            f"⛔ Globale Sperren ({len(blockers)})",
-            f"⚠️ Hinweise ({len(warning_gate) + len(hints)})",
-            f"Technische Einzelprüffälle ({len(finding_table)})",
-        ]
-    )
-    with tab_blocked:
-        if blocking_gate.empty:
-            st.success("Keine gesperrten Lok-Tage vorhanden.")
+    blocker_table = _force_blocking(sort_operator_table(operator_ui._friendly_global_blockers(global_export_blockers)))
+    finding_table = _force_blocking(sort_operator_table(operator_ui._friendly_findings(findings, include_info=True)))
+
+    movement_parts = []
+    loco_parts = []
+    for table in [gate_table, blocker_table, finding_table]:
+        if table is None or table.empty:
+            continue
+        mask = _loco_number_issue_mask(table)
+        if mask.any():
+            loco_parts.append(table[mask].copy())
+        if (~mask).any():
+            movement_parts.append(table[~mask].copy())
+
+    movement_table = pd.concat(movement_parts, ignore_index=True) if movement_parts else pd.DataFrame()
+    loco_table = pd.concat(loco_parts, ignore_index=True) if loco_parts else pd.DataFrame()
+
+    tab_movement, tab_loco = st.tabs([
+        f"⛔ Fehler in Lokbewegung ({len(movement_table)})",
+        f"⛔ Fehlende Loknummer / Dummylok ({len(loco_table)})",
+    ])
+
+    with tab_movement:
+        st.markdown("##### Fehler in Lokbewegung")
+        st.caption("GAPs, Überschneidungen, fehlende EVU-Zuordnung oder andere Bewegungsfehler. Export bleibt gesperrt, bis jede Minute geschlossen ist.")
+        if movement_table.empty:
+            st.success("Keine offenen Fehler in Lokbewegungen vorhanden.")
         else:
-            st.dataframe(blocking_gate, use_container_width=True, hide_index=True)
-            _render_direct_case_open(blocking_gate, key_suffix="blocked")
-        if not blocking_findings.empty:
-            with st.expander("Zugehörige blockierende Einzelprüffälle anzeigen", expanded=False):
-                st.dataframe(blocking_findings, use_container_width=True, hide_index=True)
-    with tab_global:
-        if blockers.empty:
-            st.success("Keine globalen Export-Sperren vorhanden.")
+            st.dataframe(movement_table, use_container_width=True, hide_index=True)
+            _render_direct_case_open(movement_table, key_suffix="movement")
+
+    with tab_loco:
+        st.markdown("##### Fehlende Loknummer / Dummylok")
+        st.caption("Fälle ohne echte Loknummer oder mit Dummy-/Planungslok. Diese Fälle müssen vor Export fachlich korrigiert werden.")
+        if loco_table.empty:
+            st.success("Keine offenen Loknummer-/Dummy-Fälle vorhanden.")
         else:
-            st.dataframe(blockers, use_container_width=True, hide_index=True)
-    with tab_hints:
-        if warning_gate.empty and hints.empty:
-            st.success("Keine Hinweise vorhanden.")
-        else:
-            if not warning_gate.empty:
-                st.markdown("##### Lok-Tage mit Hinweis")
-                st.dataframe(warning_gate, use_container_width=True, hide_index=True)
-                _render_direct_case_open(warning_gate, key_suffix="warning")
-            if not hints.empty:
-                st.markdown("##### Weitere Hinweise aus dem Regelwerk")
-                st.dataframe(hints, use_container_width=True, hide_index=True)
-    with tab_rules:
-        st.caption("Technische Detailansicht. Im normalen Betrieb zuerst die vorherigen Reiter verwenden.")
-        if finding_table.empty:
-            st.info("Keine Einzelprüffälle vorhanden.")
-        else:
-            st.dataframe(finding_table, use_container_width=True, hide_index=True)
-            csv = finding_table.to_csv(index=False, sep=";").encode("utf-8-sig")
-            st.download_button(
-                "Arbeitsliste als CSV herunterladen",
-                data=csv,
-                file_name="offene_aufgaben.csv",
-                mime="text/csv",
-                key="download_operator_tasks_csv_phase10a",
-            )
+            st.dataframe(loco_table, use_container_width=True, hide_index=True)
+            _render_direct_case_open(loco_table, key_suffix="loco")
+
     selected_loco = str(st.session_state.get(SESSION_CASE_LOCO_KEY, "")).strip()
     if selected_loco:
         st.info(f"Fall Lok {selected_loco} ist geöffnet. Wechsle für Prüfung und Korrektur in den Reiter '3. Fall bearbeiten'.")
