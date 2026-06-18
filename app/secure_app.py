@@ -75,12 +75,14 @@ from operational_day_filter_ui_runtime_bridge import (  # noqa: E402
     render_early_sidebar_operational_day_filter,
     restore_operational_day_filter_runtime,
 )
+from operator_gate_detail_runtime_module import install_operator_gate_detail_runtime  # noqa: E402
 from remove_vens_runtime_module import install_remove_vens_runtime  # noqa: E402
 
 install_compact_copy_runtime()
 install_compact_login_views()
 install_gap_policy_labels()
 install_remove_vens_runtime()
+install_operator_gate_detail_runtime()
 
 from local_auth_ui_module import (  # noqa: E402
     render_admin_area,
@@ -112,6 +114,7 @@ PHASE11G_EARLY_DAY_FILTER_MARKER = "NETZENTGELT_EARLY_OPERATIONAL_DAY_FILTER_PHA
 PHASE11H_GAP_POLICY_LABEL_MARKER = "NETZENTGELT_GAP_POLICY_LABELS_PHASE11H_V1_20260618"
 PHASE11L_VENS_REMOVED_MARKER = "NETZENTGELT_VENS_SELECTION_REMOVED_PHASE11L_V1_20260618"
 PHASE11M_REVIEW_BLOCK_REMOVED_MARKER = "NETZENTGELT_REVIEW_BLOCK_REMOVED_PHASE11M_V1_20260618"
+PHASE11O_GATE_DETAIL_MARKER = "NETZENTGELT_OPERATOR_GATE_DETAIL_PHASE11O_V1_20260618"
 
 
 st.set_page_config(
