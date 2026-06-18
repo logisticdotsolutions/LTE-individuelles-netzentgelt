@@ -151,3 +151,52 @@ def test_different_evu_overlap_remains_report_relevant() -> None:
     assert con.execute("select count(*) from dq_findings where rule_id='R011'").fetchone()[0] == 1
     assert con.execute("select exact_overlap_minutes from dq_phase6d_exact_overlap_days").fetchone()[0] == 30.0
     assert con.execute("select overlap_minutes, gate_status from dq_export_gate").fetchone() == (30, "BLOCKED")
+
+
+def test_touching_intervals_are_not_overlap_even_with_different_evu() -> None:
+    con = duckdb.connect(":memory:")
+    _setup(con)
+    con.execute(
+        """
+        insert into core_loco_timeline values
+        ('MOVEMENT','IN_REPORT','L3','T1','LTE DE','2026-06-16 10:00:00','2026-06-16 11:00:00','raw',1),
+        ('MOVEMENT','IN_REPORT','L3','T2','LTE NL','2026-06-16 11:00:00','2026-06-16 12:00:00','raw',2)
+        """
+    )
+    con.execute(
+        """
+        insert into core_usage_assignment_segment_movements values
+        ('L3','LTE DE','2026-06-16 10:00:00','2026-06-16 11:00:00',1),
+        ('L3','LTE NL','2026-06-16 11:00:00','2026-06-16 12:00:00',2)
+        """
+    )
+    con.execute(
+        """
+        insert into dq_findings values
+        ('RUN','ERROR','R011','TIMELINE','L3','T2','LTE NL','MOVEMENT',null,'2026-06-16 11:00:00','2026-06-16 12:00:00','overlap','check','open','raw',2,'T1')
+        """
+    )
+
+    apply_overlap_policy_diff_evu_only(con, "RUN")
+
+    assert con.execute("select count(*) from dq_findings where rule_id='R011'").fetchone()[0] == 0
+    assert con.execute("select count(*) from dq_phase6d_exact_overlap_days").fetchone()[0] == 0
+
+
+def test_overlap_minutes_ignore_same_evu_pairs_and_sum_different_evu_pairs() -> None:
+    con = duckdb.connect(":memory:")
+    _setup(con)
+    con.execute(
+        """
+        insert into core_usage_assignment_segment_movements values
+        ('L4','LTE DE','2026-06-16 08:00:00','2026-06-16 10:00:00',1),
+        ('L4','LTE DE','2026-06-16 09:00:00','2026-06-16 11:00:00',2),
+        ('L4','LTE NL','2026-06-16 09:30:00','2026-06-16 10:30:00',3)
+        """
+    )
+
+    apply_overlap_policy_diff_evu_only(con, "RUN")
+
+    # Same-EVU overlap T1/T2 is ignored. Different-EVU overlaps are:
+    # T1/T3 = 30 minutes, T2/T3 = 60 minutes.
+    assert con.execute("select exact_overlap_minutes from dq_phase6d_exact_overlap_days where loco_no='L4'").fetchone()[0] == 90.0
