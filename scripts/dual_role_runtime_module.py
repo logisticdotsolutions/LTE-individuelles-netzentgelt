@@ -5,7 +5,7 @@ from typing import Iterable, Mapping
 import pandas as pd
 
 
-DUAL_ROLE_RUNTIME_MARKER = "NETZENTGELT_DUAL_OPERATOR_ROLE_PHASE11S_V1_20260618"
+DUAL_ROLE_RUNTIME_MARKER = "NETZENTGELT_DUAL_OPERATOR_ROLE_PHASE11S_V2_20260618"
 DUAL_ROLE = "LTE_DE_NL"
 
 
@@ -14,21 +14,15 @@ def install_dual_operator_role_runtime() -> None:
     import local_auth_module as auth
     import role_scope_module as scope
 
-    if getattr(auth, "_PHASE11S_DUAL_ROLE_PATCHED", False):
+    if getattr(auth, "_PHASE11S_DUAL_ROLE_PATCHED_V2", False):
         return
 
     if DUAL_ROLE not in auth.ALLOWED_ROLES:
         auth.ALLOWED_ROLES = tuple([*auth.ALLOWED_ROLES, DUAL_ROLE])
 
     scope.LTE_DE_NL_ROLE = DUAL_ROLE
-    scope.OPERATIONAL_ROLES = (scope.LTE_DE_ROLE, scope.LTE_NL_ROLE, DUAL_ROLE)
-
-    def _with_dual(roles: tuple[str, ...]) -> tuple[str, ...]:
-        values = list(roles)
-        if scope.LTE_DE_ROLE in values or scope.LTE_NL_ROLE in values:
-            if DUAL_ROLE not in values:
-                values.append(DUAL_ROLE)
-        return tuple(values)
+    BASE_OPERATIONAL_ROLES = (scope.LTE_DE_ROLE, scope.LTE_NL_ROLE)
+    ALL_OPERATIONAL_ROLES = (scope.LTE_DE_ROLE, scope.LTE_NL_ROLE, DUAL_ROLE)
 
     def decide_scope_with_dual(*, performing_ru: object = "", order_owner: object = ""):
         ru_text = scope._clean(performing_ru)
@@ -37,16 +31,16 @@ def install_dual_operator_role_runtime() -> None:
 
         if matched_roles == {scope.LTE_DE_ROLE, scope.LTE_NL_ROLE}:
             status = "CROSS_SCOPE_CONFLICT"
-            visible_roles = scope.OPERATIONAL_ROLES
+            visible_roles = BASE_OPERATIONAL_ROLES
         elif matched_roles == {scope.LTE_DE_ROLE}:
             status = "ASSIGNED_LTE_DE"
-            visible_roles = _with_dual((scope.LTE_DE_ROLE,))
+            visible_roles = (scope.LTE_DE_ROLE,)
         elif matched_roles == {scope.LTE_NL_ROLE}:
             status = "ASSIGNED_LTE_NL"
-            visible_roles = _with_dual((scope.LTE_NL_ROLE,))
+            visible_roles = (scope.LTE_NL_ROLE,)
         else:
             status = "SHARED_UNASSIGNED"
-            visible_roles = scope.OPERATIONAL_ROLES
+            visible_roles = BASE_OPERATIONAL_ROLES
 
         return scope.ScopeDecision(
             visible_roles=tuple(visible_roles),
@@ -56,17 +50,25 @@ def install_dual_operator_role_runtime() -> None:
             order_owner=owner_text,
         )
 
+    def visible_for_with_dual(self, role_code: str) -> bool:
+        role = scope.normalize_role(role_code)
+        if role == scope.ADMIN_ROLE:
+            return True
+        if role == DUAL_ROLE:
+            return bool(set(self.visible_roles) & set(BASE_OPERATIONAL_ROLES))
+        return role in self.visible_roles
+
     def filter_dataframe_for_role_with_dual(data: pd.DataFrame, role_code: str) -> pd.DataFrame:
         if data is None:
             return pd.DataFrame()
         role = scope.normalize_role(role_code)
         if role == scope.ADMIN_ROLE or data.empty:
             return data.copy()
-        if role not in scope.OPERATIONAL_ROLES:
+        if role not in ALL_OPERATIONAL_ROLES:
             return data.iloc[0:0].copy()
         scoped = scope.add_scope_columns(data)
         mask = scoped["_scope_visible_roles"].fillna("").astype(str).str.split("|").apply(
-            lambda roles: role in roles
+            lambda roles: bool(set(roles) & set(BASE_OPERATIONAL_ROLES)) if role == DUAL_ROLE else role in roles
         )
         return scoped.loc[mask].drop(columns=["_scope_status", "_scope_visible_roles"], errors="ignore").copy()
 
@@ -89,11 +91,10 @@ def install_dual_operator_role_runtime() -> None:
         role = scope.normalize_role(role_code)
         if role == scope.ADMIN_ROLE:
             return values
-        if role not in scope.OPERATIONAL_ROLES:
+        if role not in ALL_OPERATIONAL_ROLES:
             raise PermissionError("Für diese Rolle ist kein Export zulässig.")
         matched_roles = scope.roles_for_values(values)
         if role == DUAL_ROLE:
-            # Dual role may export LTE_DE and LTE_NL, plus shared/unresolved/non-LTE rows.
             return values
         if matched_roles and role not in matched_roles:
             raise PermissionError(
@@ -107,18 +108,14 @@ def install_dual_operator_role_runtime() -> None:
         if role == scope.ADMIN_ROLE:
             return {str(key): dict(value) for key, value in groups.items()}
         if role == DUAL_ROLE:
-            result: dict[str, dict[str, object]] = {}
-            for key in [scope.LTE_DE_ROLE, scope.LTE_NL_ROLE]:
-                if key in groups:
-                    result[key] = dict(groups[key])
-            return result
-        if role in (scope.LTE_DE_ROLE, scope.LTE_NL_ROLE) and role in groups:
+            return {
+                key: dict(groups[key])
+                for key in [scope.LTE_DE_ROLE, scope.LTE_NL_ROLE]
+                if key in groups
+            }
+        if role in BASE_OPERATIONAL_ROLES and role in groups:
             return {role: dict(groups[role])}
         return {}
-
-    def visible_for_with_dual(self, role_code: str) -> bool:
-        role = scope.normalize_role(role_code)
-        return role == scope.ADMIN_ROLE or role in self.visible_roles
 
     scope.decide_scope = decide_scope_with_dual
     scope.filter_dataframe_for_role = filter_dataframe_for_role_with_dual
@@ -128,4 +125,6 @@ def install_dual_operator_role_runtime() -> None:
     scope.ScopeDecision.visible_for = visible_for_with_dual
 
     auth._PHASE11S_DUAL_ROLE_PATCHED = True
+    auth._PHASE11S_DUAL_ROLE_PATCHED_V2 = True
     scope._PHASE11S_DUAL_ROLE_PATCHED = True
+    scope._PHASE11S_DUAL_ROLE_PATCHED_V2 = True
