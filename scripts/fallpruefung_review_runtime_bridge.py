@@ -62,6 +62,46 @@ def _gap_duration_minutes(row: pd.Series) -> float | None:
     return _duration_minutes(row.get("period_start_utc"), row.get("period_end_utc"))
 
 
+def _new_cold_stand_suggestion(
+    *,
+    loco_no: object,
+    transport_number: object,
+    period_start_utc: object,
+    period_end_utc: object,
+    source_table: object,
+    source_row_id: object,
+    minutes: float,
+    evidence_prefix: str,
+) -> object:
+    return suggestion_module._new_suggestion(
+        suggestion_type=COLD_STAND_SUGGESTION_TYPE,
+        override_type="CLASSIFY_GAP",
+        classification_code="COLD_STAND",
+        confidence="MEDIUM",
+        suggested_value="Mögliche kalte Abstellung",
+        loco_no=_clean(loco_no),
+        transport_number=_clean(transport_number),
+        period_start_utc=(
+            suggestion_module._timestamp_text(period_start_utc)
+            or _clean(period_start_utc)
+        ),
+        period_end_utc=(
+            suggestion_module._timestamp_text(period_end_utc)
+            or _clean(period_end_utc)
+        ),
+        source_table=_clean(source_table),
+        source_row_id=_clean(source_row_id),
+        reason=(
+            "DE-relevante Unterbrechung über 120 Minuten erkannt. "
+            "Bitte prüfen, ob eine kalte Abstellung vorliegt."
+        ),
+        evidence=(
+            f"{evidence_prefix} GAP-Dauer: {minutes:.0f} Minuten; "
+            f"Schwellwert: > {COLD_STAND_PROPOSAL_MIN_MINUTES} Minuten."
+        ),
+    )
+
+
 def _build_gap_cold_stand_suggestions(timeline: pd.DataFrame) -> list[object]:
     """Für jede DE-relevante GAP > 120 Minuten einen manuellen Prüf-Vorschlag erzeugen."""
     if timeline is None or timeline.empty or "row_type" not in timeline.columns:
@@ -70,6 +110,9 @@ def _build_gap_cold_stand_suggestions(timeline: pd.DataFrame) -> list[object]:
     gap_rows = timeline[
         timeline["row_type"].fillna("").astype(str).str.strip().str.upper().eq("GAP")
     ].copy()
+
+    if gap_rows.empty:
+        return []
 
     if "gap_relevant_de" in gap_rows.columns:
         gap_rows = gap_rows[gap_rows["gap_relevant_de"].apply(_bool_flag)]
@@ -80,33 +123,68 @@ def _build_gap_cold_stand_suggestions(timeline: pd.DataFrame) -> list[object]:
         if minutes is None or minutes <= COLD_STAND_PROPOSAL_MIN_MINUTES:
             continue
         suggestions.append(
-            suggestion_module._new_suggestion(
-                suggestion_type=COLD_STAND_SUGGESTION_TYPE,
-                override_type="CLASSIFY_GAP",
-                classification_code="COLD_STAND",
-                confidence="MEDIUM",
-                loco_no=_clean(row.get("loco_no")),
-                transport_number=_clean(row.get("transport_number")),
-                period_start_utc=(
-                    suggestion_module._timestamp_text(row.get("period_start_utc"))
-                    or _clean(row.get("period_start_utc"))
-                ),
-                period_end_utc=(
-                    suggestion_module._timestamp_text(row.get("period_end_utc"))
-                    or _clean(row.get("period_end_utc"))
-                ),
-                source_table=_clean(row.get("source_table")),
-                source_row_id=_clean(row.get("source_row_id")),
-                reason=(
-                    "DE-relevante Unterbrechung über 120 Minuten erkannt. "
-                    "Bitte prüfen, ob eine kalte Abstellung vorliegt."
-                ),
-                evidence=(
-                    f"GAP-Dauer: {minutes:.0f} Minuten; "
-                    f"Schwellwert: > {COLD_STAND_PROPOSAL_MIN_MINUTES} Minuten."
-                ),
+            _new_cold_stand_suggestion(
+                loco_no=row.get("loco_no"),
+                transport_number=row.get("transport_number"),
+                period_start_utc=row.get("period_start_utc"),
+                period_end_utc=row.get("period_end_utc"),
+                source_table=row.get("source_table"),
+                source_row_id=row.get("source_row_id"),
+                minutes=minutes,
+                evidence_prefix="Explizite GAP-Zeile.",
             )
         )
+    return suggestions
+
+
+def _build_legacy_movement_cold_stand_suggestions(timeline: pd.DataFrame) -> list[object]:
+    """Fallback für ältere Timeline-Stände ohne explizite GAP-Zeilen."""
+    if timeline is None or timeline.empty or "row_type" not in timeline.columns:
+        return []
+
+    movements = timeline[
+        timeline["row_type"].fillna("").astype(str).str.strip().str.upper().eq("MOVEMENT")
+    ].copy()
+    if movements.empty:
+        return []
+
+    movements["_cold_stand_sort_ts"] = pd.to_datetime(
+        movements.get("sequence_ts", movements.get("period_start_utc", "")),
+        errors="coerce",
+    )
+    suggestions = []
+    for loco_no, group in movements.groupby("loco_no", dropna=False):
+        ordered = group.sort_values(["_cold_stand_sort_ts", "source_row_id"], na_position="last").reset_index(drop=True)
+        for index in range(len(ordered) - 1):
+            previous = ordered.iloc[index]
+            following = ordered.iloc[index + 1]
+            previous_end = pd.to_datetime(previous.get("period_end_utc"), errors="coerce")
+            following_start = pd.to_datetime(following.get("period_start_utc"), errors="coerce")
+            if pd.isna(previous_end) or pd.isna(following_start) or following_start <= previous_end:
+                continue
+            minutes = float((following_start - previous_end).total_seconds() / 60.0)
+            if minutes <= COLD_STAND_PROPOSAL_MIN_MINUTES:
+                continue
+            previous_scope = _clean(previous.get("report_scope")).upper()
+            following_scope = _clean(following.get("report_scope")).upper()
+            if previous_scope and following_scope and "IN_REPORT" not in {previous_scope, following_scope}:
+                continue
+            previous_location = _clean(previous.get("destination_name"))
+            following_location = _clean(following.get("origin_name"))
+            if previous_location and following_location and previous_location != following_location:
+                continue
+            suggestions.append(
+                _new_cold_stand_suggestion(
+                    loco_no=loco_no,
+                    transport_number=previous.get("transport_number"),
+                    period_start_utc=previous_end,
+                    period_end_utc=following_start,
+                    source_table=previous.get("source_table"),
+                    source_row_id=previous.get("source_row_id"),
+                    minutes=minutes,
+                    evidence_prefix="Legacy-Timeline ohne explizite GAP-Zeile.",
+                )
+            )
     return suggestions
 
 
@@ -135,6 +213,9 @@ def install_fallpruefung_review_integration() -> FallpruefungReviewRuntime:
         gap_suggestions = _build_gap_cold_stand_suggestions(timeline)
         if gap_suggestions:
             return gap_suggestions
+        movement_suggestions = _build_legacy_movement_cold_stand_suggestions(timeline)
+        if movement_suggestions:
+            return movement_suggestions
         return _filter_legacy_cold_stand_suggestions(
             runtime.original_cold_stand_suggester(timeline)
         )
