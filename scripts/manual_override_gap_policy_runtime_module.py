@@ -63,19 +63,52 @@ def install_gap_policy_labels() -> None:
     def classify(duration, known_end: bool, jump: bool, same_ru: str, evidence: str, common: dict[str, str], open_end: bool = False):
         no_value = "Keine LTE-Zuweisung / nicht im Report"
         if jump:
-            return mk("GAP_NO_LTE_ASSIGNMENT", "NO_LTE_ASSIGNMENT", no_value, "MEDIUM", "Ortsunterbrechung erkannt. Vorschlag: keine Zuweisung / nicht im Report.", evidence, common)
+            return mk(
+                "GAP_NO_LTE_ASSIGNMENT",
+                "NO_LTE_ASSIGNMENT",
+                no_value,
+                "MEDIUM",
+                "Ortsunterbrechung erkannt. Vorschlag: keine Zuweisung / nicht im Report.",
+                evidence,
+                common,
+            )
         if open_end:
-            if duration is None:
-                return None
-            return mk("GAP_NO_LTE_ASSIGNMENT", "NO_LTE_ASSIGNMENT", no_value, "MEDIUM", f"GAP ohne bekannte Endzeit. Mindestunterbrechung: mind. {duration:.0f} Minuten. Vorschlag: keine Zuweisung / nicht im Report.", evidence, common)
+            # Offene GAPs bekommen bewusst keinen automatischen fachlichen Vorschlag.
+            # Die Mindestdauer wird nur in der Prüfoberfläche angezeigt, damit kein
+            # nicht belegter Abschluss der Unterbrechung simuliert wird.
+            return None
         if not known_end or duration is None:
             return None
         if duration < 120 and same_ru:
-            return mk("GAP_PERFORMING_RU_FROM_BOTH_NEIGHBOURS", "SAME_RU_CONTINUITY", same_ru, "HIGH", "GAP kleiner 120 Minuten, durchgehende Ortskette und EVU davor/danach ident. Vorschlag: dieses EVU.", evidence, common)
+            return mk(
+                "GAP_PERFORMING_RU_FROM_BOTH_NEIGHBOURS",
+                "SAME_RU_CONTINUITY",
+                same_ru,
+                "HIGH",
+                "GAP kleiner 120 Minuten, durchgehende Ortskette und EVU davor/danach ident. Vorschlag: dieses EVU.",
+                evidence,
+                common,
+            )
         if 120 < duration < 600:
-            return mk("POSSIBLE_COLD_STAND_SAME_LOCATION", "COLD_STAND", "Mögliche kalte Abstellung", "MEDIUM", "GAP größer 120 und kleiner 600 Minuten, Endzeit bekannt und Ortskette durchgehend. Vorschlag: Kaltabstellung.", evidence, common)
+            return mk(
+                "POSSIBLE_COLD_STAND_SAME_LOCATION",
+                "COLD_STAND",
+                "Mögliche kalte Abstellung",
+                "MEDIUM",
+                "GAP größer 120 und kleiner 600 Minuten, Endzeit bekannt und Ortskette durchgehend. Vorschlag: Kaltabstellung.",
+                evidence,
+                common,
+            )
         if duration > 600:
-            return mk("GAP_NO_LTE_ASSIGNMENT", "NO_LTE_ASSIGNMENT", no_value, "MEDIUM", "GAP größer 600 Minuten, Endzeit bekannt und Ortskette durchgehend. Vorschlag: keine Zuweisung / nicht im Report.", evidence, common)
+            return mk(
+                "GAP_NO_LTE_ASSIGNMENT",
+                "NO_LTE_ASSIGNMENT",
+                no_value,
+                "MEDIUM",
+                "GAP größer 600 Minuten, Endzeit bekannt und Ortskette durchgehend. Vorschlag: keine Zuweisung / nicht im Report.",
+                evidence,
+                common,
+            )
         return None
 
     def snapshot_from_timeline(timeline):
@@ -110,8 +143,19 @@ def install_gap_policy_labels() -> None:
                     if snapshot is None or snapshot <= start:
                         continue
                     duration = float((snapshot - start).total_seconds() / 60.0)
-                    common = {"loco_no": clean(loco_no), "transport_number": clean(before_row.get("transport_number")), "period_start_utc": ts_text(start), "period_end_utc": ts_text(snapshot), "source_table": clean(before_row.get("source_table")), "source_row_id": clean(before_row.get("source_row_id"))}
-                    evidence = f"GAP-Dauer: mind. {duration:.0f} Minuten; Ort davor: {clean(before_row.get('destination_name')) or '-'}; Ort danach: -; Endzeit bekannt: nein."
+                    common = {
+                        "loco_no": clean(loco_no),
+                        "transport_number": clean(before_row.get("transport_number")),
+                        "period_start_utc": ts_text(start),
+                        "period_end_utc": ts_text(snapshot),
+                        "source_table": clean(before_row.get("source_table")),
+                        "source_row_id": clean(before_row.get("source_row_id")),
+                    }
+                    evidence = (
+                        f"GAP-Dauer: mind. {duration:.0f} Minuten; "
+                        f"Ort davor: {clean(before_row.get('destination_name')) or '-'}; "
+                        "Ort danach: -; Endzeit bekannt: nein."
+                    )
                     suggestion = classify(duration, False, False, "", evidence, common, open_end=True)
                     if suggestion:
                         rows.append(suggestion)
@@ -125,8 +169,19 @@ def install_gap_policy_labels() -> None:
                 before_ru = clean(before_row.get("performing_ru"))
                 after_ru = clean(after_row.get("performing_ru"))
                 same_ru = before_ru if before_ru and before_ru == after_ru else ""
-                common = {"loco_no": clean(loco_no), "transport_number": clean(before_row.get("transport_number")), "period_start_utc": ts_text(start), "period_end_utc": ts_text(end), "source_table": clean(before_row.get("source_table")), "source_row_id": clean(before_row.get("source_row_id"))}
-                evidence = f"GAP-Dauer: {duration:.0f} Minuten; Ort davor: {before_loc or '-'}; Ort danach: {after_loc or '-'}; EVU davor/danach: {same_ru or '-'}; Endzeit bekannt: ja."
+                common = {
+                    "loco_no": clean(loco_no),
+                    "transport_number": clean(before_row.get("transport_number")),
+                    "period_start_utc": ts_text(start),
+                    "period_end_utc": ts_text(end),
+                    "source_table": clean(before_row.get("source_table")),
+                    "source_row_id": clean(before_row.get("source_row_id")),
+                }
+                evidence = (
+                    f"GAP-Dauer: {duration:.0f} Minuten; Ort davor: {before_loc or '-'}; "
+                    f"Ort danach: {after_loc or '-'}; EVU davor/danach: {same_ru or '-'}; "
+                    "Endzeit bekannt: ja."
+                )
                 suggestion = classify(duration, True, is_jump(before_loc, after_loc), same_ru, evidence, common)
                 if suggestion:
                     rows.append(suggestion)
@@ -168,12 +223,43 @@ def install_gap_policy_labels() -> None:
                         after_ru = clean(frow.get("performing_ru"))
                         after_loc = clean(frow.get("origin_name")) or clean(frow.get("destination_name"))
             same_ru = before_ru if before_ru and before_ru == after_ru else ""
-            common = {"loco_no": loco, "transport_number": clean(row.get("transport_number")), "period_start_utc": ts_text(start), "period_end_utc": ts_text(end), "source_table": clean(row.get("source_table")), "source_row_id": clean(row.get("source_row_id"))}
-            evidence = f"GAP aus Fehlerliste; Dauer: {duration:.0f} Minuten; Ort davor: {before_loc or '-'}; Ort danach: {after_loc or '-'}; EVU davor/danach: {same_ru or '-'}; Endzeit bekannt: {'ja' if end is not None else 'nein'}." if duration is not None else f"GAP aus Fehlerliste; Dauer unbekannt; Ort davor: {before_loc or '-'}; Ort danach: {after_loc or '-'}; Endzeit bekannt: nein."
+            common = {
+                "loco_no": loco,
+                "transport_number": clean(row.get("transport_number")),
+                "period_start_utc": ts_text(start),
+                "period_end_utc": ts_text(end),
+                "source_table": clean(row.get("source_table")),
+                "source_row_id": clean(row.get("source_row_id")),
+            }
+            evidence = (
+                f"GAP aus Fehlerliste; Dauer: {duration:.0f} Minuten; Ort davor: {before_loc or '-'}; "
+                f"Ort danach: {after_loc or '-'}; EVU davor/danach: {same_ru or '-'}; "
+                f"Endzeit bekannt: {'ja' if end is not None else 'nein'}."
+                if duration is not None
+                else f"GAP aus Fehlerliste; Dauer unbekannt; Ort davor: {before_loc or '-'}; Ort danach: {after_loc or '-'}; Endzeit bekannt: nein."
+            )
             suggestion = classify(duration, end is not None, is_jump(before_loc, after_loc), same_ru, evidence, common, open_end=end is None)
             if suggestion:
                 rows.append(suggestion)
         return rows
+
+    def remove_open_gap_suggestions(result):
+        if result is None or getattr(result, "empty", True):
+            return result
+        if "suggestion_type" not in result.columns:
+            return result
+        text = (
+            result.get("reason", pd.Series("", index=result.index)).fillna("").astype(str)
+            + " | "
+            + result.get("evidence", pd.Series("", index=result.index)).fillna("").astype(str)
+        ).str.lower()
+        open_gap_mask = result["suggestion_type"].fillna("").astype(str).eq("GAP_NO_LTE_ASSIGNMENT") & (
+            text.str.contains("offenes ende: ja", regex=False)
+            | text.str.contains("ohne nachfolgende bewegung", regex=False)
+            | text.str.contains("gap ohne bekannte endzeit", regex=False)
+            | text.str.contains("endzeit bekannt: nein", regex=False)
+        )
+        return result.loc[~open_gap_mask].copy()
 
     def build_suggestion_table_with_gap_matrix(*args, **kwargs):
         result = original_build_suggestion_table(*args, **kwargs)
@@ -184,6 +270,7 @@ def install_gap_policy_labels() -> None:
             extra = pd.DataFrame(rows, columns=suggestion_module.SUGGESTION_COLUMNS)
             result = extra if result is None or result.empty else pd.concat([result, extra], ignore_index=True)
             result = result.drop_duplicates(subset=["suggestion_id"], keep="last")
+        result = remove_open_gap_suggestions(result)
         if result is None or result.empty or "suggestion_type" not in result.columns:
             return result
         return result[result["suggestion_type"].fillna("").astype(str).ne("BORDER_QUARTER_HOUR_REVIEW")].reset_index(drop=True)
