@@ -388,7 +388,6 @@ def _refresh_movement_export_flags(con) -> None:
              and nullif(trim(loco_no), '') is not null
              and trim(loco_no) <> '00000000000-0'
              and nullif(trim(performing_ru), '') is not null
-             and nullif(trim(user_vens), '') is not null
              and nullif(trim(holder_market_partner_id), '') is not null
                 then true
             else false
@@ -563,10 +562,14 @@ def _apply_minute_exact_gate_values(con, run_id: str) -> None:
                 gate_status = source.gate_status,
                 gate_reason = source.gate_reason,
                 error_findings = source.error_findings,
-                manual_review_findings = source.manual_review_findings
+                manual_review_findings = source.manual_review_findings,
+                warning_findings = source.warning_findings,
+                info_findings = source.info_findings,
+                long_gap_rows = source.long_gap_rows,
+                not_export_ready_movement_rows = source.not_export_ready_movement_rows
             from core_loco_day_coverage source
-            where source.loco_no = target.loco_no
-              and source.coverage_date = target.coverage_date
+            where target.loco_no is not distinct from source.loco_no
+              and target.coverage_date is not distinct from source.coverage_date
             """
         )
 
@@ -581,4 +584,4 @@ def apply_feedback_rule_adjustments_phase11i(con, run_id: str) -> None:
     _refresh_timeline_quality_flags(con)
     _refresh_movement_export_flags(con)
     _apply_minute_exact_gate_values(con, run_id)
-    print("Phase 11I aktiv: Feedback-Regeln fuer Overlaps, Kaltabstellung, Orte und Minutenwerte angewandt.")
+    print("Phase 11I aktiv: Feedback-Regeln fuer Overlaps, Kaltabstellung, Orte und Minutenwerte angewandt. vEns ist keine Export-Sperre mehr.")
