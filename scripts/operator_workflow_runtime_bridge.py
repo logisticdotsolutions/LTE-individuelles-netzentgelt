@@ -22,6 +22,7 @@ from operator_case_workspace_module import (
 
 
 PHASE11A_WORKFLOW_RUNTIME_MARKER = "NETZENTGELT_OPERATOR_WORKFLOW_RUNTIME_PHASE11A_V1_20260611"
+PHASE11Q_TASK_DEDUP_MARKER = "NETZENTGELT_OPERATOR_TASK_DEDUP_PHASE11Q_V1_20260618"
 _PIPELINE_TAB_LABEL = "⚙️ Technik: Pipeline"
 
 
@@ -34,6 +35,131 @@ def _non_empty_locos(table: pd.DataFrame) -> list[str]:
         if str(value).strip()
     }
     return sorted(values)
+
+
+def _clean_display_value(value: object) -> str:
+    if value is None:
+        return ""
+    try:
+        if pd.isna(value):
+            return ""
+    except (TypeError, ValueError):
+        pass
+    text = str(value).strip()
+    if text.lower() in {"none", "nan", "nat", "<na>"}:
+        return ""
+    return text
+
+
+def _clean_display_table(table: pd.DataFrame) -> pd.DataFrame:
+    if table is None or table.empty:
+        return table
+    result = table.copy()
+    for column in result.columns:
+        result[column] = result[column].map(_clean_display_value)
+    return result
+
+
+def _normalize_transport_number(value: object) -> str:
+    text = _clean_display_value(value)
+    if not text:
+        return ""
+    if text.endswith(".0"):
+        text = text[:-2]
+    return text.strip()
+
+
+def _task_problem_key(row: pd.Series) -> str:
+    for column in ["Problem", "Regel", "Warum?", "Naechster Schritt"]:
+        value = _clean_display_value(row.get(column)).lower()
+        if value:
+            if "loknummer" in value or "r012" in value or "dummy" in value:
+                return "loco_number"
+            if "gap" in value or "unterbrech" in value:
+                return "gap"
+            if "überschneidung" in value or "ueberschneidung" in value or "r011" in value:
+                return "overlap"
+            return value[:80]
+    return ""
+
+
+def _is_detailed_task(row: pd.Series) -> bool:
+    return any(
+        _clean_display_value(row.get(column))
+        for column in ["Regel", "Prioritaet", "Von", "Bis", "Auswirkung"]
+    )
+
+
+def _task_score(row: pd.Series) -> int:
+    score = sum(1 for column in row.index if _clean_display_value(row.get(column)))
+    if _clean_display_value(row.get("Regel")):
+        score += 50
+    if _clean_display_value(row.get("Prioritaet")):
+        score += 20
+    if _clean_display_value(row.get("Von")) or _clean_display_value(row.get("Bis")):
+        score += 15
+    if _clean_display_value(row.get("Auswirkung")):
+        score += 10
+    return score
+
+
+def _deduplicate_task_table(table: pd.DataFrame) -> pd.DataFrame:
+    """Remove UI duplicates caused by mixing day-gate rows with concrete findings.
+
+    A Lok-Tag gate row and an R012 finding row can describe the same missing-loco
+    problem. The concrete finding row contains rule, priority and time context and
+    must win. This is display-only; no finding or audit record is deleted.
+    """
+    if table is None or table.empty:
+        return pd.DataFrame()
+
+    result = _clean_display_table(table).copy()
+    if result.empty:
+        return result
+
+    result["_transport_norm"] = result.get("Transportnummer", pd.Series("", index=result.index)).map(_normalize_transport_number)
+    result["_problem_norm"] = result.apply(_task_problem_key, axis=1)
+    result["_is_detailed"] = result.apply(_is_detailed_task, axis=1)
+    result["_score"] = result.apply(_task_score, axis=1)
+
+    detailed_pairs = {
+        (row["_transport_norm"], row["_problem_norm"])
+        for _, row in result.iterrows()
+        if row["_is_detailed"] and row["_transport_norm"] and row["_problem_norm"]
+    }
+    drop_aggregate_mask = result.apply(
+        lambda row: (
+            not bool(row["_is_detailed"])
+            and bool(row["_transport_norm"])
+            and bool(row["_problem_norm"])
+            and (row["_transport_norm"], row["_problem_norm"]) in detailed_pairs
+        ),
+        axis=1,
+    )
+    result = result[~drop_aggregate_mask].copy()
+
+    # Exact duplicate protection, but keep separate concrete intervals for the same transport.
+    for column in ["Regel", "Von", "Bis", "Nutzendes EVU", "Loknummer"]:
+        if column not in result.columns:
+            result[column] = ""
+    result["_exact_key"] = result.apply(
+        lambda row: "|".join(
+            [
+                row["_transport_norm"],
+                row["_problem_norm"],
+                _clean_display_value(row.get("Regel")),
+                _clean_display_value(row.get("Von")),
+                _clean_display_value(row.get("Bis")),
+                _clean_display_value(row.get("Nutzendes EVU")),
+                _clean_display_value(row.get("Loknummer")),
+            ]
+        ),
+        axis=1,
+    )
+    result = result.sort_values("_score", ascending=False).drop_duplicates("_exact_key", keep="first")
+    helper_columns = [column for column in result.columns if column.startswith("_")]
+    result = result.drop(columns=helper_columns, errors="ignore")
+    return sort_operator_table(result.reset_index(drop=True))
 
 
 def _loco_number_issue_mask(table: pd.DataFrame) -> pd.Series:
@@ -56,7 +182,7 @@ def _loco_number_issue_mask(table: pd.DataFrame) -> pd.Series:
 def _force_blocking(table: pd.DataFrame) -> pd.DataFrame:
     if table is None or table.empty:
         return table
-    result = table.copy()
+    result = _clean_display_table(table)
     if "Status" in result.columns:
         result["Status"] = "⛔ Gesperrt"
     if "Auswirkung" in result.columns:
@@ -150,11 +276,11 @@ def _render_compact_dashboard(*, operator_ui, export_gate, global_export_blocker
         combined = pd.concat([blocked_days, warning_days], ignore_index=True) if not warning_days.empty else blocked_days
         if not combined.empty:
             st.markdown("##### Offene Lok-Tage")
-            st.dataframe(_force_blocking(combined), use_container_width=True, hide_index=True)
+            st.dataframe(_deduplicate_task_table(_force_blocking(combined)), use_container_width=True, hide_index=True)
         global_table = operator_ui._friendly_global_blockers(global_export_blockers)
         if not global_table.empty:
             st.markdown("##### Globale Sperren")
-            st.dataframe(global_table, use_container_width=True, hide_index=True)
+            st.dataframe(_clean_display_table(global_table), use_container_width=True, hide_index=True)
         if operational_kpis is not None and not operational_kpis.empty:
             st.markdown("##### Operative Kennzahlen")
             st.dataframe(operational_kpis, use_container_width=True, hide_index=True)
@@ -200,6 +326,8 @@ def _render_sorted_open_tasks(
 
     movement_table = pd.concat(movement_parts, ignore_index=True) if movement_parts else pd.DataFrame()
     loco_table = pd.concat(loco_parts, ignore_index=True) if loco_parts else pd.DataFrame()
+    movement_table = _deduplicate_task_table(movement_table)
+    loco_table = _deduplicate_task_table(loco_table)
 
     tab_movement, tab_loco = st.tabs([
         f"⛔ Fehler in Lokbewegung ({len(movement_table)})",
