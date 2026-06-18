@@ -69,6 +69,7 @@ from friendly_ui_copy_runtime_module import install_compact_copy_runtime  # noqa
 from friendly_ui_density_module import apply_density_cleanup  # noqa: E402
 from friendly_ui_theme_module import apply_theme, render_theme_toggle  # noqa: E402
 from local_auth_runtime_bridge import authenticated_runtime  # noqa: E402
+from manual_override_gap_policy_runtime_module import install_gap_policy_labels  # noqa: E402
 from n01_hardened_runtime_bridge import (  # noqa: E402
     install_n01_hardened_runtime,
     restore_n01_hardened_runtime,
@@ -89,6 +90,7 @@ from vens_selection_ui_runtime_bridge import (  # noqa: E402
 
 install_compact_copy_runtime()
 install_compact_login_views()
+install_gap_policy_labels()
 
 from local_auth_ui_module import (  # noqa: E402
     render_admin_area,
@@ -119,6 +121,7 @@ PHASE11D_VENS_MAPPING_MARKER = "NETZENTGELT_UKL_VENS_MAPPING_PHASE11D_V1_2026061
 PHASE11E_VENS_SELECTION_UI_MARKER = "NETZENTGELT_UKL_VENS_SELECTION_UI_PHASE11E_V1_20260612"
 PHASE11F_FRIENDLY_THEME_MARKER = "NETZENTGELT_FRIENDLY_THEME_PHASE11F_V1_20260612"
 PHASE11G_EARLY_DAY_FILTER_MARKER = "NETZENTGELT_EARLY_OPERATIONAL_DAY_FILTER_PHASE11G_V1_20260612"
+PHASE11H_GAP_POLICY_LABEL_MARKER = "NETZENTGELT_GAP_POLICY_LABELS_PHASE11H_V1_20260618"
 
 
 st.set_page_config(
