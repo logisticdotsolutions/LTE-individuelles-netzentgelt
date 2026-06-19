@@ -3,10 +3,11 @@ from __future__ import annotations
 import base64
 import mimetypes
 from pathlib import Path
+from textwrap import dedent
 from typing import Any
 
 
-RAILVERK_BRANDING_RUNTIME_MARKER = "NETZENTGELT_RAILVERK_BRANDING_PHASE11U_V3_20260619"
+RAILVERK_BRANDING_RUNTIME_MARKER = "NETZENTGELT_RAILVERK_BRANDING_PHASE11U_V4_20260619"
 RAILVERK_TITLE = "RAILVERK IT Solutions e.U."
 LTE_TITLE_PREFIX = "Bahnstrom Deutschland"
 RAILVERK_FOOTER_LINE_1 = "Konzeption, Fachlogik & Umsetzung: RAILVERK IT Solutions e.U."
@@ -33,6 +34,11 @@ LOGO_ASSET_STEMS = {
 
 def _clean(value: object) -> str:
     return str(value or "").strip()
+
+
+def _html(value: str) -> str:
+    """Return HTML without Markdown-indenting it into a code block."""
+    return dedent(value).strip()
 
 
 def is_lte_brand_user(user: Any) -> bool:
@@ -106,12 +112,14 @@ def _picture_html(light_uri: str, dark_uri: str, *, alt: str, css_class: str) ->
     primary_uri = light_uri or dark_uri
     if not primary_uri:
         return ""
-    return f"""
+    return _html(
+        f"""
         <picture>
-            <source srcset="{dark_uri or primary_uri}" media="(prefers-color-scheme: dark)">
-            <img src="{primary_uri}" alt="{alt}" class="{css_class}">
+        <source srcset="{dark_uri or primary_uri}" media="(prefers-color-scheme: dark)">
+        <img src="{primary_uri}" alt="{alt}" class="{css_class}">
         </picture>
-    """
+        """
+    )
 
 
 def _railverk_header_html() -> str:
@@ -126,29 +134,31 @@ def _railverk_header_html() -> str:
     )
     if not logo_html:
         return ""
-    return f"""
-    <div class="railverk-brand-header">
+    return _html(
+        f"""
+        <div class="railverk-brand-header">
         {logo_html}
-    </div>
-    <style>
-    .railverk-brand-header {{
-        display: flex;
-        align-items: center;
-        margin: 0.35rem 0 1.0rem 0;
-        padding: 0.65rem 0.8rem;
-        border-radius: 0.75rem;
-        border: 1px solid rgba(148, 163, 184, 0.28);
-        background: rgba(148, 163, 184, 0.08);
-    }}
-    .railverk-brand-logo {{
-        width: min(420px, 56vw);
-        max-height: 132px;
-        height: auto;
-        object-fit: contain;
-        display: block;
-    }}
-    </style>
-    """
+        </div>
+        <style>
+        .railverk-brand-header {{
+            display: flex;
+            align-items: center;
+            margin: 0.35rem 0 1.0rem 0;
+            padding: 0.65rem 0.8rem;
+            border-radius: 0.75rem;
+            border: 1px solid rgba(148, 163, 184, 0.28);
+            background: rgba(148, 163, 184, 0.08);
+        }}
+        .railverk-brand-logo {{
+            width: min(420px, 56vw);
+            max-height: 132px;
+            height: auto;
+            object-fit: contain;
+            display: block;
+        }}
+        </style>
+        """
+    )
 
 
 def _railverk_sidebar_html() -> str:
@@ -165,86 +175,90 @@ def _railverk_sidebar_html() -> str:
     )
     if not logo_html:
         return ""
-    return f"""
-    <div class="railverk-sidebar-brand-expanded">
+    return _html(
+        f"""
+        <div class="railverk-sidebar-brand-expanded">
         {logo_html}
-    </div>
-    <div class="railverk-sidebar-heading">Angemeldet</div>
-    <style>
-    .railverk-sidebar-brand-expanded {{
-        display: flex;
-        align-items: center;
-        margin: 0.15rem 0 0.75rem 0;
-        padding: 0.3rem 0.1rem 0.45rem 0.1rem;
-    }}
-    .railverk-sidebar-logo {{
-        width: min(230px, 100%);
-        max-height: 72px;
-        height: auto;
-        object-fit: contain;
-        display: block;
-    }}
-    .railverk-sidebar-heading {{
-        font-size: 1.05rem;
-        font-weight: 700;
-        margin: 0.3rem 0 0.35rem 0;
-    }}
-    [data-testid="stSidebar"][aria-expanded="false"]::before {{
-        content: "";
-        position: fixed;
-        top: 0.75rem;
-        left: 0.58rem;
-        width: 2.2rem;
-        height: 2.2rem;
-        background-image: url("{mark_light_uri}");
-        background-repeat: no-repeat;
-        background-position: center;
-        background-size: contain;
-        z-index: 999999;
-        pointer-events: none;
-    }}
-    @media (prefers-color-scheme: dark) {{
-        [data-testid="stSidebar"][aria-expanded="false"]::before {{
-            background-image: url("{mark_dark_uri}");
+        </div>
+        <div class="railverk-sidebar-heading">Angemeldet</div>
+        <style>
+        .railverk-sidebar-brand-expanded {{
+            display: flex;
+            align-items: center;
+            margin: 0.15rem 0 0.75rem 0;
+            padding: 0.3rem 0.1rem 0.45rem 0.1rem;
         }}
-    }}
-    </style>
-    """
+        .railverk-sidebar-logo {{
+            width: min(230px, 100%);
+            max-height: 72px;
+            height: auto;
+            object-fit: contain;
+            display: block;
+        }}
+        .railverk-sidebar-heading {{
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin: 0.3rem 0 0.35rem 0;
+        }}
+        [data-testid="stSidebar"][aria-expanded="false"]::before {{
+            content: "";
+            position: fixed;
+            top: 0.75rem;
+            left: 0.58rem;
+            width: 2.2rem;
+            height: 2.2rem;
+            background-image: url("{mark_light_uri}");
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            z-index: 999999;
+            pointer-events: none;
+        }}
+        @media (prefers-color-scheme: dark) {{
+            [data-testid="stSidebar"][aria-expanded="false"]::before {{
+                background-image: url("{mark_dark_uri}");
+            }}
+        }}
+        </style>
+        """
+    )
 
 
 def _railverk_footer_html() -> str:
-    return f"""
-    <div class="railverk-attribution-footer">
+    return _html(
+        f"""
+        <div class="railverk-attribution-footer">
         <strong>{RAILVERK_FOOTER_LINE_1}</strong><br>
         <span>{RAILVERK_FOOTER_LINE_2}</span>
-    </div>
-    <style>
-    .railverk-attribution-footer {{
-        position: fixed;
-        right: 1.0rem;
-        bottom: 0.55rem;
-        z-index: 999998;
-        padding: 0.35rem 0.55rem;
-        border-radius: 0.45rem;
-        border: 1px solid rgba(148, 163, 184, 0.24);
-        background: rgba(255, 255, 255, 0.78);
-        color: rgba(15, 23, 42, 0.82);
-        font-size: 0.76rem;
-        line-height: 1.25;
-        pointer-events: none;
-        backdrop-filter: blur(4px);
-    }}
-    .railverk-attribution-footer span {{
-        opacity: 0.82;
-    }}
-    @media (prefers-color-scheme: dark) {{
+        </div>
+        <style>
         .railverk-attribution-footer {{
-            background: rgba(15, 23, 42, 0.78);
-            color: rgba(248, 250, 252, 0.84);
+            position: fixed;
+            right: 1.0rem;
+            bottom: 0.55rem;
+            z-index: 999998;
+            padding: 0.35rem 0.55rem;
+            border-radius: 0.45rem;
+            border: 1px solid rgba(148, 163, 184, 0.24);
+            background: rgba(255, 255, 255, 0.78);
+            color: rgba(15, 23, 42, 0.82);
+            font-size: 0.76rem;
+            line-height: 1.25;
+            pointer-events: none;
+            backdrop-filter: blur(4px);
         }}
-    }}
-    </style>
-    """
+        .railverk-attribution-footer span {{
+            opacity: 0.82;
+        }}
+        @media (prefers-color-scheme: dark) {{
+            .railverk-attribution-footer {{
+                background: rgba(15, 23, 42, 0.78);
+                color: rgba(248, 250, 252, 0.84);
+            }}
+        }}
+        </style>
+        """
+    )
 
 
 def install_railverk_branding_runtime() -> None:
