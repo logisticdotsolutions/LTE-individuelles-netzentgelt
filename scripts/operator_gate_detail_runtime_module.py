@@ -99,8 +99,10 @@ def install_operator_gate_detail_runtime() -> None:
     """Show concrete finding reasons in the open-task gate table and simplify baskets."""
     import operator_ui_module as operator_ui
     from export_and_loco_check_runtime_module import install_export_and_loco_check_runtime
+    from railverk_branding_runtime_module import install_railverk_branding_runtime
 
     install_export_and_loco_check_runtime()
+    install_railverk_branding_runtime()
 
     if getattr(operator_ui, "_PHASE11O_GATE_DETAIL_PATCHED", False):
         if not getattr(operator_ui, "_PHASE11Q_BUSINESS_WORKBASKETS_PATCHED", False):
