@@ -6,20 +6,28 @@ from pathlib import Path
 from typing import Any
 
 
-RAILVERK_BRANDING_RUNTIME_MARKER = "NETZENTGELT_RAILVERK_BRANDING_PHASE11U_V2_20260619"
+RAILVERK_BRANDING_RUNTIME_MARKER = "NETZENTGELT_RAILVERK_BRANDING_PHASE11U_V3_20260619"
 RAILVERK_TITLE = "RAILVERK IT Solutions e.U."
 LTE_TITLE_PREFIX = "Bahnstrom Deutschland"
+RAILVERK_FOOTER_LINE_1 = "Konzeption, Fachlogik & Umsetzung: RAILVERK IT Solutions e.U."
+RAILVERK_FOOTER_LINE_2 = "railverk.com"
 
 
 ROOT = Path(__file__).resolve().parents[1]
 PIC_DIR_CANDIDATES = [
-    ROOT / "data" / "06_pic",
     ROOT / "data" / "06_pics",
+    ROOT / "data" / "06_pic",
 ]
-SUPPORTED_LOGO_SUFFIXES = {".svg", ".png", ".jpg", ".jpeg", ".webp"}
+SUPPORTED_LOGO_SUFFIXES = (".svg", ".png", ".webp", ".jpg", ".jpeg")
 GENERATED_PLACEHOLDER_NAMES = {
     "railverk_logo_light.svg",
     "railverk_logo_dark.svg",
+}
+LOGO_ASSET_STEMS = {
+    "full_light": "railverk-logo-tagline",
+    "full_dark": "railverk-logo-tagline-on-dark",
+    "mark_light": "railverk-mark",
+    "mark_dark": "railverk-mark-on-dark",
 }
 
 
@@ -47,48 +55,39 @@ def should_use_railverk_branding() -> bool:
     return not is_lte_brand_user(get_current_user())
 
 
-def _existing_logo_files() -> list[Path]:
-    files: list[Path] = []
+def _is_supported_logo(path: Path) -> bool:
+    return (
+        path.is_file()
+        and path.name.lower() not in GENERATED_PLACEHOLDER_NAMES
+        and path.suffix.lower() in SUPPORTED_LOGO_SUFFIXES
+    )
+
+
+def _resolve_logo_by_stem(stem: str) -> Path | None:
+    """Resolve one explicitly named Railverk logo asset without heuristic fallback."""
+    requested_stem = stem.casefold()
     for directory in PIC_DIR_CANDIDATES:
         if not directory.exists():
             continue
-        for path in directory.iterdir():
-            if not path.is_file():
+
+        for suffix in SUPPORTED_LOGO_SUFFIXES:
+            candidate = directory / f"{stem}{suffix}"
+            if _is_supported_logo(candidate):
+                return candidate
+
+        for path in sorted(directory.iterdir(), key=lambda item: item.name.casefold()):
+            if not _is_supported_logo(path):
                 continue
-            if path.name.lower() in GENERATED_PLACEHOLDER_NAMES:
-                continue
-            if path.suffix.lower() not in SUPPORTED_LOGO_SUFFIXES:
-                continue
-            files.append(path)
-    return sorted(files, key=lambda item: item.name.lower())
+            if path.stem.casefold() == requested_stem:
+                return path
+    return None
 
 
-def _score_logo(path: Path, *, dark: bool) -> tuple[int, str]:
-    name = path.name.lower()
-    score = 0
-    if "railverk" in name:
-        score += 40
-    if "logo" in name:
-        score += 30
-    if dark:
-        if any(token in name for token in ["dark", "dunkel", "black", "schwarz", "negative", "white"]):
-            score += 20
-    else:
-        if any(token in name for token in ["light", "hell", "white", "weiss", "weiß", "positive", "black"]):
-            score += 20
-    # SVG/PNG are preferred in browser rendering, but all supported formats are accepted.
-    if path.suffix.lower() in {".svg", ".png"}:
-        score += 5
-    return (-score, name)
-
-
-def _select_logo_pair() -> tuple[Path | None, Path | None]:
-    files = _existing_logo_files()
-    if not files:
-        return None, None
-    light = sorted(files, key=lambda path: _score_logo(path, dark=False))[0]
-    dark = sorted(files, key=lambda path: _score_logo(path, dark=True))[0]
-    return light, dark
+def _select_logo_paths() -> dict[str, Path | None]:
+    return {
+        key: _resolve_logo_by_stem(stem)
+        for key, stem in LOGO_ASSET_STEMS.items()
+    }
 
 
 def _data_uri(path: Path | None) -> str:
@@ -103,18 +102,33 @@ def _data_uri(path: Path | None) -> str:
     return f"data:{mime_type};base64,{encoded}"
 
 
+def _picture_html(light_uri: str, dark_uri: str, *, alt: str, css_class: str) -> str:
+    primary_uri = light_uri or dark_uri
+    if not primary_uri:
+        return ""
+    return f"""
+        <picture>
+            <source srcset="{dark_uri or primary_uri}" media="(prefers-color-scheme: dark)">
+            <img src="{primary_uri}" alt="{alt}" class="{css_class}">
+        </picture>
+    """
+
+
 def _railverk_header_html() -> str:
-    light_path, dark_path = _select_logo_pair()
-    light_uri = _data_uri(light_path)
-    dark_uri = _data_uri(dark_path) or light_uri
-    if not light_uri and not dark_uri:
+    logo_paths = _select_logo_paths()
+    light_uri = _data_uri(logo_paths["full_light"])
+    dark_uri = _data_uri(logo_paths["full_dark"]) or light_uri
+    logo_html = _picture_html(
+        light_uri,
+        dark_uri,
+        alt=RAILVERK_TITLE,
+        css_class="railverk-brand-logo",
+    )
+    if not logo_html:
         return ""
     return f"""
     <div class="railverk-brand-header">
-        <picture>
-            <source srcset="{dark_uri}" media="(prefers-color-scheme: dark)">
-            <img src="{light_uri or dark_uri}" alt="RAILVERK IT Solutions e.U." class="railverk-brand-logo">
-        </picture>
+        {logo_html}
     </div>
     <style>
     .railverk-brand-header {{
@@ -127,11 +141,107 @@ def _railverk_header_html() -> str:
         background: rgba(148, 163, 184, 0.08);
     }}
     .railverk-brand-logo {{
-        width: min(360px, 48vw);
-        max-height: 120px;
+        width: min(420px, 56vw);
+        max-height: 132px;
         height: auto;
         object-fit: contain;
         display: block;
+    }}
+    </style>
+    """
+
+
+def _railverk_sidebar_html() -> str:
+    logo_paths = _select_logo_paths()
+    full_light_uri = _data_uri(logo_paths["full_light"])
+    full_dark_uri = _data_uri(logo_paths["full_dark"]) or full_light_uri
+    mark_light_uri = _data_uri(logo_paths["mark_light"]) or full_light_uri
+    mark_dark_uri = _data_uri(logo_paths["mark_dark"]) or mark_light_uri
+    logo_html = _picture_html(
+        full_light_uri,
+        full_dark_uri,
+        alt=RAILVERK_TITLE,
+        css_class="railverk-sidebar-logo",
+    )
+    if not logo_html:
+        return ""
+    return f"""
+    <div class="railverk-sidebar-brand-expanded">
+        {logo_html}
+    </div>
+    <div class="railverk-sidebar-heading">Angemeldet</div>
+    <style>
+    .railverk-sidebar-brand-expanded {{
+        display: flex;
+        align-items: center;
+        margin: 0.15rem 0 0.75rem 0;
+        padding: 0.3rem 0.1rem 0.45rem 0.1rem;
+    }}
+    .railverk-sidebar-logo {{
+        width: min(230px, 100%);
+        max-height: 72px;
+        height: auto;
+        object-fit: contain;
+        display: block;
+    }}
+    .railverk-sidebar-heading {{
+        font-size: 1.05rem;
+        font-weight: 700;
+        margin: 0.3rem 0 0.35rem 0;
+    }}
+    [data-testid="stSidebar"][aria-expanded="false"]::before {{
+        content: "";
+        position: fixed;
+        top: 0.75rem;
+        left: 0.58rem;
+        width: 2.2rem;
+        height: 2.2rem;
+        background-image: url("{mark_light_uri}");
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: contain;
+        z-index: 999999;
+        pointer-events: none;
+    }}
+    @media (prefers-color-scheme: dark) {{
+        [data-testid="stSidebar"][aria-expanded="false"]::before {{
+            background-image: url("{mark_dark_uri}");
+        }}
+    }}
+    </style>
+    """
+
+
+def _railverk_footer_html() -> str:
+    return f"""
+    <div class="railverk-attribution-footer">
+        <strong>{RAILVERK_FOOTER_LINE_1}</strong><br>
+        <span>{RAILVERK_FOOTER_LINE_2}</span>
+    </div>
+    <style>
+    .railverk-attribution-footer {{
+        position: fixed;
+        right: 1.0rem;
+        bottom: 0.55rem;
+        z-index: 999998;
+        padding: 0.35rem 0.55rem;
+        border-radius: 0.45rem;
+        border: 1px solid rgba(148, 163, 184, 0.24);
+        background: rgba(255, 255, 255, 0.78);
+        color: rgba(15, 23, 42, 0.82);
+        font-size: 0.76rem;
+        line-height: 1.25;
+        pointer-events: none;
+        backdrop-filter: blur(4px);
+    }}
+    .railverk-attribution-footer span {{
+        opacity: 0.82;
+    }}
+    @media (prefers-color-scheme: dark) {{
+        .railverk-attribution-footer {{
+            background: rgba(15, 23, 42, 0.78);
+            color: rgba(248, 250, 252, 0.84);
+        }}
     }}
     </style>
     """
@@ -146,6 +256,7 @@ def install_railverk_branding_runtime() -> None:
     original_title = st.title
     original_markdown = st.markdown
     original_caption = st.caption
+    original_sidebar_markdown = st.sidebar.markdown
 
     def patched_title(body, *args, **kwargs):
         text = _clean(body)
@@ -157,23 +268,29 @@ def install_railverk_branding_runtime() -> None:
         return original_title(body, *args, **kwargs)
 
     def patched_caption(body, *args, **kwargs):
-        text = _clean(body)
-        if should_use_railverk_branding() and "individuelle Netzentgelt" in text:
-            return original_caption(
-                "Gebrandete RAILVERK-Version für operative Prüfung, Plausibilisierung und Exportvorbereitung.",
-                *args,
-                **kwargs,
-            )
         return original_caption(body, *args, **kwargs)
 
     def patched_markdown(body, *args, **kwargs):
         text = _clean(body)
-        if should_use_railverk_branding() and ("Christoph Orgl" in text or "LTE-group" in text):
-            branded = text.replace("Christoph Orgl", RAILVERK_TITLE).replace("LTE-group", "railverk.com")
-            return original_markdown(branded, *args, **kwargs)
+        if should_use_railverk_branding() and "Konzeption" in text and (
+            "Christoph Orgl" in text or "LTE-group" in text
+        ):
+            return original_markdown(_railverk_footer_html(), unsafe_allow_html=True)
         return original_markdown(body, *args, **kwargs)
+
+    def patched_sidebar_markdown(body, *args, **kwargs):
+        text = _clean(body)
+        if should_use_railverk_branding() and text == "### Angemeldet":
+            html = _railverk_sidebar_html()
+            if html:
+                return original_sidebar_markdown(html, unsafe_allow_html=True)
+        return original_sidebar_markdown(body, *args, **kwargs)
 
     st.title = patched_title
     st.caption = patched_caption
     st.markdown = patched_markdown
+    try:
+        st.sidebar.markdown = patched_sidebar_markdown
+    except Exception:
+        pass
     st._PHASE11U_RAILVERK_BRANDING_PATCHED = True
