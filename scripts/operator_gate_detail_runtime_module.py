@@ -6,13 +6,104 @@ import pandas as pd
 
 
 GATE_DETAIL_RUNTIME_MARKER = "NETZENTGELT_OPERATOR_GATE_DETAIL_PHASE11O_V1_20260618"
+BUSINESS_WORKBASKET_MARKER = "NETZENTGELT_OPERATOR_WORKBASKETS_PHASE11Q_V1_20260619"
+
+
+def _empty_business_baskets() -> OrderedDict[str, pd.DataFrame]:
+    return OrderedDict(
+        [
+            ("Fehler in Lokbewegung", pd.DataFrame()),
+            ("Fehlende Loknummer / Dummylok", pd.DataFrame()),
+        ]
+    )
+
+
+def _clean_text(value: object) -> str:
+    if value is None:
+        return ""
+    try:
+        if pd.isna(value):
+            return ""
+    except (TypeError, ValueError):
+        pass
+    return str(value).strip()
+
+
+def _deduplicate(table: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
+    if table is None or table.empty:
+        return table
+    existing = [column for column in columns if column in table.columns]
+    if not existing:
+        return table.reset_index(drop=True)
+    return table.drop_duplicates(subset=existing, keep="first").reset_index(drop=True)
+
+
+def _missing_loco_blockers(operator_ui, global_export_blockers: pd.DataFrame | None) -> pd.DataFrame:
+    if global_export_blockers is None or global_export_blockers.empty:
+        return operator_ui._friendly_global_blockers(global_export_blockers)
+
+    work = global_export_blockers.copy()
+    rule_col = operator_ui._column(work, ["rule_id", "rule"])
+    message_col = operator_ui._column(work, ["message", "problem", "gate_reason"])
+    row_type_col = operator_ui._column(work, ["row_type"])
+
+    rule = work[rule_col].fillna("").astype(str).str.strip().str.upper() if rule_col else pd.Series("", index=work.index)
+    message = work[message_col].fillna("").astype(str).str.strip().str.lower() if message_col else pd.Series("", index=work.index)
+    row_type = work[row_type_col].fillna("").astype(str).str.strip().str.upper() if row_type_col else pd.Series("", index=work.index)
+
+    mask = (
+        rule.eq("R012")
+        | row_type.eq("RAW_DUMMY_LOCOMOTIVE")
+        | message.str.contains("dummy", regex=False)
+        | message.str.contains("dummylok", regex=False)
+        | message.str.contains("loknummer", regex=False)
+        | message.str.contains("locomotive", regex=False)
+    )
+    return operator_ui._friendly_global_blockers(work[mask].copy())
+
+
+def build_business_workbaskets(
+    export_gate: pd.DataFrame | None,
+    global_export_blockers: pd.DataFrame | None,
+    findings: pd.DataFrame | None,
+) -> OrderedDict[str, pd.DataFrame]:
+    """Build the two business-facing work baskets without hint or technical side lists."""
+    import operator_ui_module as operator_ui
+
+    baskets = _empty_business_baskets()
+    movement_errors = operator_ui._friendly_gate_table(export_gate, only_status="BLOCKED", findings=findings)
+    missing_loco = _missing_loco_blockers(operator_ui, global_export_blockers)
+
+    if movement_errors is not None and not movement_errors.empty and "Warum?" in movement_errors.columns:
+        problem_text = movement_errors["Warum?"].fillna("").astype(str).str.lower()
+        movement_errors = movement_errors[
+            ~(
+                problem_text.str.contains("dummy", regex=False)
+                | problem_text.str.contains("loknummer fehlt", regex=False)
+                | problem_text.str.contains("fehlende loknummer", regex=False)
+            )
+        ].copy()
+
+    baskets["Fehler in Lokbewegung"] = _deduplicate(
+        movement_errors,
+        ["Loknummer", "Datum", "Nutzendes EVU", "Warum?"],
+    )
+    baskets["Fehlende Loknummer / Dummylok"] = _deduplicate(
+        missing_loco,
+        ["Datum", "Problem", "Transportnummer", "Nutzendes EVU"],
+    )
+    return baskets
 
 
 def install_operator_gate_detail_runtime() -> None:
-    """Show concrete finding reasons in the open-task gate table."""
+    """Show concrete finding reasons in the open-task gate table and simplify baskets."""
     import operator_ui_module as operator_ui
 
     if getattr(operator_ui, "_PHASE11O_GATE_DETAIL_PATCHED", False):
+        if not getattr(operator_ui, "_PHASE11Q_BUSINESS_WORKBASKETS_PATCHED", False):
+            operator_ui.render_open_tasks = _build_patched_render_open_tasks(operator_ui)
+            operator_ui.build_business_workbaskets = build_business_workbaskets
+            operator_ui._PHASE11Q_BUSINESS_WORKBASKETS_PATCHED = True
         return
 
     original_friendly_gate_table = operator_ui._friendly_gate_table
@@ -142,4 +233,67 @@ def install_operator_gate_detail_runtime() -> None:
 
     operator_ui._friendly_gate_table = patched_friendly_gate_table
     operator_ui._friendly_findings = patched_friendly_findings
+    operator_ui.render_open_tasks = _build_patched_render_open_tasks(operator_ui)
+    operator_ui.build_business_workbaskets = build_business_workbaskets
     operator_ui._PHASE11O_GATE_DETAIL_PATCHED = True
+    operator_ui._PHASE11Q_BUSINESS_WORKBASKETS_PATCHED = True
+
+
+def _build_patched_render_open_tasks(operator_ui):
+    def patched_render_open_tasks(
+        export_gate: pd.DataFrame,
+        global_export_blockers: pd.DataFrame,
+        findings: pd.DataFrame,
+    ) -> None:
+        st = operator_ui.st
+        st.subheader("Offene Aufgaben")
+        st.caption(
+            "Diese Ansicht zeigt nur fachliche Arbeitskoerbe. Hinweise und technische Nebenlisten sind bewusst ausgeblendet."
+        )
+
+        baskets = build_business_workbaskets(
+            export_gate=export_gate,
+            global_export_blockers=global_export_blockers,
+            findings=findings,
+        )
+        movement_errors = baskets["Fehler in Lokbewegung"]
+        missing_loco = baskets["Fehlende Loknummer / Dummylok"]
+
+        tab_movements, tab_loco = st.tabs(
+            [
+                f"Fehler in Lokbewegung ({len(movement_errors)})",
+                f"Fehlende Loknummer / Dummylok ({len(missing_loco)})",
+            ]
+        )
+
+        with tab_movements:
+            if movement_errors.empty:
+                st.success("Keine fachlichen Fehler in Lokbewegungen offen.")
+            else:
+                st.dataframe(movement_errors, use_container_width=True, hide_index=True)
+                operator_ui._render_loco_shortcut(movement_errors, key_suffix="business_movement")
+
+        with tab_loco:
+            if missing_loco.empty:
+                st.success("Keine fehlenden Loknummern oder Dummy-Loks offen.")
+            else:
+                st.dataframe(missing_loco, use_container_width=True, hide_index=True)
+
+        combined_parts = []
+        for basket_name, table in baskets.items():
+            if table is None or table.empty:
+                continue
+            export_table = table.copy()
+            export_table.insert(0, "Arbeitskorb", basket_name)
+            combined_parts.append(export_table)
+        if combined_parts:
+            csv = pd.concat(combined_parts, ignore_index=True).to_csv(index=False, sep=";").encode("utf-8-sig")
+            st.download_button(
+                "Arbeitsliste als CSV herunterladen",
+                data=csv,
+                file_name="offene_aufgaben_fachlich.csv",
+                mime="text/csv",
+                key="download_operator_business_tasks_csv",
+            )
+
+    return patched_render_open_tasks
