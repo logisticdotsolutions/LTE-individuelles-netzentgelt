@@ -98,6 +98,9 @@ def build_business_workbaskets(
 def install_operator_gate_detail_runtime() -> None:
     """Show concrete finding reasons in the open-task gate table and simplify baskets."""
     import operator_ui_module as operator_ui
+    from export_and_loco_check_runtime_module import install_export_and_loco_check_runtime
+
+    install_export_and_loco_check_runtime()
 
     if getattr(operator_ui, "_PHASE11O_GATE_DETAIL_PATCHED", False):
         if not getattr(operator_ui, "_PHASE11Q_BUSINESS_WORKBASKETS_PATCHED", False):
@@ -165,8 +168,6 @@ def install_operator_gate_detail_runtime() -> None:
         if day_findings.empty:
             return "", ""
 
-        # Same-EVU overlaps may still exist in an old DB before the recalculation. If the gate already has
-        # zero relevant overlap minutes, do not show R011 as the visible blocking reason.
         if gate_overlap_minutes <= 0:
             day_findings = day_findings[~rules[mask].eq("R011")].copy()
         if day_findings.empty:
@@ -227,7 +228,6 @@ def install_operator_gate_detail_runtime() -> None:
             return result
         if "Regel" in result.columns and "Auswirkung" in result.columns:
             r011_mask = result["Regel"].fillna("").astype(str).str.strip().str.upper().eq("R011")
-            # R011 shown after recalculation should be only different-EVU. Make the impact text explicit.
             result.loc[r011_mask, "Auswirkung"] = "Export gesperrt nur bei anderem EVU"
         return result
 
