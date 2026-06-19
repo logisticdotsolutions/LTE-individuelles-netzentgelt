@@ -1,12 +1,69 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Iterable, Mapping
 
 import pandas as pd
 
 
-DUAL_ROLE_RUNTIME_MARKER = "NETZENTGELT_DUAL_OPERATOR_ROLE_PHASE11S_V2_20260618"
+DUAL_ROLE_RUNTIME_MARKER = "NETZENTGELT_DUAL_OPERATOR_ROLE_PHASE11S_V3_20260619"
 DUAL_ROLE = "LTE_DE_NL"
+
+
+def migrate_auth_db_for_dual_role(db_path: Path | str | None = None) -> Path:
+    """Rebuild the local SQLite user table when its role check still misses LTE_DE_NL."""
+    import local_auth_module as auth
+
+    path = auth.ensure_app_state(db_path)
+    with auth._connect(path) as connection:  # noqa: SLF001 - runtime compatibility adapter
+        row = connection.execute(
+            "select sql from sqlite_master where type = 'table' and name = 'app_user'"
+        ).fetchone()
+        create_sql = str(row["sql"] if row is not None else "")
+        if DUAL_ROLE in create_sql:
+            return path
+
+        connection.execute("alter table app_user rename to app_user_legacy_role_migration")
+        connection.executescript(
+            """
+            create table app_user (
+                username text primary key,
+                display_name text not null,
+                password_hash text not null,
+                role_code text not null check (role_code in ('ADMIN', 'LTE_DE', 'LTE_NL', 'LTE_DE_NL')),
+                active_flag integer not null default 1 check (active_flag in (0, 1)),
+                must_change_password integer not null default 0 check (must_change_password in (0, 1)),
+                created_by text not null,
+                created_at_utc text not null,
+                updated_by text not null,
+                updated_at_utc text not null
+            );
+            """
+        )
+        connection.execute(
+            """
+            insert into app_user (
+                username, display_name, password_hash, role_code, active_flag,
+                must_change_password, created_by, created_at_utc, updated_by, updated_at_utc
+            )
+            select
+                username, display_name, password_hash, role_code, active_flag,
+                must_change_password, created_by, created_at_utc, updated_by, updated_at_utc
+            from app_user_legacy_role_migration
+            """
+        )
+        connection.execute("drop table app_user_legacy_role_migration")
+        connection.execute(
+            """
+            insert into app_meta(meta_key, meta_value, updated_at_utc)
+            values ('schema_dual_role_migration', ?, ?)
+            on conflict(meta_key) do update set
+                meta_value = excluded.meta_value,
+                updated_at_utc = excluded.updated_at_utc
+            """,
+            [DUAL_ROLE_RUNTIME_MARKER, auth.utc_now_text()],
+        )
+    return path
 
 
 def install_dual_operator_role_runtime() -> None:
@@ -14,11 +71,13 @@ def install_dual_operator_role_runtime() -> None:
     import local_auth_module as auth
     import role_scope_module as scope
 
-    if getattr(auth, "_PHASE11S_DUAL_ROLE_PATCHED_V2", False):
-        return
-
     if DUAL_ROLE not in auth.ALLOWED_ROLES:
         auth.ALLOWED_ROLES = tuple([*auth.ALLOWED_ROLES, DUAL_ROLE])
+
+    migrate_auth_db_for_dual_role()
+
+    if getattr(auth, "_PHASE11S_DUAL_ROLE_PATCHED_V3", False):
+        return
 
     scope.LTE_DE_NL_ROLE = DUAL_ROLE
     BASE_OPERATIONAL_ROLES = (scope.LTE_DE_ROLE, scope.LTE_NL_ROLE)
@@ -126,5 +185,7 @@ def install_dual_operator_role_runtime() -> None:
 
     auth._PHASE11S_DUAL_ROLE_PATCHED = True
     auth._PHASE11S_DUAL_ROLE_PATCHED_V2 = True
+    auth._PHASE11S_DUAL_ROLE_PATCHED_V3 = True
     scope._PHASE11S_DUAL_ROLE_PATCHED = True
     scope._PHASE11S_DUAL_ROLE_PATCHED_V2 = True
+    scope._PHASE11S_DUAL_ROLE_PATCHED_V3 = True
