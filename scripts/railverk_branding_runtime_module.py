@@ -7,7 +7,7 @@ from textwrap import dedent
 from typing import Any
 
 
-RAILVERK_BRANDING_RUNTIME_MARKER = "NETZENTGELT_RAILVERK_BRANDING_PHASE11U_V4_20260619"
+RAILVERK_BRANDING_RUNTIME_MARKER = "NETZENTGELT_RAILVERK_BRANDING_PHASE11U_V5_20260619"
 RAILVERK_TITLE = "RAILVERK IT Solutions e.U."
 LTE_TITLE_PREFIX = "Bahnstrom Deutschland"
 RAILVERK_FOOTER_LINE_1 = "Konzeption, Fachlogik & Umsetzung: RAILVERK IT Solutions e.U."
@@ -108,16 +108,97 @@ def _data_uri(path: Path | None) -> str:
     return f"data:{mime_type};base64,{encoded}"
 
 
-def _picture_html(light_uri: str, dark_uri: str, *, alt: str, css_class: str) -> str:
+def _theme_bridge_html() -> str:
+    return _html(
+        """
+        <script>
+        (function () {
+            function getDocument() {
+                try { return window.parent.document; } catch (error) { return null; }
+            }
+            function rgbParts(value) {
+                const match = String(value || '').match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+                if (!match) { return null; }
+                return [Number(match[1]), Number(match[2]), Number(match[3])];
+            }
+            function isDarkColor(value) {
+                const parts = rgbParts(value);
+                if (!parts) { return false; }
+                const brightness = (parts[0] * 299 + parts[1] * 587 + parts[2] * 114) / 1000;
+                return brightness < 128;
+            }
+            function applyTheme() {
+                const doc = getDocument();
+                if (!doc || !doc.documentElement) { return; }
+                const app = doc.querySelector('[data-testid="stAppViewContainer"]') || doc.querySelector('.stApp') || doc.body;
+                if (!app) { return; }
+                const style = window.parent.getComputedStyle(app);
+                const background = style.backgroundColor || style.getPropertyValue('background-color');
+                doc.documentElement.setAttribute('data-railverk-theme', isDarkColor(background) ? 'dark' : 'light');
+            }
+            function watchTheme() {
+                const doc = getDocument();
+                if (!doc) { return; }
+                applyTheme();
+                const observer = new MutationObserver(applyTheme);
+                observer.observe(doc.documentElement, { attributes: true, childList: true, subtree: true });
+                window.setInterval(applyTheme, 500);
+            }
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', watchTheme);
+            } else {
+                watchTheme();
+            }
+        }());
+        </script>
+        """
+    )
+
+
+def _render_theme_bridge() -> None:
+    try:
+        import streamlit.components.v1 as components
+
+        components.html(_theme_bridge_html(), height=0, width=0)
+    except Exception:
+        return
+
+
+def _logo_switch_html(light_uri: str, dark_uri: str, *, alt: str, css_class: str) -> str:
     primary_uri = light_uri or dark_uri
     if not primary_uri:
         return ""
+    dark_primary_uri = dark_uri or primary_uri
     return _html(
         f"""
-        <picture>
-        <source srcset="{dark_uri or primary_uri}" media="(prefers-color-scheme: dark)">
-        <img src="{primary_uri}" alt="{alt}" class="{css_class}">
-        </picture>
+        <span class="railverk-logo-switch">
+        <img src="{primary_uri}" alt="{alt}" class="{css_class} railverk-logo-light">
+        <img src="{dark_primary_uri}" alt="{alt}" class="{css_class} railverk-logo-dark">
+        </span>
+        """
+    )
+
+
+def _logo_switch_css() -> str:
+    return _html(
+        """
+        <style>
+        .railverk-logo-switch .railverk-logo-dark {
+            display: none;
+        }
+        html[data-railverk-theme="dark"] .railverk-logo-switch .railverk-logo-light {
+            display: none;
+        }
+        html[data-railverk-theme="dark"] .railverk-logo-switch .railverk-logo-dark {
+            display: block;
+        }
+        html[data-railverk-theme="light"] .railverk-logo-switch .railverk-logo-light {
+            display: block;
+        }
+        html[data-railverk-theme="light"] .railverk-logo-switch .railverk-logo-dark {
+            display: none;
+        }
+        </style>
         """
     )
 
@@ -125,8 +206,8 @@ def _picture_html(light_uri: str, dark_uri: str, *, alt: str, css_class: str) ->
 def _railverk_header_html() -> str:
     logo_paths = _select_logo_paths()
     light_uri = _data_uri(logo_paths["full_light"])
-    dark_uri = _data_uri(logo_paths["full_dark"]) or light_uri
-    logo_html = _picture_html(
+    dark_uri = _data_uri(logo_paths["full_dark"])
+    logo_html = _logo_switch_html(
         light_uri,
         dark_uri,
         alt=RAILVERK_TITLE,
@@ -139,6 +220,7 @@ def _railverk_header_html() -> str:
         <div class="railverk-brand-header">
         {logo_html}
         </div>
+        {_logo_switch_css()}
         <style>
         .railverk-brand-header {{
             display: flex;
@@ -154,7 +236,6 @@ def _railverk_header_html() -> str:
             max-height: 132px;
             height: auto;
             object-fit: contain;
-            display: block;
         }}
         </style>
         """
@@ -164,10 +245,10 @@ def _railverk_header_html() -> str:
 def _railverk_sidebar_html() -> str:
     logo_paths = _select_logo_paths()
     full_light_uri = _data_uri(logo_paths["full_light"])
-    full_dark_uri = _data_uri(logo_paths["full_dark"]) or full_light_uri
+    full_dark_uri = _data_uri(logo_paths["full_dark"])
     mark_light_uri = _data_uri(logo_paths["mark_light"]) or full_light_uri
     mark_dark_uri = _data_uri(logo_paths["mark_dark"]) or mark_light_uri
-    logo_html = _picture_html(
+    logo_html = _logo_switch_html(
         full_light_uri,
         full_dark_uri,
         alt=RAILVERK_TITLE,
@@ -181,6 +262,7 @@ def _railverk_sidebar_html() -> str:
         {logo_html}
         </div>
         <div class="railverk-sidebar-heading">Angemeldet</div>
+        {_logo_switch_css()}
         <style>
         .railverk-sidebar-brand-expanded {{
             display: flex;
@@ -193,7 +275,6 @@ def _railverk_sidebar_html() -> str:
             max-height: 72px;
             height: auto;
             object-fit: contain;
-            display: block;
         }}
         .railverk-sidebar-heading {{
             font-size: 1.05rem;
@@ -214,10 +295,11 @@ def _railverk_sidebar_html() -> str:
             z-index: 999999;
             pointer-events: none;
         }}
-        @media (prefers-color-scheme: dark) {{
-            [data-testid="stSidebar"][aria-expanded="false"]::before {{
-                background-image: url("{mark_dark_uri}");
-            }}
+        html[data-railverk-theme="dark"] [data-testid="stSidebar"][aria-expanded="false"]::before {{
+            background-image: url("{mark_dark_uri}");
+        }}
+        html[data-railverk-theme="light"] [data-testid="stSidebar"][aria-expanded="false"]::before {{
+            background-image: url("{mark_light_uri}");
         }}
         </style>
         """
@@ -247,14 +329,12 @@ def _railverk_footer_html() -> str:
             pointer-events: none;
             backdrop-filter: blur(4px);
         }}
+        html[data-railverk-theme="dark"] .railverk-attribution-footer {{
+            background: rgba(15, 23, 42, 0.78);
+            color: rgba(248, 250, 252, 0.84);
+        }}
         .railverk-attribution-footer span {{
             opacity: 0.82;
-        }}
-        @media (prefers-color-scheme: dark) {{
-            .railverk-attribution-footer {{
-                background: rgba(15, 23, 42, 0.78);
-                color: rgba(248, 250, 252, 0.84);
-            }}
         }}
         </style>
         """
@@ -275,6 +355,7 @@ def install_railverk_branding_runtime() -> None:
     def patched_title(body, *args, **kwargs):
         text = _clean(body)
         if should_use_railverk_branding() and LTE_TITLE_PREFIX in text:
+            _render_theme_bridge()
             html = _railverk_header_html()
             if html:
                 return original_markdown(html, unsafe_allow_html=True)
