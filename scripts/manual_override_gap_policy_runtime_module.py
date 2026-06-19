@@ -21,7 +21,6 @@ def install_gap_policy_labels() -> None:
     if getattr(suggestion_module, "_PHASE11M_GAP_MATRIX_PATCHED", False):
         override_ui.build_suggestion_table = suggestion_module.build_suggestion_table
         return
-
     original_build_suggestion_table = suggestion_module.build_suggestion_table
 
     def clean(value: object) -> str:
@@ -33,6 +32,14 @@ def install_gap_policy_labels() -> None:
         except (TypeError, ValueError):
             pass
         return str(value).strip()
+
+    def first_text(row, *columns: str) -> str:
+        """Return the first populated value from common timeline location column variants."""
+        for column in columns:
+            value = clean(row.get(column))
+            if value:
+                return value
+        return ""
 
     def ts(value: object):
         parsed = pd.to_datetime(value, errors="coerce")
@@ -143,6 +150,7 @@ def install_gap_policy_labels() -> None:
                     if snapshot is None or snapshot <= start:
                         continue
                     duration = float((snapshot - start).total_seconds() / 60.0)
+                    before_loc = first_text(before_row, "destination_name", "destination_location", "destination", "origin_name", "origin_location", "origin")
                     common = {
                         "loco_no": clean(loco_no),
                         "transport_number": clean(before_row.get("transport_number")),
@@ -153,7 +161,7 @@ def install_gap_policy_labels() -> None:
                     }
                     evidence = (
                         f"GAP-Dauer: mind. {duration:.0f} Minuten; "
-                        f"Ort davor: {clean(before_row.get('destination_name')) or '-'}; "
+                        f"Ort davor: {before_loc or '-'}; "
                         "Ort danach: -; Endzeit bekannt: nein."
                     )
                     suggestion = classify(duration, False, False, "", evidence, common, open_end=True)
@@ -164,8 +172,8 @@ def install_gap_policy_labels() -> None:
                 if end is None or end <= start:
                     continue
                 duration = float((end - start).total_seconds() / 60.0)
-                before_loc = clean(before_row.get("destination_name")) or clean(before_row.get("origin_name"))
-                after_loc = clean(after_row.get("origin_name")) or clean(after_row.get("destination_name"))
+                before_loc = first_text(before_row, "destination_name", "destination_location", "destination", "origin_name", "origin_location", "origin")
+                after_loc = first_text(after_row, "origin_name", "origin_location", "origin", "destination_name", "destination_location", "destination")
                 before_ru = clean(before_row.get("performing_ru"))
                 after_ru = clean(after_row.get("performing_ru"))
                 same_ru = before_ru if before_ru and before_ru == after_ru else ""
@@ -217,11 +225,11 @@ def install_gap_policy_labels() -> None:
                     if not previous.empty:
                         prow = previous.iloc[0]
                         before_ru = clean(prow.get("performing_ru"))
-                        before_loc = clean(prow.get("destination_name")) or clean(prow.get("origin_name"))
+                        before_loc = first_text(prow, "destination_name", "destination_location", "destination", "origin_name", "origin_location", "origin")
                     if not following.empty:
                         frow = following.iloc[0]
                         after_ru = clean(frow.get("performing_ru"))
-                        after_loc = clean(frow.get("origin_name")) or clean(frow.get("destination_name"))
+                        after_loc = first_text(frow, "origin_name", "origin_location", "origin", "destination_name", "destination_location", "destination")
             same_ru = before_ru if before_ru and before_ru == after_ru else ""
             common = {
                 "loco_no": loco,
