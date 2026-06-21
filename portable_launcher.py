@@ -18,23 +18,52 @@ import traceback
 import webbrowser
 
 
-PORTABLE_LAUNCHER_MARKER = "NETZENTGELT_PORTABLE_LAUNCHER_PHASE12A_V3_20260621"
+PORTABLE_LAUNCHER_MARKER = "NETZENTGELT_PORTABLE_LAUNCHER_PHASE12A_V4_20260621"
 
 
-def _base_dir() -> Path:
+def _runtime_dir() -> Path:
+    """Writable directory next to the exe; used for logs and runtime state."""
     if getattr(sys, "frozen", False):
         return Path(sys.executable).resolve().parent
     return Path(__file__).resolve().parent
 
 
-def _log_dir(base_dir: Path) -> Path:
-    path = base_dir / "_portable_logs"
+def _resource_dirs(runtime_dir: Path) -> list[Path]:
+    """Possible read-only resource roots for PyInstaller onedir/dev runs."""
+    candidates = [runtime_dir]
+    internal_dir = runtime_dir / "_internal"
+    if internal_dir.exists():
+        candidates.append(internal_dir)
+    meipass = getattr(sys, "_MEIPASS", None)
+    if meipass:
+        candidates.append(Path(meipass).resolve())
+
+    unique: list[Path] = []
+    seen: set[str] = set()
+    for candidate in candidates:
+        key = str(candidate.resolve()).lower()
+        if key not in seen:
+            seen.add(key)
+            unique.append(candidate)
+    return unique
+
+
+def _find_app_path(runtime_dir: Path) -> Path | None:
+    for resource_dir in _resource_dirs(runtime_dir):
+        app_path = resource_dir / "app" / "portable_secure_app.py"
+        if app_path.exists():
+            return app_path
+    return None
+
+
+def _log_dir(runtime_dir: Path) -> Path:
+    path = runtime_dir / "_portable_logs"
     path.mkdir(parents=True, exist_ok=True)
     return path
 
 
-def _write_log(base_dir: Path, message: str) -> Path:
-    log_path = _log_dir(base_dir) / "launcher_error.log"
+def _write_log(runtime_dir: Path, message: str) -> Path:
+    log_path = _log_dir(runtime_dir) / "launcher_error.log"
     with log_path.open("a", encoding="utf-8") as handle:
         handle.write("\n" + "=" * 80 + "\n")
         handle.write(datetime.now().isoformat(timespec="seconds") + "\n")
@@ -57,13 +86,14 @@ def _open_browser(url: str) -> None:
 
 
 def main() -> int:
-    base_dir = _base_dir()
+    runtime_dir = _runtime_dir()
     try:
-        app_path = base_dir / "app" / "portable_secure_app.py"
-        if not app_path.exists():
-            message = f"FEHLER: Portable App wurde nicht gefunden: {app_path}"
+        app_path = _find_app_path(runtime_dir)
+        if app_path is None:
+            searched = "\n".join(str(path / "app" / "portable_secure_app.py") for path in _resource_dirs(runtime_dir))
+            message = "FEHLER: Portable App wurde nicht gefunden. Geprüfte Pfade:\n" + searched
             print(message)
-            _write_log(base_dir, message)
+            _write_log(runtime_dir, message)
             return 2
 
         port = _free_port()
@@ -84,14 +114,15 @@ def main() -> int:
 
         print("Starte Netzentgelt Tool...")
         print(f"Lokale URL: {url}")
-        print(f"Arbeitsordner: {base_dir}")
+        print(f"Arbeitsordner: {runtime_dir}")
+        print(f"App-Datei: {app_path}")
         from streamlit.web import cli as stcli
 
         stcli.main()
         return 0
     except BaseException:
         details = traceback.format_exc()
-        log_path = _write_log(base_dir, details)
+        log_path = _write_log(runtime_dir, details)
         print("FEHLER: Netzentgelt Tool konnte nicht gestartet werden.")
         print(f"Details wurden protokolliert unter: {log_path}")
         print(details)
