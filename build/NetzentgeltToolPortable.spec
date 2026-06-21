@@ -38,6 +38,7 @@ datas += data_if_exists("scripts", "scripts")
 datas += data_if_exists("config/portable_runtime.enc", "config")
 datas += data_if_exists("config/portable_runtime.key", "config")
 datas += data_if_exists("data/01_mapping", "data/01_mapping")
+datas += data_if_exists("data/05_templates", "data/05_templates")
 datas += data_if_exists("data/06_pic", "data/06_pic")
 
 hiddenimports = []
