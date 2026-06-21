@@ -2,7 +2,11 @@
 
 from pathlib import Path
 
-ROOT = Path.cwd()
+# PyInstaller resolves script paths relative to the spec file location.
+# Therefore use the repository root explicitly instead of relying on a relative
+# script name like "portable_launcher.py", which would be searched below build/.
+ROOT = Path(__file__).resolve().parents[1]
+PORTABLE_LAUNCHER = ROOT / "portable_launcher.py"
 
 
 def data_if_exists(path: str, target: str | None = None):
@@ -10,6 +14,10 @@ def data_if_exists(path: str, target: str | None = None):
     if source.exists():
         return [(str(source), target or path)]
     return []
+
+
+if not PORTABLE_LAUNCHER.exists():
+    raise SystemExit(f"Portable Launcher fehlt: {PORTABLE_LAUNCHER}")
 
 
 datas = []
@@ -32,7 +40,7 @@ hiddenimports = [
 
 
 a = Analysis(
-    ["portable_launcher.py"],
+    [str(PORTABLE_LAUNCHER)],
     pathex=[str(ROOT)],
     binaries=[],
     datas=datas,
