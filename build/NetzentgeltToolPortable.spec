@@ -1,7 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 
 from pathlib import Path
-from PyInstaller.utils.hooks import copy_metadata
+from PyInstaller.utils.hooks import collect_data_files, copy_metadata
 
 # BUILD_PORTABLE_EXE_V2.bat changes the working directory to the repository root
 # before running PyInstaller. PyInstaller spec execution does not define
@@ -23,6 +23,7 @@ if not PORTABLE_LAUNCHER.exists():
 
 datas = []
 datas += copy_metadata("streamlit")
+datas += collect_data_files("streamlit")
 datas += data_if_exists("START_NETZENTGELT.bat", ".")
 datas += data_if_exists("app", "app")
 datas += data_if_exists("scripts", "scripts")
