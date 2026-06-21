@@ -54,6 +54,10 @@ from ae01_hardened_runtime_bridge import (  # noqa: E402
     install_ae01_hardened_runtime,
     restore_ae01_hardened_runtime,
 )
+from async_rebuild_runtime_module import (  # noqa: E402
+    install_async_rebuild_runtime,
+    render_async_rebuild_status,
+)
 from browser_title_module import DEFAULT_BROWSER_TITLE, enforce_browser_title  # noqa: E402
 from compact_login_ui_runtime_module import install_compact_login_views  # noqa: E402
 from dual_role_runtime_module import install_dual_operator_role_runtime  # noqa: E402
@@ -78,6 +82,7 @@ from operational_day_filter_ui_runtime_bridge import (  # noqa: E402
     restore_operational_day_filter_runtime,
 )
 from operator_gate_detail_runtime_module import install_operator_gate_detail_runtime  # noqa: E402
+from overlap_tolerance_runtime_module import install_overlap_tolerance_runtime  # noqa: E402
 from remove_review_tab_runtime_module import (  # noqa: E402
     install_remove_review_tab_runtime,
     restore_remove_review_tab_runtime,
@@ -91,6 +96,7 @@ install_gap_policy_labels()
 install_remove_vens_runtime()
 install_operator_gate_detail_runtime()
 install_overlap_correction_workflow()
+install_overlap_tolerance_runtime()
 
 from local_auth_ui_module import (  # noqa: E402
     render_admin_area,
@@ -126,6 +132,8 @@ PHASE11O_GATE_DETAIL_MARKER = "NETZENTGELT_OPERATOR_GATE_DETAIL_PHASE11O_V1_2026
 PHASE11P_OVERLAP_WORKFLOW_MARKER = "NETZENTGELT_OVERLAP_CORRECTION_WORKFLOW_PHASE11P_V1_20260618"
 PHASE11R_REMOVE_REVIEW_TAB_MARKER = "NETZENTGELT_REMOVE_REVIEW_TAB_PHASE11R_V1_20260618"
 PHASE11S_DUAL_ROLE_MARKER = "NETZENTGELT_DUAL_OPERATOR_ROLE_PHASE11S_V1_20260618"
+PHASE13A_ASYNC_REBUILD_MARKER = "NETZENTGELT_ASYNC_REBUILD_ENTRYPOINT_PHASE13A_V1_20260621"
+PHASE13B_OVERLAP_TOLERANCE_MARKER = "NETZENTGELT_OVERLAP_TOLERANCE_ENTRYPOINT_PHASE13B_V1_20260621"
 
 
 st.set_page_config(
@@ -136,10 +144,12 @@ st.set_page_config(
 enforce_browser_title(DEFAULT_BROWSER_TITLE)
 apply_theme()
 apply_density_cleanup()
+install_async_rebuild_runtime()
 
 current_user = require_local_login()
 admin_mode = render_authenticated_sidebar(current_user)
 render_theme_toggle()
+render_async_rebuild_status()
 exception_mode = render_export_exception_sidebar_toggle()
 
 if exception_mode:
