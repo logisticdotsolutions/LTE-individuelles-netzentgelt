@@ -18,7 +18,7 @@ import traceback
 import webbrowser
 
 
-PORTABLE_LAUNCHER_MARKER = "NETZENTGELT_PORTABLE_LAUNCHER_PHASE12A_V5_20260621"
+PORTABLE_LAUNCHER_MARKER = "NETZENTGELT_PORTABLE_LAUNCHER_PHASE12A_V6_20260621"
 
 
 def _runtime_dir() -> Path:
@@ -120,7 +120,16 @@ def main() -> int:
         print(f"App-Datei: {app_path}")
         from streamlit.web import cli as stcli
 
-        stcli.main()
+        try:
+            stcli.main()
+        except SystemExit as exc:
+            exit_code = exc.code if isinstance(exc.code, int) else 0
+            if exit_code == 0:
+                return 0
+            message = f"Streamlit wurde mit Exitcode {exit_code} beendet."
+            _write_log(runtime_dir, message)
+            print(message)
+            return exit_code
         return 0
     except BaseException:
         details = traceback.format_exc()
