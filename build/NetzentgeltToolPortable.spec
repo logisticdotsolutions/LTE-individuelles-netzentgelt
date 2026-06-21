@@ -2,10 +2,10 @@
 
 from pathlib import Path
 
-# PyInstaller resolves script paths relative to the spec file location.
-# Therefore use the repository root explicitly instead of relying on a relative
-# script name like "portable_launcher.py", which would be searched below build/.
-ROOT = Path(__file__).resolve().parents[1]
+# BUILD_PORTABLE_EXE_V2.bat changes the working directory to the repository root
+# before running PyInstaller. PyInstaller spec execution does not define
+# __file__, therefore the repository root must be derived from cwd here.
+ROOT = Path.cwd().resolve()
 PORTABLE_LAUNCHER = ROOT / "portable_launcher.py"
 
 
