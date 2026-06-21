@@ -39,7 +39,7 @@ Die erzeugten Dateien `config\portable_runtime.enc` und `config\portable_runtime
 ```powershell
 git pull
 .\RUN_TESTS.bat
-build\BUILD_PORTABLE_EXE.bat
+build\BUILD_PORTABLE_EXE_V2.bat
 build\PACKAGE_SHAREPOINT_ZIP.bat 0.1.0
 ```
 
