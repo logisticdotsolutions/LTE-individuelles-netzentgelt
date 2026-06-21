@@ -6,3 +6,4 @@ pyyaml
 streamlit
 python-dotenv
 pypdf
+cryptography
