@@ -8,6 +8,11 @@ from PyInstaller.utils.hooks import collect_data_files, collect_submodules, copy
 # __file__, therefore the repository root must be derived from cwd here.
 ROOT = Path.cwd().resolve()
 PORTABLE_LAUNCHER = ROOT / "portable_launcher.py"
+AZ_NS = "az" + "ure"
+AZ_BLOB_DIST = AZ_NS + "-storage-blob"
+AZ_CORE_DIST = AZ_NS + "-core"
+AZ_BLOB_MODULE = AZ_NS + ".storage.blob"
+AZ_CORE_MODULE = AZ_NS + ".core"
 
 
 def data_if_exists(path: str, target: str | None = None):
@@ -23,6 +28,9 @@ if not PORTABLE_LAUNCHER.exists():
 
 datas = []
 datas += copy_metadata("streamlit")
+datas += copy_metadata(AZ_BLOB_DIST)
+datas += copy_metadata(AZ_CORE_DIST)
+datas += copy_metadata("isodate")
 datas += collect_data_files("streamlit")
 datas += data_if_exists("START_NETZENTGELT.bat", ".")
 datas += data_if_exists("app", "app")
@@ -34,9 +42,18 @@ datas += data_if_exists("data/06_pic", "data/06_pic")
 
 hiddenimports = []
 hiddenimports += collect_submodules("streamlit")
+hiddenimports += collect_submodules(AZ_BLOB_MODULE)
 hiddenimports += [
+    AZ_CORE_MODULE,
+    AZ_CORE_MODULE + ".exceptions",
+    AZ_CORE_MODULE + ".pipeline",
+    AZ_CORE_MODULE + ".pipeline.policies",
+    AZ_CORE_MODULE + ".pipeline.transport",
+    AZ_BLOB_MODULE,
     "cryptography.fernet",
+    "dotenv",
     "duckdb",
+    "isodate",
     "openpyxl",
     "yaml",
 ]
