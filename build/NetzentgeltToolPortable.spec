@@ -21,6 +21,7 @@ if not PORTABLE_LAUNCHER.exists():
 
 
 datas = []
+datas += data_if_exists("START_NETZENTGELT.bat", ".")
 datas += data_if_exists("app", "app")
 datas += data_if_exists("scripts", "scripts")
 datas += data_if_exists("config/portable_runtime.enc", "config")
