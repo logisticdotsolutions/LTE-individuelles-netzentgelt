@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "azure": {
+    "AZURE_STORAGE_ACCOUNT_NAME": "REPLACE_WITH_STORAGE_ACCOUNT_NAME",
+    "AZURE_STORAGE_CONTAINER_NAME": "REPLACE_WITH_CONTAINER_NAME",
+    "AZURE_STORAGE_ACCOUNT_KEY": "REPLACE_WITH_ACCOUNT_KEY_OR_LEAVE_EMPTY_WHEN_USING_SAS",
+    "AZURE_STORAGE_SAS_TOKEN": "REPLACE_WITH_READ_ONLY_SAS_OR_LEAVE_EMPTY"
+  },
+  "users": [
+    {
+      "username": "admin",
+      "display_name": "Netzentgelt Admin",
+      "role_code": "ADMIN",
+      "temporary_password": "ChangeMeAdmin2026!",
+      "must_change_password": true
+    },
+    {
+      "username": "lte.de",
+      "display_name": "LTE Deutschland",
+      "role_code": "LTE_DE",
+      "temporary_password": "ChangeMeLTEDE2026!",
+      "must_change_password": true
+    },
+    {
+      "username": "lte.nl",
+      "display_name": "LTE Niederlande",
+      "role_code": "LTE_NL",
+      "temporary_password": "ChangeMeLTENL2026!",
+      "must_change_password": true
+    }
+  ]
+}
