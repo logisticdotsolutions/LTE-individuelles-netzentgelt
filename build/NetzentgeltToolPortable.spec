@@ -1,7 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 
 from pathlib import Path
-from PyInstaller.utils.hooks import collect_data_files, copy_metadata
+from PyInstaller.utils.hooks import collect_data_files, collect_submodules, copy_metadata
 
 # BUILD_PORTABLE_EXE_V2.bat changes the working directory to the repository root
 # before running PyInstaller. PyInstaller spec execution does not define
@@ -32,10 +32,9 @@ datas += data_if_exists("config/portable_runtime.key", "config")
 datas += data_if_exists("data/01_mapping", "data/01_mapping")
 datas += data_if_exists("data/06_pic", "data/06_pic")
 
-hiddenimports = [
-    "streamlit.web.cli",
-    "streamlit.runtime.scriptrunner.script_run_context",
-    "streamlit.runtime.scriptrunner_utils.script_run_context",
+hiddenimports = []
+hiddenimports += collect_submodules("streamlit")
+hiddenimports += [
     "cryptography.fernet",
     "duckdb",
     "openpyxl",
