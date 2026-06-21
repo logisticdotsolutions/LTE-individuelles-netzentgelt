@@ -18,7 +18,7 @@ import traceback
 import webbrowser
 
 
-PORTABLE_LAUNCHER_MARKER = "NETZENTGELT_PORTABLE_LAUNCHER_PHASE12A_V4_20260621"
+PORTABLE_LAUNCHER_MARKER = "NETZENTGELT_PORTABLE_LAUNCHER_PHASE12A_V5_20260621"
 
 
 def _runtime_dir() -> Path:
@@ -100,12 +100,14 @@ def main() -> int:
         url = f"http://127.0.0.1:{port}"
         os.environ["NETZENTGELT_PORTABLE"] = "1"
         os.environ["STREAMLIT_BROWSER_GATHER_USAGE_STATS"] = "false"
+        os.environ["STREAMLIT_GLOBAL_DEVELOPMENT_MODE"] = "false"
 
         threading.Thread(target=_open_browser, args=(url,), daemon=True).start()
         sys.argv = [
             "streamlit",
             "run",
             str(app_path),
+            "--global.developmentMode=false",
             "--server.address=127.0.0.1",
             f"--server.port={port}",
             "--server.headless=true",
