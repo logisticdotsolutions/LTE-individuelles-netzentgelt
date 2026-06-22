@@ -1,8 +1,8 @@
 """Betriebsmodi fuer den Pipeline-Neuaufbau.
 
-Die Modi bilden bewusst das fachliche Zielbild ab. Im ersten Schritt ist nur
-der vollstaendige Neuaufbau produktiv angebunden. Die schnelleren Modi werden
-in den naechsten Refactorings schrittweise implementiert.
+Die Modi bilden bewusst das fachliche Zielbild ab. Der vollstaendige Neuaufbau
+ist weiterhin der sichere Standardlauf. Schnelle Teilmodi werden schrittweise
+angebunden, sobald sie fachlich isoliert testbar sind.
 """
 
 from enum import Enum
@@ -19,4 +19,7 @@ class RebuildMode(str, Enum):
     @property
     def is_implemented(self) -> bool:
         """True, wenn der Modus aktuell technisch angebunden ist."""
-        return self is RebuildMode.FULL_IMPORT_REBUILD
+        return self in {
+            RebuildMode.FULL_IMPORT_REBUILD,
+            RebuildMode.EXPORT_REBUILD,
+        }
