@@ -1,17 +1,13 @@
-"""Full-Rebuild aus einer vorhandenen Raw-DuckDB.
-
-Dieser Modus trennt den teuren CSV-Import von der fachlichen Berechnung. Die
-Raw-DuckDB bleibt die unveraenderte Importbasis. Aus ihr wird eine Build-DuckDB
-kopiert, auf der Mapping, Overrides, Staging, Core, Findings, Quality-Gate und
-Exporte neu berechnet werden.
-"""
+"""Full-Rebuild aus einer vorhandenen Raw-DuckDB."""
 
 from __future__ import annotations
 
+import json
 import os
 import shutil
 import sys
 from pathlib import Path
+from time import perf_counter
 
 import duckdb
 
@@ -32,17 +28,30 @@ def _remove_if_exists(path: Path) -> None:
         path.unlink()
 
 
+def _write_timing_log(ctx: PipelineContext, timings: list[dict[str, object]]) -> None:
+    ctx.ensure_directories()
+    timing_path = ctx.log_dir / f"{ctx.run_id}_pipeline_timing.json"
+    timing_path.write_text(
+        json.dumps(
+            {
+                "run_id": ctx.run_id,
+                "timings": timings,
+                "total_seconds": round(sum(float(item["seconds"]) for item in timings), 3),
+            },
+            ensure_ascii=False,
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+    print(f"Pipeline-Timing-Log: {timing_path}")
+
+
 def run_full_rebuild_from_raw(
     ctx: PipelineContext,
     *,
     write_csv_outputs: bool = True,
 ) -> str:
-    """Fachliche Datenbank aus bestehender Raw-DuckDB neu erzeugen.
-
-    `write_csv_outputs=False` ist fuer schnelle UI-Korrekturen gedacht: Die
-    Exporttabellen werden in DuckDB trotzdem berechnet, aber die vielen CSV-
-    Dateien werden nicht bei jeder Korrektur neu geschrieben.
-    """
+    """Fachliche Datenbank aus bestehender Raw-DuckDB neu erzeugen."""
     ctx.ensure_directories()
 
     if not ctx.raw_db_path.exists():
@@ -90,11 +99,21 @@ def run_full_rebuild_from_raw(
         import_vens_tens_exception,
     )
 
+    timings: list[dict[str, object]] = []
+
+    def timed(label: str, func):
+        started = perf_counter()
+        result = func()
+        seconds = round(perf_counter() - started, 3)
+        timings.append({"step": label, "seconds": seconds})
+        print(f"TIMING {label}: {seconds:.3f}s")
+        return result
+
     _remove_if_exists(ctx.db_build_path)
     _remove_if_exists(Path(str(ctx.db_build_path) + ".wal"))
 
     print(f"Kopiere Raw-DuckDB in Build-Datenbank: {ctx.db_build_path}")
-    shutil.copy2(ctx.raw_db_path, ctx.db_build_path)
+    timed("copy_raw_to_build", lambda: shutil.copy2(ctx.raw_db_path, ctx.db_build_path))
 
     con = None
 
@@ -102,49 +121,50 @@ def run_full_rebuild_from_raw(
         con = duckdb.connect(str(ctx.db_build_path))
 
         print("Berechne Exclusions, Referenzen und manuelle Overrides...")
-        build_cancelled_transport_exclusions(con)
-        build_dummy_locomotive_catalog(con)
-        import_mapping(con)
-        import_market_partner_reference(con)
-        import_market_partner_mapping(con)
-        import_vens_tens_exception(con)
-        import_manual_overrides(con)
-        apply_raw_manual_overrides(con, ctx.run_id)
+        timed("build_cancelled_transport_exclusions", lambda: build_cancelled_transport_exclusions(con))
+        timed("build_dummy_locomotive_catalog", lambda: build_dummy_locomotive_catalog(con))
+        timed("import_mapping", lambda: import_mapping(con))
+        timed("import_market_partner_reference", lambda: import_market_partner_reference(con))
+        timed("import_market_partner_mapping", lambda: import_market_partner_mapping(con))
+        timed("import_vens_tens_exception", lambda: import_vens_tens_exception(con))
+        timed("import_manual_overrides", lambda: import_manual_overrides(con))
+        timed("apply_raw_manual_overrides", lambda: apply_raw_manual_overrides(con, ctx.run_id))
 
         print("Berechne Staging, Routen und Core-Timeline...")
-        build_loco_events(con)
-        exclude_dummy_locomotives_from_staging(con)
-        apply_staging_manual_overrides(con, ctx.run_id)
-        build_transport_routes(con)
-        build_core(con, ctx.run_id)
-        apply_core_assignment_fallbacks(con, ctx.run_id)
-        prepare_timeline_context_phase6c(con, ctx.run_id)
-        build_unresolved_performing_ru_market_partner_alias(con)
+        timed("build_loco_events", lambda: build_loco_events(con))
+        timed("exclude_dummy_locomotives_from_staging", lambda: exclude_dummy_locomotives_from_staging(con))
+        timed("apply_staging_manual_overrides", lambda: apply_staging_manual_overrides(con, ctx.run_id))
+        timed("build_transport_routes", lambda: build_transport_routes(con))
+        timed("build_core", lambda: build_core(con, ctx.run_id))
+        timed("apply_core_assignment_fallbacks", lambda: apply_core_assignment_fallbacks(con, ctx.run_id))
+        timed("prepare_timeline_context_phase6c", lambda: prepare_timeline_context_phase6c(con, ctx.run_id))
+        timed("build_unresolved_performing_ru_alias", lambda: build_unresolved_performing_ru_market_partner_alias(con))
 
         print("Berechne Findings, Quality-Gate und Exporttabellen...")
-        build_findings(con, ctx.run_id, home_country_iso=ctx.home_country_iso)
-        consolidate_dummy_locomotive_findings(con, ctx.run_id)
-        harden_findings_and_export_policy(con, ctx.run_id)
-        harden_findings_and_segments_phase6c(con, ctx.run_id)
-        build_quality_gate_tables(con, ctx.run_id)
-        insert_gap_only_day_findings_phase6d(con, ctx.run_id)
-        build_quality_gate_tables(con, ctx.run_id)
-        finalize_quality_gate_phase6d(con, ctx.run_id)
-        build_export_tables(con)
-        refresh_reconciliation_table(con, ctx.run_id)
+        timed("build_findings", lambda: build_findings(con, ctx.run_id, home_country_iso=ctx.home_country_iso))
+        timed("consolidate_dummy_locomotive_findings", lambda: consolidate_dummy_locomotive_findings(con, ctx.run_id))
+        timed("harden_findings_and_export_policy", lambda: harden_findings_and_export_policy(con, ctx.run_id))
+        timed("harden_findings_and_segments_phase6c", lambda: harden_findings_and_segments_phase6c(con, ctx.run_id))
+        timed("build_quality_gate_tables_1", lambda: build_quality_gate_tables(con, ctx.run_id))
+        timed("insert_gap_only_day_findings_phase6d", lambda: insert_gap_only_day_findings_phase6d(con, ctx.run_id))
+        timed("build_quality_gate_tables_2", lambda: build_quality_gate_tables(con, ctx.run_id))
+        timed("finalize_quality_gate_phase6d", lambda: finalize_quality_gate_phase6d(con, ctx.run_id))
+        timed("build_export_tables", lambda: build_export_tables(con))
+        timed("refresh_reconciliation_table", lambda: refresh_reconciliation_table(con, ctx.run_id))
 
         written_files = []
         if write_csv_outputs:
             print("Schreibe CSV-Ausgaben...")
-            written_files = export_all_csv_outputs(con, ctx.export_dir)
+            written_files = timed("export_all_csv_outputs", lambda: export_all_csv_outputs(con, ctx.export_dir))
         else:
             print("CSV-Ausgaben werden fuer schnellen Korrekturlauf uebersprungen.")
 
         con.close()
         con = None
 
-        os.replace(ctx.db_build_path, ctx.db_path)
+        timed("replace_build_database", lambda: os.replace(ctx.db_build_path, ctx.db_path))
         _remove_if_exists(Path(str(ctx.db_build_path) + ".wal"))
+        _write_timing_log(ctx, timings)
 
         if write_csv_outputs:
             return f"FULL_REBUILD_FROM_RAW abgeschlossen. CSV-Dateien geschrieben: {len(written_files)}"
@@ -155,4 +175,6 @@ def run_full_rebuild_from_raw(
             con.close()
         _remove_if_exists(ctx.db_build_path)
         _remove_if_exists(Path(str(ctx.db_build_path) + ".wal"))
+        if timings:
+            _write_timing_log(ctx, timings)
         raise
