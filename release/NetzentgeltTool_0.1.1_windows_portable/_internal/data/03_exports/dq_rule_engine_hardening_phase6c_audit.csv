@@ -1,8 +1,0 @@
-phase_id;run_id;metric;metric_value;calculated_at_utc;comment
-NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6C_ADJACENCY_HOTFIX_V1_20260608;RUN_20260621_191259;nested_event_skips_for_gap_adjacency;349;2026-06-21 21:13:19.303389;Zeitlich verschachtelte operative Ereignisse werden fuer die GAP-Nachbarschaft uebersprungen und separat auditiert.
-NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6C_ADJACENCY_HOTFIX_V1_20260608;RUN_20260621_191259;uncertain_gap_rows;1;2026-06-21 21:13:19.310359;Gebrochene DE-Ortsketten ohne belastbare ActualArrival-/ActualDeparture-Grenzen.
-NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6C_ADJACENCY_HOTFIX_V1_20260608;RUN_20260621_191259;gap_context_review_rows;1195;2026-06-21 21:13:19.316898;Grenzkontext-GAPs werden auditierbar klassifiziert, aber nicht automatisch blockierend bewertet.
-NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6C_ADJACENCY_HOTFIX_V1_20260608;RUN_20260621_191259;potential_cold_stand_rows;240;2026-06-21 21:13:19.324282;Standzeiten ueber 8 Stunden am selben DE-Ort als Pruefkandidaten vorbereitet.
-NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6C_ADJACENCY_HOTFIX_V1_20260608;RUN_20260621_191259;r015_uncertain_gap_findings;1;2026-06-21 21:13:21.05788;Unsichere GAP-Zeitgrenzen werden sichtbar statt mit Ersatzdauer bewertet.
-NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6C_ADJACENCY_HOTFIX_V1_20260608;RUN_20260621_191259;r012_transportdetail_dummy_findings;5;2026-06-21 21:13:21.064626;TransportDetail-Dummy-Loks werden symmetrisch als R012 erkannt.
-NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6C_ADJACENCY_HOTFIX_V1_20260608;RUN_20260621_191259;central_de_usage_segments;2458;2026-06-21 21:13:21.070882;Zentrale DE-begrenzte Nutzungssegmente fuer Gate und Export.

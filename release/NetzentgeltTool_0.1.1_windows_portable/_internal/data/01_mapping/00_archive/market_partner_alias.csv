@@ -1,7 +1,0 @@
-﻿source_system;source_field;source_value;role_code;company_name_official;active_flag;comment
-RailCube;LocomotiveHolder;LTE Logistik- und Transport-GmbH (Holding);ANE_TENS;LTE Logistik- und Transport-GmbH;N;"Aus Relations.xlsx abgeleitet; vor Aktivierung fachlich prüfen"
-RailCube;LocomotiveHolder;LTE DE - LTE Germany GmbH;ANE_TENS;LTE Germany GmbH;N;"Aus Relations.xlsx abgeleitet; vor Aktivierung fachlich prüfen"
-RailCube;LocomotiveHolder;LTE NL - LTE Netherlands B.V.;ANE_TENS;LTE Netherlands B.V.;N;"Aus Relations.xlsx abgeleitet; vor Aktivierung fachlich prüfen"
-RailCube;LocomotiveHolder;LTE CH - LTE Schweiz GmbH;ANE_TENS;LTE Schweiz GmbH;N;"Aus Relations.xlsx abgeleitet; vor Aktivierung fachlich prüfen"
-RailCube;LocomotiveHolder;LTE GROUP;ANE_TENS;LTE Logistik- und Transport-GmbH;N;Nur aktivieren, wenn LTE GROUP im Quellsystem tatsächlich diesen Halter meint
-RailCube;LocomotiveHolder;LTE AT - LTE Austria GmbH;ANE_TENS;LTE Logistik- und Transport-GmbH;N;"Nur als Prüfvorschlag; offizielle ANE_TENS-Zuordnung vor Aktivierung klären"
