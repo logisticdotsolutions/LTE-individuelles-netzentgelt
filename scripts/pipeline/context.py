@@ -1,4 +1,4 @@
-"""Zentraler Pipeline-Kontext fuer Pfade und Fachparameter."""
+"""Pipeline context for paths and parameters."""
 
 from __future__ import annotations
 
@@ -9,12 +9,7 @@ from pathlib import Path
 
 @dataclass(frozen=True)
 class PipelineContext:
-    """Gemeinsamer Kontext fuer Pipeline-Schritte.
-
-    Ziel ist, Pfade und fachliche Standardparameter nicht mehr verstreut in
-    mehreren Modulen zu halten. Die Defaults spiegeln den aktuellen Aufbau des
-    Netzentgelt-MVP wider.
-    """
+    """Shared context for pipeline steps."""
 
     root: Path
     raw_dir: Path
@@ -24,6 +19,7 @@ class PipelineContext:
     log_dir: Path
     db_path: Path
     db_build_path: Path
+    raw_db_path: Path
     run_id: str
     home_country_iso: str = "DE"
     lookback_months: int = 6
@@ -32,7 +28,6 @@ class PipelineContext:
 
     @classmethod
     def from_project_root(cls, root: Path | None = None) -> "PipelineContext":
-        """Kontext ausgehend vom Projektstamm erzeugen."""
         project_root = root or Path(__file__).resolve().parents[2]
         db_dir = project_root / "data" / "02_duckdb"
 
@@ -45,11 +40,11 @@ class PipelineContext:
             log_dir=project_root / "data" / "04_logs",
             db_path=db_dir / "netzentgelt.duckdb",
             db_build_path=db_dir / "netzentgelt_build.duckdb",
+            raw_db_path=db_dir / "netzentgelt_raw.duckdb",
             run_id=datetime.now(timezone.utc).strftime("RUN_%Y%m%d_%H%M%S"),
         )
 
     def ensure_directories(self) -> None:
-        """Alle Standardordner anlegen, falls sie fehlen."""
         for directory in [
             self.raw_dir,
             self.map_dir,
