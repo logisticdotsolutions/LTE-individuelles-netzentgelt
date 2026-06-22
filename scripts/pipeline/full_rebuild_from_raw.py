@@ -13,6 +13,7 @@ import duckdb
 
 from .context import PipelineContext
 from .csv_outputs import export_all_csv_outputs
+from .quality_gate_incremental import apply_r016_to_quality_gate_tables
 
 
 def _ensure_scripts_dir_on_path() -> None:
@@ -186,9 +187,9 @@ def run_full_rebuild_from_raw(
         timed("consolidate_dummy_locomotive_findings", lambda: consolidate_dummy_locomotive_findings(con, ctx.run_id))
         timed("harden_findings_and_export_policy", lambda: harden_findings_and_export_policy(con, ctx.run_id))
         timed("harden_findings_and_segments_phase6c", lambda: harden_findings_and_segments_phase6c(con, ctx.run_id))
-        timed("build_quality_gate_tables_1", lambda: build_quality_gate_tables(con, ctx.run_id))
+        timed("build_quality_gate_tables", lambda: build_quality_gate_tables(con, ctx.run_id))
         timed("insert_gap_only_day_findings_phase6d", lambda: insert_gap_only_day_findings_phase6d(con, ctx.run_id))
-        timed("build_quality_gate_tables_2", lambda: build_quality_gate_tables(con, ctx.run_id))
+        timed("apply_r016_to_quality_gate_tables", lambda: apply_r016_to_quality_gate_tables(con))
         timed("finalize_quality_gate_phase6d", lambda: finalize_quality_gate_phase6d(con, ctx.run_id))
         timed("build_export_tables", lambda: build_export_tables(con))
         timed("refresh_reconciliation_table", lambda: refresh_reconciliation_table(con, ctx.run_id))
