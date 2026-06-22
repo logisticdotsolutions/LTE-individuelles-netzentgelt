@@ -32,8 +32,17 @@ def _remove_if_exists(path: Path) -> None:
         path.unlink()
 
 
-def run_full_rebuild_from_raw(ctx: PipelineContext) -> str:
-    """Fachliche Datenbank aus bestehender Raw-DuckDB neu erzeugen."""
+def run_full_rebuild_from_raw(
+    ctx: PipelineContext,
+    *,
+    write_csv_outputs: bool = True,
+) -> str:
+    """Fachliche Datenbank aus bestehender Raw-DuckDB neu erzeugen.
+
+    `write_csv_outputs=False` ist fuer schnelle UI-Korrekturen gedacht: Die
+    Exporttabellen werden in DuckDB trotzdem berechnet, aber die vielen CSV-
+    Dateien werden nicht bei jeder Korrektur neu geschrieben.
+    """
     ctx.ensure_directories()
 
     if not ctx.raw_db_path.exists():
@@ -112,7 +121,7 @@ def run_full_rebuild_from_raw(ctx: PipelineContext) -> str:
         prepare_timeline_context_phase6c(con, ctx.run_id)
         build_unresolved_performing_ru_market_partner_alias(con)
 
-        print("Berechne Findings, Quality-Gate und Export...")
+        print("Berechne Findings, Quality-Gate und Exporttabellen...")
         build_findings(con, ctx.run_id, home_country_iso=ctx.home_country_iso)
         consolidate_dummy_locomotive_findings(con, ctx.run_id)
         harden_findings_and_export_policy(con, ctx.run_id)
@@ -124,8 +133,12 @@ def run_full_rebuild_from_raw(ctx: PipelineContext) -> str:
         build_export_tables(con)
         refresh_reconciliation_table(con, ctx.run_id)
 
-        print("Schreibe CSV-Ausgaben...")
-        written_files = export_all_csv_outputs(con, ctx.export_dir)
+        written_files = []
+        if write_csv_outputs:
+            print("Schreibe CSV-Ausgaben...")
+            written_files = export_all_csv_outputs(con, ctx.export_dir)
+        else:
+            print("CSV-Ausgaben werden fuer schnellen Korrekturlauf uebersprungen.")
 
         con.close()
         con = None
@@ -133,7 +146,9 @@ def run_full_rebuild_from_raw(ctx: PipelineContext) -> str:
         os.replace(ctx.db_build_path, ctx.db_path)
         _remove_if_exists(Path(str(ctx.db_build_path) + ".wal"))
 
-        return f"FULL_REBUILD_FROM_RAW abgeschlossen. CSV-Dateien geschrieben: {len(written_files)}"
+        if write_csv_outputs:
+            return f"FULL_REBUILD_FROM_RAW abgeschlossen. CSV-Dateien geschrieben: {len(written_files)}"
+        return "FULL_REBUILD_FROM_RAW abgeschlossen. CSV-Schreiben uebersprungen."
 
     except Exception:
         if con is not None:
