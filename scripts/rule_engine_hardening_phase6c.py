@@ -11,29 +11,12 @@ Die Schicht wird innerhalb des temporaeren DuckDB-Neuaufbaus ausgefuehrt.
 Original-CSVs bleiben unveraendert.
 """
 
+from time import perf_counter
 from typing import Iterable
 
-from rule_engine_hardening_phase6b import _cutoff_utc, _refresh_core_quality_flags
+from rule_engine_hardening_phase6b import _cutoff_utc, _refresh_core_quality_flags, qident, table_exists
 
 PHASE_ID = "NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6C_ADJACENCY_HOTFIX_V1_20260608"
-
-
-def qident(value: str) -> str:
-    return '"' + str(value).replace('"', '""') + '"'
-
-
-def table_exists(con, table_name: str) -> bool:
-    return (
-        con.execute(
-            """
-            select count(*)
-            from information_schema.tables
-            where lower(table_name) = lower(?)
-            """,
-            [table_name],
-        ).fetchone()[0]
-        > 0
-    )
 
 
 def columns(con, table_name: str) -> list[str]:
@@ -158,6 +141,7 @@ def prepare_timeline_context_phase6c(con, run_id: str) -> None:
     _ensure_column(con, "core_loco_timeline", "de_period_start_utc", "timestamp")
     _ensure_column(con, "core_loco_timeline", "de_period_end_utc", "timestamp")
 
+    _t = perf_counter()
     con.execute(
         """
         update core_loco_timeline
@@ -174,50 +158,90 @@ def prepare_timeline_context_phase6c(con, run_id: str) -> None:
             end
         """
     )
+    print(f"  phase6c[1] update de_period: {perf_counter()-_t:.3f}s")
 
+    _t = perf_counter()
+    con.execute(
+        """
+        create or replace temp table tmp_movements_phase6c as
+        select *
+        from core_loco_timeline
+        where row_type = 'MOVEMENT'
+        order by loco_no, movement_sequence_no
+        """
+    )
+    # ART-Index auf (loco_no, movement_sequence_no) aktiviert den Index-Range-Scan
+    # im nachfolgenden Lateral-Join: statt O(n_total) pro Zeile → O(log n + n_loco_local).
+    # loco_no ist in MOVEMENT-Zeilen garantiert nicht null (relevant_loco-Filter).
+    con.execute(
+        "create index idx_tmp_mov_p6c on tmp_movements_phase6c(loco_no, movement_sequence_no)"
+    )
+    print(f"  phase6c[2] tmp_movements_phase6c + index: {perf_counter()-_t:.3f}s")
+
+    _t = perf_counter()
     con.execute(
         f"""
         create or replace temp table tmp_phase6c_adjacency as
-        with movements as (
-            select *
-            from core_loco_timeline
-            where row_type = 'MOVEMENT'
-        ), ordered as (
+        with eligible_keys as (
+            -- Alle zulässigen (C, N)-Paare: gleiche Loco, N nach C, N nicht von C überlappend.
+            -- ROW_NUMBER mit identischer Sortierung wie vorher LATERAL LIMIT 1 → bit-identisch.
+            select
+                c.loco_no              as c_loco_no,
+                c.movement_sequence_no as c_seq,
+                n.movement_sequence_no as n_seq,
+                n.transport_number     as n_transport_number,
+                n.actual_departure_ts  as n_actual_departure_ts,
+                n.period_start_utc     as n_period_start_utc,
+                n.sequence_ts          as n_sequence_ts,
+                n.origin_name          as n_origin_name,
+                n.origin_country_iso   as n_origin_country_iso,
+                n.report_scope         as n_report_scope,
+                n.de_event_label       as n_de_event_label,
+                n.source_table         as n_source_table,
+                n.source_row_id        as n_source_row_id,
+                row_number() over (
+                    partition by c.loco_no, c.movement_sequence_no
+                    order by
+                        case when n.actual_departure_ts is null then 1 else 0 end,
+                        n.actual_departure_ts asc nulls last,
+                        n.movement_sequence_no asc,
+                        n.source_row_id asc
+                ) as _rn
+            from tmp_movements_phase6c c
+            join tmp_movements_phase6c n
+                on  n.loco_no = c.loco_no
+                and n.movement_sequence_no > c.movement_sequence_no
+                and (
+                      c.actual_arrival_ts is null
+                   or n.actual_departure_ts is null
+                   or n.actual_departure_ts >= c.actual_arrival_ts
+                )
+        ),
+        best as (
+            select * from eligible_keys where _rn = 1
+        ),
+        joined as (
             select
                 c.*,
-                n.movement_sequence_no as next_movement_sequence_no,
-                n.transport_number as next_transport_number,
-                n.actual_departure_ts as next_actual_departure_ts,
-                n.period_start_utc as next_period_start_utc,
-                n.sequence_ts as next_sequence_ts,
-                n.origin_name as next_origin_name,
-                n.origin_country_iso as next_origin_country_iso,
-                n.report_scope as next_report_scope,
-                n.de_event_label as next_de_event_label,
-                n.source_table as next_source_table,
-                n.source_row_id as next_source_row_id
-            from movements c
-            left join lateral (
-                select candidate.*
-                from movements candidate
-                where candidate.loco_no is not distinct from c.loco_no
-                  and candidate.movement_sequence_no > c.movement_sequence_no
-                  and (
-                        c.actual_arrival_ts is null
-                     or candidate.actual_departure_ts is null
-                     or candidate.actual_departure_ts >= c.actual_arrival_ts
-                  )
-                order by
-                    case when candidate.actual_departure_ts is null then 1 else 0 end,
-                    candidate.actual_departure_ts asc nulls last,
-                    candidate.movement_sequence_no asc,
-                    candidate.source_row_id asc
-                limit 1
-            ) n on true
+                b.n_seq              as next_movement_sequence_no,
+                b.n_transport_number as next_transport_number,
+                b.n_actual_departure_ts as next_actual_departure_ts,
+                b.n_period_start_utc    as next_period_start_utc,
+                b.n_sequence_ts         as next_sequence_ts,
+                b.n_origin_name         as next_origin_name,
+                b.n_origin_country_iso  as next_origin_country_iso,
+                b.n_report_scope        as next_report_scope,
+                b.n_de_event_label      as next_de_event_label,
+                b.n_source_table        as next_source_table,
+                b.n_source_row_id       as next_source_row_id
+            from tmp_movements_phase6c c
+            inner join best b
+                on  b.c_loco_no = c.loco_no
+                and b.c_seq     = c.movement_sequence_no
         )
         select
             *,
-            {_context_class_sql('ordered')} as derived_gap_context_class,
+            {_context_class_sql('joined')} as derived_gap_context_class,
             case
                 when actual_arrival_ts is not null
                  and next_actual_departure_ts is not null
@@ -231,11 +255,12 @@ def prepare_timeline_context_phase6c(con, run_id: str) -> None:
                     then date_diff('minute', actual_arrival_ts, next_actual_departure_ts)
                 else null
             end as actual_gap_minutes
-        from ordered
-        where next_movement_sequence_no is not null
+        from joined
         """
     )
+    print(f"  phase6c[3] self-join adjacency: {perf_counter()-_t:.3f}s")
 
+    _t = perf_counter()
     con.execute(
         """
         create or replace table dq_phase6c_nested_event_skips as
@@ -247,8 +272,7 @@ def prepare_timeline_context_phase6c(con, run_id: str) -> None:
                 lead(actual_arrival_ts) over w as skipped_actual_arrival_ts,
                 lead(source_table) over w as skipped_source_table,
                 lead(source_row_id) over w as skipped_source_row_id
-            from core_loco_timeline c
-            where row_type = 'MOVEMENT'
+            from tmp_movements_phase6c c
             window w as (
                 partition by loco_no
                 order by movement_sequence_no asc, source_row_id asc
@@ -274,9 +298,11 @@ def prepare_timeline_context_phase6c(con, run_id: str) -> None:
         order by loco_no, actual_arrival_ts, source_row_id
         """
     )
+    print(f"  phase6c[4] nested_event_skips: {perf_counter()-_t:.3f}s")
 
     # Bestehende GAP-Zeilen auf belastbare Grenzen umstellen. Unsichere Grenzen
     # bleiben sichtbar, duerfen aber weder Dauer noch harte 15-Minuten-Deckung liefern.
+    _t = perf_counter()
     con.execute(
         """
         update core_loco_timeline as g
@@ -311,7 +337,9 @@ def prepare_timeline_context_phase6c(con, run_id: str) -> None:
           and g.source_row_id is not distinct from a.source_row_id
         """
     )
+    print(f"  phase6c[5] update GAP rows: {perf_counter()-_t:.3f}s")
 
+    _t = perf_counter()
     con.execute(
         """
         create or replace table dq_phase6c_uncertain_gaps as
@@ -339,7 +367,9 @@ def prepare_timeline_context_phase6c(con, run_id: str) -> None:
         """,
         [str(run_id)],
     )
+    print(f"  phase6c[6] uncertain_gaps: {perf_counter()-_t:.3f}s")
 
+    _t = perf_counter()
     con.execute(
         """
         create or replace table dq_phase6c_gap_context_review as
@@ -373,7 +403,9 @@ def prepare_timeline_context_phase6c(con, run_id: str) -> None:
         """,
         [str(run_id)],
     )
+    print(f"  phase6c[7] gap_context_review: {perf_counter()-_t:.3f}s")
 
+    _t = perf_counter()
     con.execute(
         """
         create or replace table core_loco_stand_candidates as
@@ -405,6 +437,7 @@ def prepare_timeline_context_phase6c(con, run_id: str) -> None:
         """,
         [str(run_id)],
     )
+    print(f"  phase6c[8] stand_candidates: {perf_counter()-_t:.3f}s")
 
     _audit(
         con,

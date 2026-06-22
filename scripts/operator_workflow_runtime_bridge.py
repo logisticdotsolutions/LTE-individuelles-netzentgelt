@@ -24,6 +24,29 @@ from operator_case_workspace_module import (
 PHASE11A_WORKFLOW_RUNTIME_MARKER = "NETZENTGELT_OPERATOR_WORKFLOW_RUNTIME_PHASE11A_V1_20260611"
 PHASE11Q_TASK_DEDUP_MARKER = "NETZENTGELT_OPERATOR_TASK_DEDUP_PHASE11Q_V1_20260618"
 _PIPELINE_TAB_LABEL = "⚙️ Technik: Pipeline"
+_FALL_BEARBEITEN_TAB_INDEX = 2
+
+
+@st.dialog("Korrektur gespeichert", width="large")
+def _save_success_dialog(message: str) -> None:
+    st.success(message)
+    st.markdown("Prüfe jetzt Timeline oder erstelle Exporte.")
+    if st.button("OK", key="save_success_dialog_ok", type="primary"):
+        st.rerun()
+
+
+def _navigate_to_fall_bearbeiten_tab() -> None:
+    import streamlit.components.v1 as components
+    components.html(
+        """<script>
+        setTimeout(function() {
+            var tabs = window.parent.document.querySelectorAll('[role="tab"]');
+            if (tabs.length > 2) { tabs[2].click(); }
+        }, 50);
+        </script>""",
+        height=0,
+        width=0,
+    )
 
 
 def _non_empty_locos(table: pd.DataFrame) -> list[str]:
@@ -395,6 +418,11 @@ def operator_workflow_runtime(user: UserContext) -> Iterator[None]:
         )
 
     def cockpit(*args: Any, **kwargs: Any):
+        if st.session_state.pop("navigate_to_fall_bearbeiten", False):
+            _navigate_to_fall_bearbeiten_tab()
+
+        success_msg = st.session_state.pop("override_save_success_message", None)
+
         original_info = st.info
         st.info = _without_legacy_override_info(original_info)
         try:
@@ -404,6 +432,9 @@ def operator_workflow_runtime(user: UserContext) -> Iterator[None]:
             return None
         finally:
             st.info = original_info
+
+        if success_msg:
+            _save_success_dialog(success_msg)
 
         timeline = case_timeline() if st.session_state.get(SESSION_CASE_LOCO_KEY) else pd.DataFrame()
         try:

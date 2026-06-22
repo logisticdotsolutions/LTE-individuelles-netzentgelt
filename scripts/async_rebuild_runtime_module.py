@@ -98,12 +98,29 @@ def _write_status(status: dict[str, object]) -> None:
     os.replace(temporary, STATUS_PATH)
 
 
+_MAX_REBUILD_LOG_RUNS = 20
+
+
+def _rotate_rebuild_logs() -> None:
+    """Älteste Rebuild-Logs löschen; behalte die letzten _MAX_REBUILD_LOG_RUNS Läufe."""
+    try:
+        log_files = sorted(LOG_DIR.glob("REBUILD_*_stdout.log"), key=lambda p: p.stat().st_mtime)
+        excess = len(log_files) - _MAX_REBUILD_LOG_RUNS
+        for stdout_log in log_files[:excess]:
+            stderr_log = stdout_log.with_name(stdout_log.name.replace("_stdout.log", "_stderr.log"))
+            stdout_log.unlink(missing_ok=True)
+            stderr_log.unlink(missing_ok=True)
+    except OSError:
+        pass
+
+
 def _write_logs(run_id: str, stdout: str, stderr: str) -> tuple[str, str]:
     LOG_DIR.mkdir(parents=True, exist_ok=True)
     stdout_path = LOG_DIR / f"{run_id}_stdout.log"
     stderr_path = LOG_DIR / f"{run_id}_stderr.log"
     stdout_path.write_text(stdout or "", encoding="utf-8")
     stderr_path.write_text(stderr or "", encoding="utf-8")
+    _rotate_rebuild_logs()
     return str(stdout_path), str(stderr_path)
 
 

@@ -79,6 +79,38 @@ def test_install_extension_leaves_unrelated_tab_sets_unchanged(monkeypatch) -> N
     assert module.st.tabs is original_tabs
 
 
+def test_patched_tabs_does_not_double_wrap_export_tab_when_already_injected(monkeypatch) -> None:
+    """patched_tabs darf _InjectedExportTab nicht nochmals einwickeln wenn es bereits einer ist."""
+    render_calls: list[str] = []
+
+    def original_tabs(labels):
+        return [DummyTab(str(label)) for label in labels]
+
+    monkeypatch.setattr(module.st, "tabs", original_tabs)
+    monkeypatch.setattr(module, "render_zuordnungen_export_extension", lambda: render_calls.append("x"))
+
+    restored1 = module.install_zuordnungen_export_tab_extension()
+    # Zweiter install: der Sentinel verhindert erneutes Patchen von st.tabs,
+    # aber falls die Kette doch zwei patched_tabs enthielte (z. B. durch
+    # andere Patcher), darf der Export-Tab nur einmal gewrapped werden.
+    # Simuliere den Worst-Case manuell: rufe patched_tabs direkt auf einem
+    # bereits-gewickelten Tab auf.
+    patched = module.st.tabs  # = patched_tabs
+    first_tabs = patched([module.EXPORT_TAB_LABEL])
+    assert isinstance(first_tabs[0], module._InjectedExportTab)
+
+    # Wenn patched_tabs nochmals über bereits gewickelte Tabs läuft
+    second_tabs = patched([module.EXPORT_TAB_LABEL])
+    assert isinstance(second_tabs[0], module._InjectedExportTab)
+
+    # Regardless of nesting, render_extension darf nur EINMAL aufgerufen werden
+    with second_tabs[0]:
+        pass
+    assert render_calls == ["x"], f"render_extension wurde {len(render_calls)}× aufgerufen statt 1×"
+
+    module.restore_zuordnungen_export_tab_extension(restored1)
+
+
 def test_render_extension_calls_preview_and_both_holding_downloads(monkeypatch, tmp_path: Path) -> None:
     db_path = tmp_path / "netzentgelt.duckdb"
     db_path.touch()

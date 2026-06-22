@@ -1,0 +1,33 @@
+loco_no;match_reason;catalog_source
+91850000001-6;Bekannte Planungs-/Dummy-Loknummer;data/01_mapping/dummy_locomotives.csv
+00000000013-3;Bekannte Planungs-/Dummy-Loknummer | LocomotiveType enthaelt Dummy: Dummy;data/01_mapping/dummy_locomotives.csv | raw_locomotivemovement.LocomotiveType
+00000000007-5;Bekannte Planungs-/Dummy-Loknummer;data/01_mapping/dummy_locomotives.csv
+91806193000-7;LocomotiveType enthaelt Dummy: Dummy;raw_locomotivemovement.LocomotiveType
+00000000003-4;Bekannte Planungs-/Dummy-Loknummer;data/01_mapping/dummy_locomotives.csv
+91850000003-2;Bekannte Planungs-/Dummy-Loknummer;data/01_mapping/dummy_locomotives.csv
+91850000008-1;Bekannte Planungs-/Dummy-Loknummer;data/01_mapping/dummy_locomotives.csv
+92561740778-6;LocomotiveType enthaelt Dummy: Dummy SK/CZ;raw_locomotivemovement.LocomotiveType
+91807193109-4;LocomotiveType enthaelt Dummy: Dummy;raw_locomotivemovement.LocomotiveType
+91560383999-3;LocomotiveType enthaelt Dummy: Dummy SK/CZ;raw_locomotivemovement.LocomotiveType
+00000000001-8;Bekannte Planungs-/Dummy-Loknummer | LocomotiveType enthaelt Dummy: Dummy;data/01_mapping/dummy_locomotives.csv | raw_locomotivemovement.LocomotiveType
+00000000010-9;Bekannte Planungs-/Dummy-Loknummer;data/01_mapping/dummy_locomotives.csv
+00000000011-7;Bekannte Planungs-/Dummy-Loknummer;data/01_mapping/dummy_locomotives.csv
+00000000009-1;Bekannte Planungs-/Dummy-Loknummer;data/01_mapping/dummy_locomotives.csv
+95571061094-5;LocomotiveType enthaelt Dummy: Dummy;raw_locomotivemovement.LocomotiveType
+91806189000-3;Bekannte Planungs-/Dummy-Loknummer | LocomotiveType enthaelt Dummy: Dummy;data/01_mapping/dummy_locomotives.csv | raw_locomotivemovement.LocomotiveType
+91806999002-9;LocomotiveType enthaelt Dummy: Dummy;raw_locomotivemovement.LocomotiveType
+91850000002-4;Bekannte Planungs-/Dummy-Loknummer;data/01_mapping/dummy_locomotives.csv
+91850000004-0;Bekannte Planungs-/Dummy-Loknummer;data/01_mapping/dummy_locomotives.csv
+91850000007-3;Bekannte Planungs-/Dummy-Loknummer;data/01_mapping/dummy_locomotives.csv
+00000000006-7;Bekannte Planungs-/Dummy-Loknummer;data/01_mapping/dummy_locomotives.csv
+00000000005-9;Bekannte Planungs-/Dummy-Loknummer;data/01_mapping/dummy_locomotives.csv
+91806193951-1;LocomotiveType enthaelt Dummy: Dummy;raw_locomotivemovement.LocomotiveType
+91806185606-1;LocomotiveType enthaelt Dummy: Dummy;raw_locomotivemovement.LocomotiveType
+00000000008-3;Bekannte Planungs-/Dummy-Loknummer;data/01_mapping/dummy_locomotives.csv
+00000000015-8;Bekannte Planungs-/Dummy-Loknummer | LocomotiveType enthaelt Dummy: Dummy;data/01_mapping/dummy_locomotives.csv | raw_locomotivemovement.LocomotiveType
+00000000000-0;Bekannte Planungs-/Dummy-Loknummer | LocomotiveType enthaelt Dummy: Dummy;data/01_mapping/dummy_locomotives.csv | raw_locomotivemovement.LocomotiveType
+95710601054-0;LocomotiveType enthaelt Dummy: Dummy;raw_locomotivemovement.LocomotiveType
+00000000004-2;Bekannte Planungs-/Dummy-Loknummer;data/01_mapping/dummy_locomotives.csv
+91807193110-2;LocomotiveType enthaelt Dummy: Dummy;raw_locomotivemovement.LocomotiveType
+00000000014-1;Bekannte Planungs-/Dummy-Loknummer;data/01_mapping/dummy_locomotives.csv
+00000000002-6;Bekannte Planungs-/Dummy-Loknummer;data/01_mapping/dummy_locomotives.csv

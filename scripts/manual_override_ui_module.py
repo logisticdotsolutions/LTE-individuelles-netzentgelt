@@ -706,6 +706,10 @@ def _render_suggestions(
                     status.update(label="Neuberechnung erfolgreich abgeschlossen.", state="complete", expanded=False)
                     st.session_state["overview_refresh_completed"] = True
                     st.session_state["overview_refresh_completed_at"] = datetime.now().strftime("%d.%m.%Y um %H:%M")
+                    st.session_state["override_save_success_message"] = (
+                        f"{len(created)} lokale Korrektur(en) wurden gespeichert und neu berechnet."
+                    )
+                    st.session_state["navigate_to_fall_bearbeiten"] = True
                     st.rerun()
                 status.update(label="Neuberechnung fehlgeschlagen.", state="error", expanded=True)
                 st.error("Der letzte produktive Stand bleibt erhalten.")
@@ -905,6 +909,10 @@ def _render_new_override(
                 status.update(label="Neuberechnung erfolgreich abgeschlossen.", state="complete", expanded=False)
                 st.session_state["overview_refresh_completed"] = True
                 st.session_state["overview_refresh_completed_at"] = datetime.now().strftime("%d.%m.%Y um %H:%M")
+                st.session_state["override_save_success_message"] = (
+                    f"Lokale Korrektur **{override_id}** wurde gespeichert und neu berechnet."
+                )
+                st.session_state["navigate_to_fall_bearbeiten"] = True
                 st.rerun()
             status.update(label="Neuberechnung fehlgeschlagen.", state="error", expanded=True)
             st.error("Der letzte produktive DuckDB-Stand bleibt erhalten.")

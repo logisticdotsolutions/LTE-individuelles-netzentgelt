@@ -1,0 +1,4 @@
+phase_id;run_id;metric;metric_value;calculated_at_utc;comment
+NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6D_V1_20260608;RUN_20260621_191259;r016_gap_only_day_findings;8;2026-06-21 21:13:22.382008;GAP-only-Lok-Tage erhalten einen sichtbaren MANUAL_REVIEW-Prueffall.
+NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6D_V1_20260608;RUN_20260621_191259;exact_overlap_loco_days;68;2026-06-21 21:13:23.846283;Lok-Tage mit tatsaechlicher Ueberschneidungsdauer zusaetzlich zur Slotzahl.
+NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6D_V1_20260608;RUN_20260621_191259;exact_overlap_seconds_total;278580;2026-06-21 21:13:23.852264;Tatsaechliche Ueberschneidungsdauer in Sekunden ohne Slot-Rundung.

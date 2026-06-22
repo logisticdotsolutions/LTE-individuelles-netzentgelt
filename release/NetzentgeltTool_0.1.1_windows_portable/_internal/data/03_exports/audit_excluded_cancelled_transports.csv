@@ -1,0 +1,29 @@
+source_table;transport_number;transport_status;affected_rows;first_seen_utc;last_seen_utc;transport_last_edit_date;transport_last_edit_by
+raw_transportdetail;458645;cancelled;1;2026-06-10 02:48:00;2026-06-10 05:48:00;;
+raw_transportdetail;445644;cancelled;1;2026-05-26 12:33:00;2026-05-26 14:00:00;;
+raw_transportdetail;453517;cancelled;1;2026-06-10 05:40:00;2026-06-10 09:18:00;;
+raw_transportdetail;459215;cancelled;1;2026-06-06 12:00:00;2026-06-06 12:15:00;;
+raw_transportdetail;454510;cancelled;2;2026-06-06 10:32:00;2026-06-06 16:02:00;;
+raw_transportdetail;454982;cancelled;4;2026-05-23 14:00:00;2026-05-23 19:30:00;;
+raw_transportdetail;456758;cancelled;1;2026-05-26 12:00:00;2026-05-26 12:00:00;;
+raw_transportdetail;453532;cancelled;2;2026-05-28 01:39:00;2026-05-28 05:26:00;;
+raw_transportdetail;456660;cancelled;1;2026-05-28 20:43:00;2026-05-28 21:57:00;;
+raw_transportdetail;457872;cancelled;1;2026-06-01 06:50:00;2026-06-01 09:51:00;;
+raw_transportdetail;458378;cancelled;3;2026-06-01 09:00:00;2026-06-01 10:45:00;;
+raw_transportdetail;461929;cancelled;1;2026-06-19 22:00:00;2026-06-19 22:10:00;;
+raw_transportdetail;457250;cancelled;1;2026-05-25 02:08:00;2026-05-25 03:20:00;;
+raw_transportdetail;459955;cancelled;1;2026-06-12 05:49:00;2026-06-12 08:17:00;;
+raw_locomotivemovement;459955;cancelled;1;2026-06-12 05:49:00;2026-06-12 08:17:00;2026-06-12 09:02:47.337;36dd5eb6-c7ab-41a0-96ec-30ad90cc1ed5
+raw_locomotivemovement;458645;cancelled;1;2026-06-10 02:48:00;2026-06-10 05:48:00;2026-06-10 10:03:51.267;67a7c3c3-01b8-4249-a794-2ee628d4b101
+raw_locomotivemovement;445644;cancelled;1;2026-05-26 12:33:00;2026-05-26 14:00:00;2026-06-02 11:16:18.977;f0319a37-d99d-4adb-aa19-2b3f87155325
+raw_locomotivemovement;461929;cancelled;1;2026-06-19 22:00:00;2026-06-19 22:10:00;2026-06-20 10:35:20.74;ff8efa50-e8d5-4064-b69d-d33de67f3b28
+raw_locomotivemovement;457250;cancelled;1;2026-05-25 02:08:00;2026-05-25 03:20:00;2026-05-25 15:03:45.137;0dc855b9-f48f-46a3-a937-e56c06d9b7ca
+raw_locomotivemovement;453517;cancelled;1;2026-06-10 05:40:00;2026-06-10 09:18:00;2026-06-12 09:42:23.487;af293fd0-5bcf-4cd6-bde3-9c41f4bf04ac
+raw_locomotivemovement;456758;cancelled;1;2026-05-26 12:00:00;2026-05-26 12:00:00;2026-06-09 14:05:15.073;0a938aa1-f2d6-4699-ad87-a629069d0037
+raw_locomotivemovement;457872;cancelled;1;2026-06-01 06:50:00;2026-06-01 09:51:00;2026-06-02 08:54:00.977;0a938aa1-f2d6-4699-ad87-a629069d0037
+raw_locomotivemovement;454510;cancelled;2;2026-06-06 10:32:00;2026-06-06 16:02:00;2026-06-06 17:05:22.587;0dc855b9-f48f-46a3-a937-e56c06d9b7ca
+raw_locomotivemovement;454982;cancelled;4;2026-05-23 14:00:00;2026-05-23 19:30:00;2026-05-25 09:34:57.397;fab8757e-d9e3-4cb6-b69a-83467f8f719c
+raw_locomotivemovement;459215;cancelled;1;2026-06-06 12:00:00;2026-06-06 12:15:00;2026-06-06 15:16:19.65;fb075f5f-edc6-41ef-916e-7da02740da3b
+raw_locomotivemovement;458378;cancelled;3;2026-06-01 09:00:00;2026-06-01 10:45:00;2026-06-01 14:45:05.473;fa862b7d-0fc2-4360-b85e-74be33c7d007
+raw_locomotivemovement;453532;cancelled;2;2026-05-28 01:39:00;2026-05-28 05:26:00;2026-06-01 10:11:31.847;af293fd0-5bcf-4cd6-bde3-9c41f4bf04ac
+raw_locomotivemovement;456660;cancelled;1;2026-05-28 20:43:00;2026-05-28 21:57:00;2026-06-09 16:41:02.513;f0319a37-d99d-4adb-aa19-2b3f87155325

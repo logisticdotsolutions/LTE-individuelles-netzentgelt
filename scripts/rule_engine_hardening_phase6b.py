@@ -18,25 +18,9 @@ Original-CSVs bleiben unveraendert. Sie korrigiert insbesondere:
 
 from datetime import datetime, timezone
 
+from error_rules import qident, table_exists  # noqa: F401 (re-exported for phase6c)
+
 PHASE_ID = "NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6B_V1_20260608"
-
-
-def qident(value: str) -> str:
-    return '"' + str(value).replace('"', '""') + '"'
-
-
-def table_exists(con, table_name: str) -> bool:
-    return (
-        con.execute(
-            """
-            select count(*)
-            from information_schema.tables
-            where lower(table_name) = lower(?)
-            """,
-            [table_name],
-        ).fetchone()[0]
-        > 0
-    )
 
 
 def columns(con, table_name: str) -> list[str]:

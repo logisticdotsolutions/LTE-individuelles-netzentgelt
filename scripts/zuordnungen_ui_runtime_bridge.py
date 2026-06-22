@@ -263,9 +263,9 @@ def install_zuordnungen_export_tab_extension():
 
         export_tab_index = normalized_labels.index(EXPORT_TAB_LABEL)
         rendered_tabs = list(rendered_tabs)
-        rendered_tabs[export_tab_index] = _InjectedExportTab(
-            rendered_tabs[export_tab_index]
-        )
+        existing = rendered_tabs[export_tab_index]
+        if not isinstance(existing, _InjectedExportTab):
+            rendered_tabs[export_tab_index] = _InjectedExportTab(existing)
         return rendered_tabs
 
     patched_tabs._zuordnungen_extension_installed = True

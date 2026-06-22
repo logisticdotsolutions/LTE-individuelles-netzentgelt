@@ -31,6 +31,7 @@ def run_raw_import(ctx: PipelineContext) -> str:
     from dummy_locomotive_module import build_dummy_locomotive_catalog
     from run_all import (
         build_cancelled_transport_exclusions,
+        build_transport_routes,
         import_csvs,
         import_mapping,
         import_market_partner_mapping,
@@ -54,6 +55,10 @@ def run_raw_import(ctx: PipelineContext) -> str:
         import_market_partner_reference(con)
         import_market_partner_mapping(con)
         import_vens_tens_exception(con)
+        # core_transport_route hängt nur von raw_transportdetail ab – unabhängig
+        # von Manual Overrides. Vorberechnung spart einen timed-Schritt im
+        # Correction-Rebuild (wird dort per timed_if_missing übersprungen).
+        build_transport_routes(con)
 
         con.close()
         con = None

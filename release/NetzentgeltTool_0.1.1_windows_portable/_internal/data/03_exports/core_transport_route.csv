@@ -1,0 +1,3734 @@
+transport_number;cal_start_country;cal_end_country;cal_entry_count_home;cal_exit_count_home;cal_route_type_home
+450621;NL;DE;1;0;Einfahrt
+451117;PL;DE;1;0;Einfahrt
+451308;CH;DE;0;0;Kein Bezug
+452324;SK;SK;0;0;Kein Bezug
+456679;PL;PL;0;0;Kein Bezug
+457189;BE;NL;0;0;Kein Bezug
+457566;IT;IT;0;0;Kein Bezug
+457585;PL;CZ;0;0;Kein Bezug
+457884;DE;DE;0;0;Inland
+457923;DE;DE;0;0;Inland
+458067;IT;IT;0;0;Kein Bezug
+458815;PL;PL;0;0;Kein Bezug
+459142;BG;TR;0;0;Kein Bezug
+459298;PL;PL;0;0;Kein Bezug
+459602;CZ;CZ;0;0;Kein Bezug
+460241;PL;PL;0;0;Kein Bezug
+461317;NL;NL;0;0;Kein Bezug
+461333;NL;NL;0;0;Kein Bezug
+454272;DE;AT;0;0;Kein Bezug
+454463;DE;NL;0;1;Ausfahrt
+455224;DE;DE;0;0;Inland
+456290;AT;CH;0;0;Kein Bezug
+457222;IT;IT;0;0;Kein Bezug
+458296;NL;NL;0;0;Kein Bezug
+458537;IT;IT;0;0;Kein Bezug
+458803;AT;SI;0;0;Kein Bezug
+459177;NL;NL;0;0;Kein Bezug
+459189;NL;NL;0;0;Kein Bezug
+459815;NL;NL;0;0;Kein Bezug
+460238;NL;NL;0;0;Kein Bezug
+460377;NL;NL;0;0;Kein Bezug
+460570;CZ;CZ;0;0;Kein Bezug
+460665;AT;AT;0;0;Kein Bezug
+454497;PL;NL;1;1;Passiert (Transit)
+454596;NL;NL;0;0;Kein Bezug
+454677;NL;NL;0;0;Kein Bezug
+454683;DE;NL;0;0;Kein Bezug
+455120;NL;NL;0;0;Kein Bezug
+455238;DE;DE;0;0;Inland
+457476;PL;PL;0;0;Kein Bezug
+457480;PL;PL;0;0;Kein Bezug
+458198;NL;NL;0;0;Kein Bezug
+458402;PL;PL;0;0;Kein Bezug
+458524;NL;NL;0;0;Kein Bezug
+458616;NL;NL;0;0;Kein Bezug
+459806;NL;NL;0;0;Kein Bezug
+450434;RO;BE;0;1;Komplex (mehrfach/Schleife)
+450603;IT;DE;0;0;Kein Bezug
+454211;CH;CH;0;0;Kein Bezug
+456373;SI;SI;0;0;Kein Bezug
+457213;PL;PL;0;0;Kein Bezug
+457359;PL;PL;0;0;Kein Bezug
+457544;RO;RO;0;0;Kein Bezug
+457886;DE;DE;0;0;Inland
+459010;SK;SK;0;0;Kein Bezug
+459036;NL;NL;0;0;Kein Bezug
+459471;DE;AT;0;1;Ausfahrt
+450534;DE;NL;0;0;Kein Bezug
+454543;DE;NL;0;1;Ausfahrt
+454702;NL;PL;1;1;Passiert (Transit)
+457588;AT;AT;0;0;Kein Bezug
+458285;SK;SK;0;0;Kein Bezug
+458546;AT;AT;0;0;Kein Bezug
+458930;NL;NL;0;0;Kein Bezug
+459694;AT;SK;0;0;Kein Bezug
+459761;RO;RO;0;0;Kein Bezug
+460044;SK;SK;0;0;Kein Bezug
+460804;CH;CH;0;0;Kein Bezug
+461832;NL;NL;0;0;Kein Bezug
+450547;NL;DE;0;0;Kein Bezug
+450591;CH;NL;0;0;Kein Bezug
+453083;PL;DE;1;0;Einfahrt
+455306;DE;SK;0;0;Kein Bezug
+457174;NL;NL;0;0;Kein Bezug
+457553;AT;CZ;0;0;Kein Bezug
+457621;PL;PL;0;0;Kein Bezug
+458038;HU;HU;0;0;Kein Bezug
+458279;NL;NL;0;0;Kein Bezug
+458962;NL;NL;0;0;Kein Bezug
+459817;BG;BG;0;0;Kein Bezug
+460179;NL;NL;0;0;Kein Bezug
+446205;IT;NL;0;1;Komplex (mehrfach/Schleife)
+451319;SI;CH;0;0;Kein Bezug
+451510;PL;NL;1;1;Passiert (Transit)
+457355;DE;DE;0;0;Inland
+457447;PL;DE;1;0;Einfahrt
+457619;SK;PL;0;0;Kein Bezug
+457674;HU;HU;0;0;Kein Bezug
+457895;DE;DE;0;0;Inland
+458128;PL;PL;0;0;Kein Bezug
+458259;NL;NL;0;0;Kein Bezug
+458443;HU;SI;0;0;Kein Bezug
+458553;HU;HU;0;0;Kein Bezug
+458604;PL;PL;0;0;Kein Bezug
+459123;DE;PL;0;0;Kein Bezug
+459246;NL;NL;0;0;Kein Bezug
+459486;CH;CH;0;0;Kein Bezug
+459819;SI;AT;0;0;Kein Bezug
+460043;DE;DE;0;0;Inland
+460094;DE;DE;0;0;Inland
+460133;PL;PL;0;0;Kein Bezug
+452460;NL;NL;0;0;Kein Bezug
+454421;DE;DE;0;0;Inland
+455136;NL;CH;0;0;Kein Bezug
+456530;CZ;CZ;0;0;Kein Bezug
+457233;RO;RO;0;0;Kein Bezug
+457615;PL;SI;0;0;Kein Bezug
+459249;NL;NL;0;0;Kein Bezug
+459489;CH;CH;0;0;Kein Bezug
+460900;NL;NL;0;0;Kein Bezug
+461326;AT;AT;0;0;Kein Bezug
+457727;NL;NL;0;0;Kein Bezug
+458002;NL;NL;0;0;Kein Bezug
+458229;AT;AT;0;0;Kein Bezug
+458360;RO;RO;0;0;Kein Bezug
+458671;HU;HU;0;0;Kein Bezug
+459154;NL;NL;0;0;Kein Bezug
+459671;DE;DE;0;0;Inland
+459945;NL;NL;0;0;Kein Bezug
+459950;NL;NL;0;0;Kein Bezug
+460072;IT;IT;0;0;Kein Bezug
+460247;PL;PL;0;0;Kein Bezug
+460554;DE;DE;0;0;Inland
+461323;AT;AT;0;0;Kein Bezug
+454512;NL;NL;0;0;Kein Bezug
+454515;NL;NL;0;0;Kein Bezug
+455067;DE;NL;0;0;Kein Bezug
+456481;DE;DE;0;0;Inland
+456606;DE;HR;0;0;Kein Bezug
+457867;AT;SI;0;0;Kein Bezug
+458362;NL;NL;0;0;Kein Bezug
+458884;DE;DE;0;0;Inland
+459162;NL;NL;0;0;Kein Bezug
+459180;NL;NL;0;0;Kein Bezug
+459285;NL;NL;0;0;Kein Bezug
+460275;PL;PL;0;0;Kein Bezug
+460325;NL;NL;0;0;Kein Bezug
+460402;NL;NL;0;0;Kein Bezug
+460977;NL;NL;0;0;Kein Bezug
+461487;PL;PL;0;0;Kein Bezug
+461823;NL;NL;0;0;Kein Bezug
+448710;DE;AT;0;0;Kein Bezug
+454451;DE;NL;0;1;Ausfahrt
+454547;DE;NL;0;1;Ausfahrt
+454583;RO;HU;0;0;Kein Bezug
+455154;DE;NL;0;0;Kein Bezug
+456242;SK;SK;0;0;Kein Bezug
+456395;CZ;CZ;0;0;Kein Bezug
+457300;PL;PL;0;0;Kein Bezug
+457366;PL;PL;0;0;Kein Bezug
+457775;SK;DE;0;0;Kein Bezug
+458344;CZ;SK;0;0;Kein Bezug
+458565;NL;NL;0;0;Kein Bezug
+460660;NL;NL;0;0;Kein Bezug
+461957;NL;NL;0;0;Kein Bezug
+448715;AT;DE;0;0;Kein Bezug
+453539;PL;BE;0;0;Kein Bezug
+453548;PL;BE;0;0;Kein Bezug
+454471;NL;DE;1;0;Einfahrt
+455033;RO;DE;0;0;Kein Bezug
+455161;NL;NL;0;0;Kein Bezug
+456686;PL;PL;0;0;Kein Bezug
+457090;DE;DE;0;0;Inland
+457933;RO;AT;0;0;Kein Bezug
+458401;NL;NL;0;0;Kein Bezug
+458977;PL;DE;1;0;Einfahrt
+458998;BE;DE;1;0;Einfahrt
+459159;PL;PL;0;0;Kein Bezug
+459606;PL;PL;0;0;Kein Bezug
+460092;SK;SK;0;0;Kein Bezug
+461386;CZ;CZ;0;0;Kein Bezug
+451231;DE;UA;0;0;Kein Bezug
+454166;CH;CH;0;0;Kein Bezug
+455076;NL;PL;1;1;Passiert (Transit)
+456048;PL;DE;1;0;Einfahrt
+456450;NL;SK;1;0;Komplex (mehrfach/Schleife)
+457283;CZ;CZ;0;0;Kein Bezug
+457310;NL;NL;0;0;Kein Bezug
+457736;CH;CH;0;0;Kein Bezug
+457996;SK;SK;0;0;Kein Bezug
+458082;NL;NL;0;0;Kein Bezug
+461544;NL;NL;0;0;Kein Bezug
+450633;IT;NL;0;1;Komplex (mehrfach/Schleife)
+450702;NL;NL;0;0;Kein Bezug
+451833;CH;CH;0;0;Kein Bezug
+455229;DE;DE;0;0;Inland
+455292;DE;DE;0;0;Inland
+456723;CZ;SK;0;0;Kein Bezug
+457234;RO;RO;0;0;Kein Bezug
+457707;DE;HU;0;0;Kein Bezug
+458100;AT;AT;0;0;Kein Bezug
+458230;PL;PL;0;0;Kein Bezug
+458517;SK;UA;0;0;Kein Bezug
+458519;NL;NL;0;0;Kein Bezug
+458549;BG;BG;0;0;Kein Bezug
+459074;NL;NL;0;0;Kein Bezug
+459241;NL;NL;0;0;Kein Bezug
+459302;HU;SK;0;0;Kein Bezug
+459998;IT;IT;0;0;Kein Bezug
+460251;SK;CZ;0;0;Kein Bezug
+460286;PL;PL;0;0;Kein Bezug
+461483;NL;NL;0;0;Kein Bezug
+455842;BE;RO;1;0;Komplex (mehrfach/Schleife)
+455851;SK;CZ;0;0;Kein Bezug
+457134;CH;CH;0;0;Kein Bezug
+457147;HU;HU;0;0;Kein Bezug
+459113;NL;NL;0;0;Kein Bezug
+459192;NL;NL;0;0;Kein Bezug
+460384;CZ;CZ;0;0;Kein Bezug
+460435;NL;NL;0;0;Kein Bezug
+460805;NL;NL;0;0;Kein Bezug
+461320;NL;NL;0;0;Kein Bezug
+461567;SI;SK;0;0;Kein Bezug
+461909;SK;SK;0;0;Kein Bezug
+450583;DE;NL;0;1;Ausfahrt
+454192;CH;CH;0;0;Kein Bezug
+455149;NL;PL;0;1;Komplex (mehrfach/Schleife)
+456786;CH;DE;0;0;Kein Bezug
+456809;RO;BE;0;1;Komplex (mehrfach/Schleife)
+456994;CZ;CZ;0;0;Kein Bezug
+457312;CZ;CZ;0;0;Kein Bezug
+457429;DE;PL;0;1;Ausfahrt
+457896;DE;DE;0;0;Inland
+458438;CH;CH;0;0;Kein Bezug
+458652;NL;NL;0;0;Kein Bezug
+458828;IT;IT;0;0;Kein Bezug
+459223;RO;RO;0;0;Kein Bezug
+459278;HU;HU;0;0;Kein Bezug
+460365;NL;NL;0;0;Kein Bezug
+460434;NL;NL;0;0;Kein Bezug
+451834;CH;CH;0;0;Kein Bezug
+452461;NL;AT;0;0;Kein Bezug
+454686;DE;NL;0;0;Kein Bezug
+455158;DE;IT;0;0;Kein Bezug
+455221;DE;DE;0;0;Inland
+456845;HU;AT;0;0;Kein Bezug
+457140;HU;HU;0;0;Kein Bezug
+457426;NL;NL;0;0;Kein Bezug
+457532;NL;NL;0;0;Kein Bezug
+457648;IT;IT;0;0;Kein Bezug
+457881;DE;DE;0;0;Inland
+458092;HU;HU;0;0;Kein Bezug
+458321;NL;NL;0;0;Kein Bezug
+458687;NL;NL;0;0;Kein Bezug
+458693;HU;HU;0;0;Kein Bezug
+458833;IT;IT;0;0;Kein Bezug
+459002;HU;HU;0;0;Kein Bezug
+459077;PL;PL;0;0;Kein Bezug
+459181;NL;NL;0;0;Kein Bezug
+459768;NL;NL;0;0;Kein Bezug
+459813;NL;NL;0;0;Kein Bezug
+459954;NL;NL;0;0;Kein Bezug
+460003;IT;IT;0;0;Kein Bezug
+460769;NL;NL;0;0;Kein Bezug
+461336;NL;NL;0;0;Kein Bezug
+445651;AT;NL;0;0;Kein Bezug
+456383;IT;PL;0;0;Kein Bezug
+456791;CH;CH;0;0;Kein Bezug
+457570;PL;PL;0;0;Kein Bezug
+457890;DE;DE;0;0;Inland
+458475;SK;SK;0;0;Kein Bezug
+459994;NL;NL;0;0;Kein Bezug
+460171;RO;RO;0;0;Kein Bezug
+461315;DE;DE;0;0;Inland
+461535;NL;NL;0;0;Kein Bezug
+461857;BG;BG;0;0;Kein Bezug
+449626;DE;DE;0;0;Inland
+452214;PL;PL;0;0;Kein Bezug
+454714;NL;DE;0;0;Kein Bezug
+455147;DE;PL;0;1;Ausfahrt
+457203;NL;NL;0;0;Kein Bezug
+457370;PL;DE;1;0;Einfahrt
+457444;PL;DE;1;0;Einfahrt
+457937;HR;DE;0;0;Kein Bezug
+458003;IT;RS;0;0;Kein Bezug
+458175;CH;CH;0;0;Kein Bezug
+458341;NL;NL;0;0;Kein Bezug
+458410;NL;NL;0;0;Kein Bezug
+458488;IT;IT;0;0;Kein Bezug
+459103;HU;HU;0;0;Kein Bezug
+460442;PL;PL;0;0;Kein Bezug
+448718;DE;AT;0;0;Kein Bezug
+450427;NL;DE;0;0;Kein Bezug
+451811;CH;CH;0;0;Kein Bezug
+453542;PL;BE;0;0;Kein Bezug
+454003;PL;PL;0;0;Kein Bezug
+454401;DE;NL;0;1;Ausfahrt
+455068;DE;NL;0;0;Kein Bezug
+455244;DE;DE;0;0;Inland
+456653;SI;AT;0;0;Kein Bezug
+456693;PL;PL;0;0;Kein Bezug
+456792;CH;CH;0;0;Kein Bezug
+456849;AT;AT;0;0;Kein Bezug
+457778;SK;DE;0;0;Kein Bezug
+457831;NL;NL;0;0;Kein Bezug
+458113;SK;CZ;0;0;Kein Bezug
+458234;PL;BE;1;1;Passiert (Transit)
+458802;AT;SI;0;0;Kein Bezug
+459339;PL;PL;0;0;Kein Bezug
+460794;RO;RO;0;0;Kein Bezug
+461590;PL;PL;0;0;Kein Bezug
+461871;HU;HU;0;0;Kein Bezug
+450474;DE;NL;0;0;Kein Bezug
+453089;DE;HU;0;0;Kein Bezug
+453521;BE;DE;0;0;Kein Bezug
+454660;PL;NL;1;0;Komplex (mehrfach/Schleife)
+455069;DE;NL;0;1;Ausfahrt
+455834;DE;PL;0;1;Ausfahrt
+456505;NL;CZ;1;0;Komplex (mehrfach/Schleife)
+456750;IT;IT;0;0;Kein Bezug
+457202;NL;NL;0;0;Kein Bezug
+457239;NL;NL;0;0;Kein Bezug
+457625;NL;NL;0;0;Kein Bezug
+458147;PL;PL;0;0;Kein Bezug
+458194;NL;NL;0;0;Kein Bezug
+458353;PL;SK;0;0;Kein Bezug
+458527;AT;AT;0;0;Kein Bezug
+458586;NL;NL;0;0;Kein Bezug
+459188;NL;NL;0;0;Kein Bezug
+459226;RO;RO;0;0;Kein Bezug
+459268;NL;NL;0;0;Kein Bezug
+460348;SK;SK;0;0;Kein Bezug
+460366;NL;NL;0;0;Kein Bezug
+460395;NL;NL;0;0;Kein Bezug
+461397;PL;PL;0;0;Kein Bezug
+452900;PL;SK;0;0;Kein Bezug
+453045;NL;RO;1;0;Komplex (mehrfach/Schleife)
+454207;CH;CH;0;0;Kein Bezug
+454603;NL;DE;0;0;Kein Bezug
+454653;HU;RO;0;0;Kein Bezug
+454675;NL;NL;0;0;Kein Bezug
+455207;CZ;BE;0;1;Komplex (mehrfach/Schleife)
+456873;RO;HU;0;0;Kein Bezug
+457413;DE;SK;0;0;Kein Bezug
+457683;DE;DE;0;0;Inland
+458081;NL;NL;0;0;Kein Bezug
+458516;AT;AT;0;0;Kein Bezug
+459092;NL;NL;0;0;Kein Bezug
+459897;IT;IT;0;0;Kein Bezug
+460237;NL;NL;0;0;Kein Bezug
+460294;NL;NL;0;0;Kein Bezug
+461534;NL;NL;0;0;Kein Bezug
+449043;SK;DE;0;0;Kein Bezug
+450716;NL;PL;1;1;Passiert (Transit)
+453557;DE;PL;0;0;Kein Bezug
+456688;PL;PL;0;0;Kein Bezug
+456993;NL;CZ;1;0;Komplex (mehrfach/Schleife)
+457244;PL;PL;0;0;Kein Bezug
+457267;HU;UA;0;0;Kein Bezug
+457335;BG;BG;0;0;Kein Bezug
+457726;NL;NL;0;0;Kein Bezug
+458177;DE;CH;0;0;Kein Bezug
+458249;RO;RO;0;0;Kein Bezug
+458357;HU;HU;0;0;Kein Bezug
+460311;NL;NL;0;0;Kein Bezug
+461484;NL;NL;0;0;Kein Bezug
+461576;NL;NL;0;0;Kein Bezug
+461605;NL;NL;0;0;Kein Bezug
+450512;PL;NL;1;1;Passiert (Transit)
+454006;PL;PL;0;0;Kein Bezug
+454444;NL;DE;1;0;Einfahrt
+456724;HU;NL;0;1;Komplex (mehrfach/Schleife)
+457628;DE;DE;0;0;Inland
+457632;AT;CH;0;0;Kein Bezug
+457919;DE;DE;0;0;Inland
+458106;NL;NL;0;0;Kein Bezug
+458502;NL;NL;0;0;Kein Bezug
+458504;SK;SK;0;0;Kein Bezug
+458525;HU;HU;0;0;Kein Bezug
+458911;NL;NL;0;0;Kein Bezug
+458939;NL;NL;0;0;Kein Bezug
+458991;HU;HU;0;0;Kein Bezug
+459048;NL;NL;0;0;Kein Bezug
+459477;CH;CH;0;0;Kein Bezug
+459657;DE;DE;0;0;Inland
+460918;NL;NL;0;0;Kein Bezug
+453530;PL;BE;0;0;Kein Bezug
+454172;CH;CH;0;0;Kein Bezug
+454231;CH;CH;0;0;Kein Bezug
+456882;NL;RO;1;0;Komplex (mehrfach/Schleife)
+457255;NL;NL;0;0;Kein Bezug
+457635;IT;IT;0;0;Kein Bezug
+458396;NL;NL;0;0;Kein Bezug
+459063;NL;NL;0;0;Kein Bezug
+459235;NL;NL;0;0;Kein Bezug
+459810;NL;NL;0;0;Kein Bezug
+460867;SK;SK;0;0;Kein Bezug
+450630;IT;NL;0;0;Kein Bezug
+450680;DE;NL;0;0;Kein Bezug
+450701;DE;NL;0;0;Kein Bezug
+450719;DE;NL;0;0;Kein Bezug
+451765;CH;DE;0;0;Kein Bezug
+451843;DE;CH;0;0;Kein Bezug
+453043;RO;NL;0;1;Komplex (mehrfach/Schleife)
+453536;DE;BE;0;0;Kein Bezug
+453707;PL;DE;0;0;Kein Bezug
+454221;CH;CH;0;0;Kein Bezug
+454435;NL;NL;0;0;Kein Bezug
+455110;PL;NL;1;1;Passiert (Transit)
+457844;AT;SI;0;0;Kein Bezug
+458118;SI;SK;0;0;Kein Bezug
+459121;PL;DE;0;0;Kein Bezug
+459479;CH;CH;0;0;Kein Bezug
+459978;AT;AT;0;0;Kein Bezug
+460201;SK;SK;0;0;Kein Bezug
+461525;PL;PL;0;0;Kein Bezug
+461770;NL;NL;0;0;Kein Bezug
+454655;BE;RO;1;0;Komplex (mehrfach/Schleife)
+455124;NL;NL;0;0;Kein Bezug
+456784;DE;DE;1;1;Komplex (mehrfach/Schleife)
+457157;NL;NL;0;0;Kein Bezug
+457760;SI;CH;0;0;Kein Bezug
+458160;PL;PL;0;0;Kein Bezug
+458637;NL;NL;0;0;Kein Bezug
+458795;SI;AT;0;0;Kein Bezug
+459290;NL;NL;0;0;Kein Bezug
+459778;SK;SK;0;0;Kein Bezug
+460513;NL;NL;0;0;Kein Bezug
+438376;PL;PL;0;0;Kein Bezug
+450585;DE;NL;0;0;Kein Bezug
+454412;PL;NL;1;1;Passiert (Transit)
+454566;DE;NL;0;0;Kein Bezug
+454622;DE;NL;0;0;Kein Bezug
+455291;DE;HR;0;0;Kein Bezug
+457044;HU;HU;0;0;Kein Bezug
+457191;BG;CZ;0;0;Kein Bezug
+457282;AT;SK;0;0;Kein Bezug
+457331;PL;DE;1;0;Einfahrt
+457346;NL;NL;0;0;Kein Bezug
+457864;AT;SI;0;0;Kein Bezug
+457910;DE;DE;0;0;Inland
+458860;SK;HU;0;0;Kein Bezug
+458909;CH;DE;1;0;Einfahrt
+458912;AT;DE;1;0;Einfahrt
+459023;HU;HU;0;0;Kein Bezug
+459198;NL;NL;0;0;Kein Bezug
+459773;NL;NL;0;0;Kein Bezug
+460165;HU;HU;0;0;Kein Bezug
+461836;NL;NL;0;0;Kein Bezug
+461959;AT;AT;0;0;Kein Bezug
+461973;PL;PL;0;0;Kein Bezug
+450556;DE;NL;0;0;Kein Bezug
+450593;NL;DE;0;0;Kein Bezug
+450626;DE;NL;0;1;Ausfahrt
+456698;NL;PL;1;1;Passiert (Transit)
+456707;CZ;SK;0;0;Kein Bezug
+456822;RO;RO;0;0;Kein Bezug
+457390;HU;IT;0;0;Kein Bezug
+457442;DE;PL;0;1;Ausfahrt
+457709;NL;NL;0;0;Kein Bezug
+457781;SK;DE;0;0;Kein Bezug
+457876;DE;DE;0;0;Inland
+458089;NL;NL;0;0;Kein Bezug
+458146;PL;PL;0;0;Kein Bezug
+458722;DE;DE;0;0;Inland
+458887;CZ;CZ;0;0;Kein Bezug
+450698;NL;DE;1;0;Einfahrt
+450708;NL;DE;0;0;Kein Bezug
+454575;NL;DE;0;0;Kein Bezug
+455684;DE;DE;0;0;Inland
+455713;RO;NL;0;1;Komplex (mehrfach/Schleife)
+456428;SK;DE;0;0;Kein Bezug
+456793;CH;DE;0;0;Kein Bezug
+457025;HU;HU;0;0;Kein Bezug
+457126;AT;AT;0;0;Kein Bezug
+457395;DE;HU;0;0;Kein Bezug
+457806;IT;IT;0;0;Kein Bezug
+458727;DE;DE;0;0;Inland
+459217;DE;CH;0;0;Kein Bezug
+460079;SK;SK;0;0;Kein Bezug
+461531;NL;NL;0;0;Kein Bezug
+454709;DE;IT;0;0;Kein Bezug
+456657;SI;AT;0;0;Kein Bezug
+457056;DE;DE;0;0;Inland
+457902;DE;DE;0;0;Inland
+458427;NL;NL;0;0;Kein Bezug
+458531;NL;DE;1;0;Einfahrt
+458703;AT;CZ;0;0;Kein Bezug
+459381;SK;CZ;0;0;Kein Bezug
+459814;HU;HU;0;0;Kein Bezug
+460078;CH;CH;0;0;Kein Bezug
+461406;IT;IT;0;0;Kein Bezug
+456255;CZ;CZ;0;0;Kein Bezug
+456425;HU;DE;0;0;Kein Bezug
+456667;DE;RO;0;0;Kein Bezug
+457034;NL;NL;0;0;Kein Bezug
+457210;NL;NL;0;0;Kein Bezug
+457681;DE;DE;0;0;Inland
+457771;SK;DE;0;0;Kein Bezug
+458798;SI;AT;0;0;Kein Bezug
+459341;DE;DE;0;0;Inland
+459505;CH;CH;0;0;Kein Bezug
+459910;NL;NL;0;0;Kein Bezug
+460196;HU;HU;0;0;Kein Bezug
+460350;NL;NL;0;0;Kein Bezug
+460578;NL;NL;0;0;Kein Bezug
+461532;NL;NL;0;0;Kein Bezug
+451887;PL;DE;1;0;Einfahrt
+453671;CZ;BE;0;1;Komplex (mehrfach/Schleife)
+456890;HU;DE;0;0;Kein Bezug
+457414;SK;DE;0;0;Kein Bezug
+458077;IT;IT;0;0;Kein Bezug
+458282;SK;SK;0;0;Kein Bezug
+458486;NL;NL;0;0;Kein Bezug
+458682;NL;NL;0;0;Kein Bezug
+458696;IT;AT;0;0;Kein Bezug
+459293;CZ;CZ;0;0;Kein Bezug
+459474;CH;DE;0;0;Kein Bezug
+459695;HU;HU;0;0;Kein Bezug
+460132;PL;PL;0;0;Kein Bezug
+461842;NL;NL;0;0;Kein Bezug
+461948;NL;NL;0;0;Kein Bezug
+454621;DE;NL;0;0;Kein Bezug
+456301;NL;NL;0;0;Kein Bezug
+456727;SK;CZ;0;0;Kein Bezug
+456880;DE;HU;0;0;Kein Bezug
+457214;NL;NL;0;0;Kein Bezug
+457227;HU;HU;0;0;Kein Bezug
+457525;NL;NL;0;0;Kein Bezug
+457929;DE;DE;0;0;Inland
+458276;NL;NL;0;0;Kein Bezug
+459011;SK;SK;0;0;Kein Bezug
+459507;CH;CH;0;0;Kein Bezug
+459668;CH;CH;0;0;Kein Bezug
+459946;NL;NL;0;0;Kein Bezug
+460871;SK;SK;0;0;Kein Bezug
+450695;NL;DE;1;0;Einfahrt
+454349;HU;NL;0;1;Komplex (mehrfach/Schleife)
+455089;NL;DE;0;0;Kein Bezug
+456636;SI;AT;0;0;Kein Bezug
+457000;NL;HU;1;0;Komplex (mehrfach/Schleife)
+457003;NL;HU;1;0;Komplex (mehrfach/Schleife)
+457533;NL;NL;0;0;Kein Bezug
+458381;NL;NL;0;0;Kein Bezug
+458647;IT;IT;0;0;Kein Bezug
+458717;SI;AT;0;0;Kein Bezug
+459204;DE;DE;0;0;Inland
+459385;RO;RO;0;0;Kein Bezug
+460427;NL;NL;0;0;Kein Bezug
+461870;NL;NL;0;0;Kein Bezug
+450619;NL;DE;0;0;Kein Bezug
+450674;PL;NL;1;1;Passiert (Transit)
+454607;CH;CH;0;0;Kein Bezug
+456475;HU;HU;0;0;Kein Bezug
+456655;AT;SI;0;0;Kein Bezug
+457261;PL;PL;0;0;Kein Bezug
+457841;NL;NL;0;0;Kein Bezug
+458034;HU;HU;0;0;Kein Bezug
+458157;NL;NL;0;0;Kein Bezug
+458753;DE;DE;0;0;Inland
+460273;AT;SK;0;0;Kein Bezug
+450580;DE;NL;0;0;Kein Bezug
+454005;PL;PL;0;0;Kein Bezug
+454202;CH;NL;0;0;Kein Bezug
+454704;DE;NL;0;0;Kein Bezug
+456864;AT;AT;0;0;Kein Bezug
+457391;DE;DE;0;0;Inland
+457667;DE;DE;0;0;Inland
+457850;SI;AT;0;0;Kein Bezug
+457873;NL;NL;0;0;Kein Bezug
+458051;HU;HR;0;0;Kein Bezug
+458126;IT;AT;0;0;Kein Bezug
+458409;NL;NL;0;0;Kein Bezug
+458997;HU;HU;0;0;Kein Bezug
+459604;CZ;CZ;0;0;Kein Bezug
+459864;NL;NL;0;0;Kein Bezug
+460081;CZ;CZ;0;0;Kein Bezug
+460088;IT;IT;0;0;Kein Bezug
+460135;HU;HU;0;0;Kein Bezug
+461962;NL;NL;0;0;Kein Bezug
+449277;DE;PL;0;1;Ausfahrt
+450492;DE;PL;0;1;Ausfahrt
+457603;PL;IT;0;0;Kein Bezug
+458145;PL;PL;0;0;Kein Bezug
+458707;DE;SI;0;0;Kein Bezug
+458754;CZ;SK;0;0;Kein Bezug
+460212;NL;NL;0;0;Kein Bezug
+461398;DE;DE;0;0;Inland
+461577;NL;NL;0;0;Kein Bezug
+447453;SK;DE;0;0;Kein Bezug
+454456;IT;NL;0;1;Komplex (mehrfach/Schleife)
+457512;DE;DE;0;0;Inland
+457537;RO;RO;0;0;Kein Bezug
+457849;SI;AT;0;0;Kein Bezug
+457916;DE;DE;0;0;Inland
+458007;AT;AT;0;0;Kein Bezug
+459446;NL;NL;0;0;Kein Bezug
+459499;CH;CH;0;0;Kein Bezug
+459811;RO;RO;0;0;Kein Bezug
+460379;NL;NL;0;0;Kein Bezug
+454193;CH;CH;0;0;Kein Bezug
+454541;NL;PL;1;1;Passiert (Transit)
+455313;DE;SK;0;0;Kein Bezug
+457859;DE;AT;0;0;Kein Bezug
+457861;SI;AT;0;0;Kein Bezug
+458025;CZ;CZ;0;0;Kein Bezug
+458096;NL;NL;0;0;Kein Bezug
+458127;PL;PL;0;0;Kein Bezug
+459156;RO;AT;0;0;Kein Bezug
+459364;SK;SK;0;0;Kein Bezug
+459987;AT;AT;0;0;Kein Bezug
+461888;DE;DE;0;0;Inland
+461963;NL;NL;0;0;Kein Bezug
+451516;NL;CZ;1;0;Komplex (mehrfach/Schleife)
+451774;CH;CH;0;0;Kein Bezug
+455819;DE;PL;0;1;Ausfahrt
+456759;DE;HU;0;0;Kein Bezug
+457586;PL;PL;0;0;Kein Bezug
+457836;NL;NL;0;0;Kein Bezug
+458097;NL;NL;0;0;Kein Bezug
+458167;NL;NL;0;0;Kein Bezug
+458325;NL;NL;0;0;Kein Bezug
+459072;NL;NL;0;0;Kein Bezug
+459208;NL;NL;0;0;Kein Bezug
+459788;CZ;CZ;0;0;Kein Bezug
+459846;TR;BG;0;0;Kein Bezug
+461778;NL;NL;0;0;Kein Bezug
+451810;CH;CH;0;0;Kein Bezug
+451832;CH;CH;0;0;Kein Bezug
+453703;PL;DE;0;0;Kein Bezug
+453996;PL;PL;0;0;Kein Bezug
+454598;NL;NL;0;0;Kein Bezug
+456643;AT;SI;0;0;Kein Bezug
+457124;HU;HU;0;0;Kein Bezug
+457264;NL;NL;0;0;Kein Bezug
+457785;DE;SK;0;0;Kein Bezug
+458497;NL;NL;0;0;Kein Bezug
+458573;DE;PL;0;1;Ausfahrt
+458940;CZ;CZ;0;0;Kein Bezug
+459288;NL;NL;0;0;Kein Bezug
+459655;DE;DE;0;0;Inland
+460033;NL;NL;0;0;Kein Bezug
+461342;TR;BG;0;0;Kein Bezug
+461825;NL;NL;0;0;Kein Bezug
+451822;CH;CH;0;0;Kein Bezug
+452903;SK;PL;0;0;Kein Bezug
+454000;PL;PL;0;0;Kein Bezug
+454209;CH;CH;0;0;Kein Bezug
+455155;DE;NL;0;0;Kein Bezug
+455800;DE;PL;0;0;Kein Bezug
+456426;HU;DE;0;0;Kein Bezug
+456459;PL;DE;1;0;Einfahrt
+457344;NL;NL;0;0;Kein Bezug
+457540;SK;SK;0;0;Kein Bezug
+457906;DE;DE;0;0;Inland
+458062;NL;NL;0;0;Kein Bezug
+458239;NL;NL;0;0;Kein Bezug
+458570;NL;NL;0;0;Kein Bezug
+459764;RO;HU;0;0;Kein Bezug
+460424;TR;BG;0;0;Kein Bezug
+461562;NL;NL;0;0;Kein Bezug
+454633;NL;DE;1;0;Einfahrt
+454656;PL;DE;1;0;Einfahrt
+455811;IT;IT;0;0;Kein Bezug
+456038;CZ;SK;0;0;Kein Bezug
+456771;IT;IT;0;0;Kein Bezug
+457144;DE;DE;0;0;Inland
+457170;NL;NL;0;0;Kein Bezug
+457393;SK;SK;0;0;Kein Bezug
+457711;HU;HU;0;0;Kein Bezug
+457807;IT;IT;0;0;Kein Bezug
+458049;HU;AT;0;0;Kein Bezug
+459082;NL;NL;0;0;Kein Bezug
+459495;NL;CH;0;0;Kein Bezug
+459504;CH;CH;0;0;Kein Bezug
+459740;DE;SK;0;0;Kein Bezug
+460225;DE;DE;0;0;Inland
+460567;NL;NL;0;0;Kein Bezug
+454220;CH;CH;0;0;Kein Bezug
+454472;NL;DE;1;0;Einfahrt
+456513;DE;DE;0;0;Inland
+456878;HU;DE;0;0;Kein Bezug
+457371;CZ;CZ;0;0;Kein Bezug
+457424;SK;CZ;0;0;Kein Bezug
+457530;NL;NL;0;0;Kein Bezug
+458906;HU;HU;0;0;Kein Bezug
+460004;IT;IT;0;0;Kein Bezug
+461335;NL;NL;0;0;Kein Bezug
+461967;AT;AT;0;0;Kein Bezug
+456110;CZ;NL;0;1;Komplex (mehrfach/Schleife)
+456392;CZ;CZ;0;0;Kein Bezug
+456714;AT;SK;0;0;Kein Bezug
+457301;PL;PL;0;0;Kein Bezug
+457362;IT;IT;0;0;Kein Bezug
+458491;IT;IT;0;0;Kein Bezug
+459373;PL;SK;0;0;Kein Bezug
+459766;NL;NL;0;0;Kein Bezug
+460351;NL;NL;0;0;Kein Bezug
+461947;NL;NL;0;0;Kein Bezug
+451800;CH;CH;0;0;Kein Bezug
+455856;SK;DE;0;0;Kein Bezug
+455908;DE;PL;0;0;Kein Bezug
+456396;CZ;CZ;0;0;Kein Bezug
+457631;CH;AT;0;0;Kein Bezug
+457813;CH;DE;0;0;Kein Bezug
+458246;RO;RO;0;0;Kein Bezug
+458260;PL;PL;0;0;Kein Bezug
+458436;NL;NL;0;0;Kein Bezug
+458487;NL;NL;0;0;Kein Bezug
+459164;DE;DE;0;0;Inland
+459219;NL;NL;0;0;Kein Bezug
+459319;HU;HU;0;0;Kein Bezug
+459880;SK;SK;0;0;Kein Bezug
+460076;HU;SI;0;0;Kein Bezug
+461318;NL;NL;0;0;Kein Bezug
+454403;DE;NL;0;1;Ausfahrt
+454517;NL;NL;0;0;Kein Bezug
+456692;PL;NL;1;1;Passiert (Transit)
+456780;IT;IT;0;0;Kein Bezug
+456953;NL;CH;0;0;Kein Bezug
+457043;HU;HU;0;0;Kein Bezug
+457151;NL;NL;0;0;Kein Bezug
+457373;SK;SK;0;0;Kein Bezug
+457401;HU;DE;0;0;Kein Bezug
+457475;PL;PL;0;0;Kein Bezug
+457557;PL;IT;0;0;Kein Bezug
+457879;DE;DE;0;0;Inland
+458165;NL;NL;0;0;Kein Bezug
+458587;IT;IT;0;0;Kein Bezug
+458746;DE;DE;0;0;Inland
+458979;PL;PL;0;0;Kein Bezug
+459087;AT;SK;0;0;Kein Bezug
+459383;PL;PL;0;0;Kein Bezug
+459728;DE;SK;0;0;Kein Bezug
+460305;NL;NL;0;0;Kein Bezug
+460810;NL;NL;0;0;Kein Bezug
+461416;CZ;CZ;0;0;Kein Bezug
+461923;NL;NL;0;0;Kein Bezug
+449540;AT;AT;0;0;Kein Bezug
+450523;NL;NL;0;0;Kein Bezug
+454791;DE;DE;0;0;Inland
+456422;HU;DE;0;0;Kein Bezug
+457138;CZ;AT;0;0;Kein Bezug
+457201;NL;NL;0;0;Kein Bezug
+457473;PL;PL;0;0;Kein Bezug
+457633;CZ;PL;0;0;Kein Bezug
+457684;DE;DE;0;0;Inland
+457784;NL;NL;0;0;Kein Bezug
+457878;DE;DE;0;0;Inland
+457912;DE;DE;0;0;Inland
+458070;IT;IT;0;0;Kein Bezug
+458509;BG;RS;0;0;Kein Bezug
+458576;DE;PL;0;1;Ausfahrt
+458741;DE;DE;0;0;Inland
+460216;NL;NL;0;0;Kein Bezug
+450649;NL;DE;1;0;Einfahrt
+450679;PL;NL;1;1;Passiert (Transit)
+453538;BE;DE;0;0;Kein Bezug
+454494;BE;RO;1;0;Komplex (mehrfach/Schleife)
+457116;SK;SK;0;0;Kein Bezug
+457226;NL;NL;0;0;Kein Bezug
+457361;IT;IT;0;0;Kein Bezug
+457498;NL;NL;0;0;Kein Bezug
+458205;CH;CH;0;0;Kein Bezug
+458310;DE;DE;0;0;Inland
+458599;DE;PL;0;1;Ausfahrt
+459607;DE;DE;0;0;Inland
+459750;PL;DE;1;0;Einfahrt
+460111;PL;PL;0;0;Kein Bezug
+460218;NL;NL;0;0;Kein Bezug
+460245;NL;NL;0;0;Kein Bezug
+460858;NL;NL;0;0;Kein Bezug
+461513;RO;RO;0;0;Kein Bezug
+450653;NL;DE;0;0;Kein Bezug
+454597;NL;NL;0;0;Kein Bezug
+454777;DE;DE;0;0;Inland
+455146;NL;PL;1;1;Passiert (Transit)
+457918;DE;DE;0;0;Inland
+458102;NL;NL;0;0;Kein Bezug
+458158;NL;NL;0;0;Kein Bezug
+458189;PL;PL;0;0;Kein Bezug
+458855;SI;AT;0;0;Kein Bezug
+458990;DE;NL;0;1;Ausfahrt
+461337;CZ;CZ;0;0;Kein Bezug
+448717;AT;DE;0;0;Kein Bezug
+454642;NL;IT;0;0;Kein Bezug
+455151;NL;NL;0;0;Kein Bezug
+456506;DE;DE;0;0;Inland
+456801;IT;IT;0;0;Kein Bezug
+457657;CH;CH;0;0;Kein Bezug
+457945;TR;RS;0;0;Kein Bezug
+458018;SK;SK;0;0;Kein Bezug
+458347;CZ;SK;0;0;Kein Bezug
+458533;IT;IT;0;0;Kein Bezug
+458659;DE;DE;0;0;Inland
+459448;NL;NL;0;0;Kein Bezug
+460151;AT;AT;0;0;Kein Bezug
+460163;NL;NL;0;0;Kein Bezug
+460169;RO;RO;0;0;Kein Bezug
+453695;PL;DE;0;0;Kein Bezug
+454234;CH;CH;0;0;Kein Bezug
+455086;NL;PL;1;1;Passiert (Transit)
+456810;BE;RO;1;0;Komplex (mehrfach/Schleife)
+457172;NL;NL;0;0;Kein Bezug
+457492;PL;DE;1;0;Einfahrt
+458043;PL;PL;0;0;Kein Bezug
+458209;AT;IT;0;0;Kein Bezug
+458271;NL;NL;0;0;Kein Bezug
+458284;CZ;CZ;0;0;Kein Bezug
+458545;NL;NL;0;0;Kein Bezug
+458799;PL;PL;0;0;Kein Bezug
+459014;NL;NL;0;0;Kein Bezug
+459060;NL;NL;0;0;Kein Bezug
+459444;NL;NL;0;0;Kein Bezug
+460178;HU;HU;0;0;Kein Bezug
+460417;BG;BG;0;0;Kein Bezug
+450693;NL;NL;0;0;Kein Bezug
+451125;PL;DE;0;0;Kein Bezug
+455045;NL;NL;0;0;Kein Bezug
+455817;DE;SK;0;0;Kein Bezug
+456635;AT;SI;0;0;Kein Bezug
+456708;SK;CZ;0;0;Kein Bezug
+457340;RS;TR;0;0;Kein Bezug
+457572;SK;AT;0;0;Kein Bezug
+457721;CZ;CZ;0;0;Kein Bezug
+457843;SK;DE;0;0;Kein Bezug
+458287;CH;CH;0;0;Kein Bezug
+458503;SK;SK;0;0;Kein Bezug
+458601;IT;IT;0;0;Kein Bezug
+458684;NL;NL;0;0;Kein Bezug
+460800;CZ;CZ;0;0;Kein Bezug
+461384;NL;NL;0;0;Kein Bezug
+453716;NL;PL;1;1;Passiert (Transit)
+454162;CH;NL;0;0;Kein Bezug
+454203;CH;NL;0;0;Kein Bezug
+454426;IT;DE;0;0;Kein Bezug
+454498;PL;NL;1;1;Passiert (Transit)
+454707;DE;NL;0;0;Kein Bezug
+456877;DE;HU;0;0;Kein Bezug
+458187;PL;PL;0;0;Kein Bezug
+458348;SK;CZ;0;0;Kein Bezug
+458602;IT;IT;0;0;Kein Bezug
+458983;CZ;SK;0;0;Kein Bezug
+459441;NL;NL;0;0;Kein Bezug
+447906;HU;DE;0;0;Kein Bezug
+451903;DE;PL;0;1;Ausfahrt
+454032;PL;CZ;0;0;Kein Bezug
+454204;CH;DE;0;0;Kein Bezug
+454236;CH;CH;0;0;Kein Bezug
+454608;CH;CH;0;0;Kein Bezug
+455324;HR;HU;0;0;Kein Bezug
+456488;DE;DE;0;0;Inland
+456713;SK;SK;0;0;Kein Bezug
+456722;NL;NL;0;0;Kein Bezug
+457847;AT;SI;0;0;Kein Bezug
+458231;PL;PL;0;0;Kein Bezug
+458316;NL;NL;0;0;Kein Bezug
+459109;AT;AT;1;1;Passiert (Transit)
+459443;HU;SK;0;0;Kein Bezug
+461777;PL;PL;0;0;Kein Bezug
+452896;AT;DE;0;0;Kein Bezug
+454601;NL;NL;0;0;Kein Bezug
+454735;DE;PL;0;1;Ausfahrt
+455230;DE;DE;0;0;Inland
+456419;DE;SK;0;0;Kein Bezug
+456435;IT;IT;0;0;Kein Bezug
+457184;HU;CZ;0;0;Kein Bezug
+457578;DE;DE;0;0;Inland
+457851;AT;SI;0;0;Kein Bezug
+458014;SK;SK;0;0;Kein Bezug
+458114;NL;NL;0;0;Kein Bezug
+458308;HU;HU;0;0;Kein Bezug
+458481;RO;RO;0;0;Kein Bezug
+458655;DE;DE;0;0;Inland
+459245;SK;SK;0;0;Kein Bezug
+459784;CZ;CZ;0;0;Kein Bezug
+460131;PL;PL;0;0;Kein Bezug
+460664;NL;NL;0;0;Kein Bezug
+453909;PL;PL;0;0;Kein Bezug
+454175;CH;CH;0;0;Kein Bezug
+454577;NL;DE;0;0;Kein Bezug
+454673;NL;NL;0;0;Kein Bezug
+455760;SI;AT;0;0;Kein Bezug
+455872;DE;DE;0;0;Inland
+456417;HU;DE;0;0;Kein Bezug
+456927;PL;PL;0;0;Kein Bezug
+457298;NL;NL;0;0;Kein Bezug
+457350;NL;NL;0;0;Kein Bezug
+457772;SK;DE;0;0;Kein Bezug
+457926;DE;DE;0;0;Inland
+458532;IT;IT;0;0;Kein Bezug
+458615;CH;DE;0;0;Kein Bezug
+458995;CZ;CZ;0;0;Kein Bezug
+459005;HU;HU;0;0;Kein Bezug
+460161;CH;DE;0;0;Kein Bezug
+455135;DE;NL;0;0;Kein Bezug
+455322;IT;IT;0;0;Kein Bezug
+458424;CH;CH;0;0;Kein Bezug
+461515;RO;RO;0;0;Kein Bezug
+453752;DE;DE;0;0;Inland
+454542;NL;PL;1;1;Passiert (Transit)
+455153;DE;NL;0;0;Kein Bezug
+456682;PL;PL;0;0;Kein Bezug
+457215;NL;NL;0;0;Kein Bezug
+458332;NL;NL;0;0;Kein Bezug
+458596;NL;NL;0;0;Kein Bezug
+458621;HU;HU;0;0;Kein Bezug
+458851;AT;SI;0;0;Kein Bezug
+459015;SK;SK;0;0;Kein Bezug
+459692;PL;PL;0;0;Kein Bezug
+459720;DE;HU;0;0;Kein Bezug
+460009;NL;NL;0;0;Kein Bezug
+460371;RO;RO;0;0;Kein Bezug
+460375;NL;NL;0;0;Kein Bezug
+461581;NL;NL;0;0;Kein Bezug
+453091;DE;HU;0;0;Kein Bezug
+454534;NL;DE;1;0;Einfahrt
+454595;NL;NL;0;0;Kein Bezug
+454661;PL;NL;1;1;Passiert (Transit)
+456972;IT;NL;0;0;Kein Bezug
+457135;AT;HU;0;0;Kein Bezug
+457767;CH;CH;0;0;Kein Bezug
+458812;DE;HU;0;0;Kein Bezug
+459790;SK;SK;0;0;Kein Bezug
+460035;AT;AT;0;0;Kein Bezug
+460064;NL;NL;0;0;Kein Bezug
+460314;NL;NL;0;0;Kein Bezug
+460344;NL;NL;0;0;Kein Bezug
+460370;RO;RO;0;0;Kein Bezug
+461833;NL;NL;0;0;Kein Bezug
+451501;NL;PL;1;1;Passiert (Transit)
+456480;DE;DE;0;0;Inland
+458270;NL;NL;0;0;Kein Bezug
+458675;NL;NL;0;0;Kein Bezug
+458677;NL;NL;0;0;Kein Bezug
+458811;DE;HU;0;0;Kein Bezug
+458836;AT;AT;0;0;Kein Bezug
+459190;NL;NL;0;0;Kein Bezug
+459280;NL;NL;0;0;Kein Bezug
+459337;HU;HU;0;0;Kein Bezug
+459729;DE;HU;0;0;Kein Bezug
+460504;HU;HU;0;0;Kein Bezug
+460854;SK;SK;0;0;Kein Bezug
+460863;CZ;CZ;0;0;Kein Bezug
+453715;PL;NL;1;1;Passiert (Transit)
+454240;CH;CH;0;0;Kein Bezug
+454644;NL;IT;0;0;Kein Bezug
+457001;NL;HU;1;0;Komplex (mehrfach/Schleife)
+457223;SK;SK;0;0;Kein Bezug
+457305;NL;NL;0;0;Kein Bezug
+457990;HU;HU;0;0;Kein Bezug
+458288;CH;CH;0;0;Kein Bezug
+458667;NL;NL;0;0;Kein Bezug
+459169;PL;PL;0;0;Kein Bezug
+459228;RO;RO;0;0;Kein Bezug
+459232;DE;DE;0;0;Inland
+459853;NL;NL;0;0;Kein Bezug
+460002;IT;IT;0;0;Kein Bezug
+460015;NL;NL;0;0;Kein Bezug
+460383;NL;NL;0;0;Kein Bezug
+460556;NL;NL;0;0;Kein Bezug
+460565;NL;NL;0;0;Kein Bezug
+461583;NL;NL;0;0;Kein Bezug
+456364;AT;SK;0;0;Kein Bezug
+457408;HU;DE;0;0;Kein Bezug
+457846;SI;AT;0;0;Kein Bezug
+458169;PL;PL;0;0;Kein Bezug
+461545;NL;NL;0;0;Kein Bezug
+447456;SK;DE;0;0;Kein Bezug
+454513;NL;NL;0;0;Kein Bezug
+456241;NL;NL;0;0;Kein Bezug
+457046;SK;CZ;0;0;Kein Bezug
+457256;CZ;SK;0;0;Kein Bezug
+457670;DE;DE;0;0;Inland
+457827;CZ;CZ;0;0;Kein Bezug
+457885;DE;DE;0;0;Inland
+458564;HU;NL;0;0;Kein Bezug
+458611;NL;NL;0;0;Kein Bezug
+458827;IT;IT;0;0;Kein Bezug
+459213;NL;NL;0;0;Kein Bezug
+459456;CH;CH;0;0;Kein Bezug
+459500;CH;CH;0;0;Kein Bezug
+460139;PL;PL;0;0;Kein Bezug
+460158;NL;NL;0;0;Kein Bezug
+454699;NL;PL;1;1;Passiert (Transit)
+455122;NL;NL;0;0;Kein Bezug
+455223;DE;DE;0;0;Inland
+456861;HU;HU;0;0;Kein Bezug
+458340;NL;NL;0;0;Kein Bezug
+458346;SK;SK;0;0;Kein Bezug
+458794;SI;AT;0;0;Kein Bezug
+460502;SK;SK;0;0;Kein Bezug
+460961;RO;RO;0;0;Kein Bezug
+461411;CZ;NL;0;1;Komplex (mehrfach/Schleife)
+461504;CH;CH;0;0;Kein Bezug
+454405;DE;NL;0;1;Ausfahrt
+454587;IT;DE;0;0;Kein Bezug
+455215;DE;DE;0;0;Inland
+456870;HU;HU;0;0;Kein Bezug
+457994;RS;HU;0;0;Kein Bezug
+458263;NL;NL;0;0;Kein Bezug
+458624;BG;RO;0;0;Kein Bezug
+458715;PL;PL;0;0;Kein Bezug
+459314;BG;BG;0;0;Kein Bezug
+459436;NL;NL;0;0;Kein Bezug
+459478;CH;CH;0;0;Kein Bezug
+460045;RO;AT;0;0;Kein Bezug
+460541;DE;PL;0;1;Ausfahrt
+460855;CH;CH;0;0;Kein Bezug
+461941;NL;NL;0;0;Kein Bezug
+449784;DE;NL;0;1;Ausfahrt
+453993;PL;PL;0;0;Kein Bezug
+455212;DE;DE;0;0;Inland
+456289;HU;HU;0;0;Kein Bezug
+456558;PL;PL;0;0;Kein Bezug
+458208;NL;NL;0;0;Kein Bezug
+458281;HU;SK;0;0;Kein Bezug
+458382;NL;NL;0;0;Kein Bezug
+458389;NL;NL;0;0;Kein Bezug
+458866;IT;IT;0;0;Kein Bezug
+459051;NL;NL;0;0;Kein Bezug
+459340;DE;SK;0;0;Kein Bezug
+459647;DE;DE;0;0;Inland
+459848;PL;CZ;0;0;Kein Bezug
+460189;HU;AT;0;0;Kein Bezug
+460887;NL;NL;0;0;Kein Bezug
+461873;NL;NL;0;0;Kein Bezug
+450565;NL;DE;0;0;Kein Bezug
+453133;PL;PL;0;0;Kein Bezug
+454578;NL;DE;0;0;Kein Bezug
+456881;HU;DE;0;0;Kein Bezug
+457436;PL;DE;1;0;Einfahrt
+459172;NL;NL;0;0;Kein Bezug
+459243;NL;NL;0;0;Kein Bezug
+459342;PL;PL;0;0;Kein Bezug
+459665;CZ;SK;0;0;Kein Bezug
+460001;IT;IT;0;0;Kein Bezug
+460359;NL;NL;0;0;Kein Bezug
+460394;NL;NL;0;0;Kein Bezug
+452931;DE;NL;0;1;Ausfahrt
+453534;DE;PL;0;0;Kein Bezug
+453550;BE;DE;0;0;Kein Bezug
+454410;PL;NL;1;1;Passiert (Transit)
+454522;NL;DE;1;0;Einfahrt
+455850;IT;IT;0;0;Kein Bezug
+456508;DE;DE;0;0;Inland
+457168;CZ;NL;0;1;Komplex (mehrfach/Schleife)
+457417;SK;DE;0;0;Kein Bezug
+457664;DE;DE;0;0;Inland
+457925;DE;DE;0;0;Inland
+458435;NL;NL;0;0;Kein Bezug
+459029;SK;SK;0;0;Kein Bezug
+459106;HU;HU;0;0;Kein Bezug
+459359;PL;PL;0;0;Kein Bezug
+459465;SK;HU;0;0;Kein Bezug
+459669;CH;CH;0;0;Kein Bezug
+459737;SK;DE;0;0;Kein Bezug
+460206;NL;NL;0;0;Kein Bezug
+460514;DE;DE;0;0;Inland
+450642;DE;NL;0;0;Kein Bezug
+450710;NL;DE;1;0;Einfahrt
+454407;DE;NL;0;1;Ausfahrt
+454616;IT;NL;0;0;Kein Bezug
+455053;CH;CH;0;0;Kein Bezug
+455281;PL;SI;0;0;Kein Bezug
+455904;IT;IT;0;0;Kein Bezug
+457085;DE;DE;0;0;Inland
+458252;DE;DE;0;0;Inland
+458297;HU;HU;0;0;Kein Bezug
+458317;NL;NL;0;0;Kein Bezug
+458987;HU;HU;0;0;Kein Bezug
+459253;UA;SK;0;0;Kein Bezug
+459512;CH;CH;0;0;Kein Bezug
+460160;HU;HU;0;0;Kein Bezug
+461328;NL;NL;0;0;Kein Bezug
+450475;NL;NL;0;0;Kein Bezug
+450589;PL;NL;1;1;Passiert (Transit)
+454980;IT;IT;0;0;Kein Bezug
+455083;NL;DE;0;0;Kein Bezug
+456372;CH;CH;0;0;Kein Bezug
+457394;IT;IT;0;0;Kein Bezug
+457608;PL;SI;0;0;Kein Bezug
+459367;NL;DE;1;0;Einfahrt
+459386;RO;BG;0;0;Kein Bezug
+461901;NL;DE;0;0;Kein Bezug
+450628;DE;NL;0;1;Ausfahrt
+450945;CZ;NL;0;1;Komplex (mehrfach/Schleife)
+451842;CH;DE;0;0;Kein Bezug
+453712;NL;PL;1;1;Passiert (Transit)
+454532;NL;DE;1;0;Einfahrt
+454734;PL;DE;1;0;Einfahrt
+455036;IT;DE;0;0;Kein Bezug
+455213;DE;DE;0;0;Inland
+455752;AT;IT;0;0;Kein Bezug
+456642;SI;AT;0;0;Kein Bezug
+457058;DE;DE;0;0;Inland
+457614;SK;PL;0;0;Kein Bezug
+458633;SK;SK;0;0;Kein Bezug
+458891;DE;AT;0;0;Kein Bezug
+459782;NL;NL;0;0;Kein Bezug
+459917;NL;NL;0;0;Kein Bezug
+460795;RO;RO;0;0;Kein Bezug
+461589;PL;PL;0;0;Kein Bezug
+450636;DE;DE;0;0;Inland
+453516;BE;PL;0;0;Kein Bezug
+454171;CH;CH;0;0;Kein Bezug
+454705;DE;NL;0;0;Kein Bezug
+456644;SI;AT;0;0;Kein Bezug
+457037;CZ;HU;0;0;Kein Bezug
+458290;SK;SK;0;0;Kein Bezug
+459677;DE;DE;0;0;Inland
+460897;PL;PL;0;0;Kein Bezug
+461536;DE;DE;0;0;Inland
+461937;NL;NL;0;0;Kein Bezug
+452204;HU;IT;0;0;Kein Bezug
+455105;PL;NL;1;1;Passiert (Transit)
+456755;PL;PL;0;0;Kein Bezug
+457899;DE;DE;0;0;Inland
+457977;PL;PL;0;0;Kein Bezug
+458140;PL;PL;0;0;Kein Bezug
+458172;CH;DE;0;0;Kein Bezug
+458460;DE;DE;0;0;Inland
+460191;NL;NL;0;0;Kein Bezug
+460333;PL;PL;0;0;Kein Bezug
+460569;NL;NL;0;0;Kein Bezug
+461821;NL;NL;0;0;Kein Bezug
+461824;NL;NL;0;0;Kein Bezug
+450584;DE;NL;0;0;Kein Bezug
+454565;DE;NL;0;0;Kein Bezug
+455785;HU;RO;0;0;Kein Bezug
+456256;AT;AT;0;0;Kein Bezug
+456375;SI;HU;0;0;Kein Bezug
+457063;PL;PL;0;0;Kein Bezug
+457153;HU;IT;0;0;Kein Bezug
+457231;RO;RO;0;0;Kein Bezug
+457592;DE;DE;0;0;Inland
+458188;PL;PL;0;0;Kein Bezug
+458625;DE;DE;0;0;Inland
+458830;PL;PL;0;0;Kein Bezug
+459032;NL;NL;0;0;Kein Bezug
+459733;HU;DE;0;0;Kein Bezug
+461946;NL;NL;0;0;Kein Bezug
+449280;DE;PL;0;1;Ausfahrt
+455145;NL;DE;0;0;Kein Bezug
+455329;PL;IT;0;0;Kein Bezug
+457363;NL;NL;0;0;Kein Bezug
+457482;SK;PL;0;0;Kein Bezug
+458017;SK;SK;0;0;Kein Bezug
+458124;NL;NL;0;0;Kein Bezug
+458679;NL;NL;0;0;Kein Bezug
+459050;NL;NL;0;0;Kein Bezug
+460143;PL;PL;0;0;Kein Bezug
+460806;IT;IT;0;0;Kein Bezug
+460957;NL;NL;0;0;Kein Bezug
+461319;NL;NL;0;0;Kein Bezug
+461848;NL;NL;0;0;Kein Bezug
+450558;DE;IT;0;1;Ausfahrt
+454225;CH;CH;0;0;Kein Bezug
+454442;NL;DE;1;0;Einfahrt
+454981;IT;IT;0;0;Kein Bezug
+455334;PL;IT;0;0;Kein Bezug
+456638;SI;AT;0;0;Kein Bezug
+456678;DE;PL;0;1;Ausfahrt
+457938;DE;HR;0;0;Kein Bezug
+458052;IT;RS;0;0;Kein Bezug
+458662;HU;HU;0;0;Kein Bezug
+458719;AT;SK;0;0;Kein Bezug
+458919;NL;NL;0;0;Kein Bezug
+458929;NL;NL;0;0;Kein Bezug
+458933;NL;NL;0;0;Kein Bezug
+459168;PL;PL;0;0;Kein Bezug
+459174;NL;NL;0;0;Kein Bezug
+459707;IT;IT;0;0;Kein Bezug
+459823;SI;AT;0;0;Kein Bezug
+460115;CH;CH;0;0;Kein Bezug
+460243;NL;BE;0;0;Kein Bezug
+460248;CH;CH;0;0;Kein Bezug
+448707;DE;AT;0;0;Kein Bezug
+450936;NL;HU;1;0;Komplex (mehrfach/Schleife)
+454176;CH;CH;0;0;Kein Bezug
+454476;NL;DE;1;0;Einfahrt
+454495;BE;RO;1;0;Komplex (mehrfach/Schleife)
+456609;HR;DE;0;0;Kein Bezug
+457694;DE;DE;0;0;Inland
+458639;NL;NL;0;0;Kein Bezug
+458915;NL;NL;0;0;Kein Bezug
+459650;DE;DE;0;0;Inland
+460297;NL;NL;0;0;Kein Bezug
+461939;NL;NL;0;0;Kein Bezug
+449056;HU;DE;0;0;Kein Bezug
+451829;CH;CH;0;0;Kein Bezug
+451884;DE;PL;0;1;Ausfahrt
+452203;IT;HU;0;0;Kein Bezug
+454693;NL;DE;0;0;Kein Bezug
+455248;DE;DE;0;0;Inland
+456726;CZ;SK;0;0;Kein Bezug
+456866;AT;AT;0;0;Kein Bezug
+457159;NL;NL;0;0;Kein Bezug
+457177;PL;NL;1;1;Passiert (Transit)
+457907;DE;DE;0;0;Inland
+457997;IT;IT;0;0;Kein Bezug
+459207;NL;NL;0;0;Kein Bezug
+461486;NL;NL;0;0;Kein Bezug
+461921;HU;HU;0;0;Kein Bezug
+451309;DE;CH;0;0;Kein Bezug
+454545;DE;NL;0;1;Ausfahrt
+454604;NL;NL;0;0;Kein Bezug
+456608;HR;DE;0;0;Kein Bezug
+457689;DE;DE;0;0;Inland
+458073;IT;IT;0;0;Kein Bezug
+458311;DE;DE;0;0;Inland
+458459;NL;NL;0;0;Kein Bezug
+459510;CH;CH;0;0;Kein Bezug
+449051;RO;DE;0;0;Kein Bezug
+454525;DE;NL;0;1;Ausfahrt
+457052;PL;PL;0;0;Kein Bezug
+458806;AT;SI;0;0;Kein Bezug
+458809;NL;NL;0;0;Kein Bezug
+459100;NL;NL;0;0;Kein Bezug
+459236;NL;NL;0;0;Kein Bezug
+459299;NL;NL;0;0;Kein Bezug
+459451;NL;NL;0;0;Kein Bezug
+460014;NL;NL;0;0;Kein Bezug
+460109;NL;NL;0;0;Kein Bezug
+460173;NL;NL;0;0;Kein Bezug
+460306;IT;IT;0;0;Kein Bezug
+460349;NL;NL;0;0;Kein Bezug
+461324;NL;NL;0;0;Kein Bezug
+461345;BG;BG;0;0;Kein Bezug
+461417;HU;HU;0;0;Kein Bezug
+449062;DE;HU;0;0;Kein Bezug
+450421;DE;NL;0;1;Ausfahrt
+451509;NL;NL;0;0;Kein Bezug
+453526;PL;BE;0;0;Kein Bezug
+453704;DE;PL;0;0;Kein Bezug
+454158;CH;CH;0;0;Kein Bezug
+455211;DE;DE;0;0;Inland
+456879;HU;DE;0;0;Kein Bezug
+457249;NL;NL;0;0;Kein Bezug
+457251;SK;SK;0;0;Kein Bezug
+458610;CH;CH;0;0;Kein Bezug
+458914;NL;NL;0;0;Kein Bezug
+459013;CZ;SK;0;0;Kein Bezug
+459257;RO;RO;0;0;Kein Bezug
+459265;NL;NL;0;0;Kein Bezug
+459462;NL;NL;0;0;Kein Bezug
+459688;DE;SK;0;1;Ausfahrt
+460010;NL;NL;0;0;Kein Bezug
+460276;NL;NL;0;0;Kein Bezug
+460438;NL;NL;0;0;Kein Bezug
+450643;DE;NL;0;0;Kein Bezug
+453544;BE;PL;0;0;Kein Bezug
+453705;DE;PL;0;0;Kein Bezug
+454169;CH;CH;0;0;Kein Bezug
+456271;DE;PL;0;0;Kein Bezug
+456736;IT;NL;0;1;Komplex (mehrfach/Schleife)
+456811;RO;BE;0;1;Komplex (mehrfach/Schleife)
+457626;NL;NL;0;0;Kein Bezug
+458442;AT;SK;0;0;Kein Bezug
+458578;NL;NL;0;0;Kein Bezug
+458638;NL;NL;0;0;Kein Bezug
+458944;NL;NL;0;0;Kein Bezug
+460063;NL;NL;0;0;Kein Bezug
+460496;PL;PL;0;0;Kein Bezug
+460515;AT;DE;1;0;Einfahrt
+461965;CZ;CZ;0;0;Kein Bezug
+451482;DE;PL;0;0;Kein Bezug
+452897;DE;AT;0;0;Kein Bezug
+458376;NL;NL;0;0;Kein Bezug
+458791;NL;NL;0;0;Kein Bezug
+459020;CZ;CZ;0;0;Kein Bezug
+459071;NL;NL;0;0;Kein Bezug
+459363;HU;HU;0;0;Kein Bezug
+459366;CZ;SK;0;0;Kein Bezug
+460036;NL;NL;0;0;Kein Bezug
+450594;NL;DE;0;0;Kein Bezug
+456772;IT;IT;0;0;Kein Bezug
+457179;AT;NL;0;1;Komplex (mehrfach/Schleife)
+457372;NL;NL;0;0;Kein Bezug
+457430;PL;DE;1;0;Einfahrt
+457437;PL;DE;1;0;Einfahrt
+458563;DE;DE;0;0;Inland
+458631;NL;HU;1;0;Komplex (mehrfach/Schleife)
+458713;HR;DE;0;0;Kein Bezug
+459145;PL;PL;0;0;Kein Bezug
+459513;CH;CH;0;0;Kein Bezug
+459732;PL;PL;0;0;Kein Bezug
+459743;HU;DE;0;0;Kein Bezug
+459763;PL;PL;0;0;Kein Bezug
+460026;NL;NL;0;0;Kein Bezug
+460123;NL;NL;0;0;Kein Bezug
+460304;DE;DE;0;0;Inland
+460898;NL;NL;0;0;Kein Bezug
+450700;DE;NL;0;0;Kein Bezug
+451126;PL;DE;0;0;Kein Bezug
+451895;DE;PL;0;1;Ausfahrt
+453914;SK;HU;0;0;Kein Bezug
+454270;DE;AT;0;0;Kein Bezug
+454402;DE;NL;0;0;Kein Bezug
+456668;RO;DE;0;0;Kein Bezug
+458055;HU;IT;0;0;Kein Bezug
+458166;NL;NL;0;0;Kein Bezug
+458432;AT;AT;0;0;Kein Bezug
+458511;IT;PL;0;0;Kein Bezug
+458605;IT;IT;0;0;Kein Bezug
+458771;SK;CZ;0;0;Kein Bezug
+458826;DE;AT;0;1;Ausfahrt
+458873;PL;PL;0;0;Kein Bezug
+458910;SK;SK;0;0;Kein Bezug
+458945;NL;NL;0;0;Kein Bezug
+459101;TR;BG;0;0;Kein Bezug
+461405;NL;NL;0;0;Kein Bezug
+461527;NL;NL;0;0;Kein Bezug
+449632;DE;PL;0;0;Kein Bezug
+454411;PL;NL;1;1;Passiert (Transit)
+454681;NL;DE;1;0;Einfahrt
+455220;DE;DE;0;0;Inland
+457265;NL;NL;0;0;Kein Bezug
+457571;NL;NL;0;0;Kein Bezug
+457630;NL;NL;0;0;Kein Bezug
+458065;HU;SK;0;0;Kein Bezug
+458579;NL;NL;0;0;Kein Bezug
+458641;HU;IT;0;0;Kein Bezug
+458796;AT;SI;0;0;Kein Bezug
+458821;IT;IT;0;0;Kein Bezug
+459108;NL;NL;0;0;Kein Bezug
+459116;HU;HU;0;0;Kein Bezug
+459194;NL;NL;0;0;Kein Bezug
+459787;CZ;CZ;0;0;Kein Bezug
+461572;DE;DE;0;0;Inland
+454230;CH;CH;0;0;Kein Bezug
+455217;DE;DE;0;0;Inland
+455262;DE;DE;0;0;Inland
+456497;DE;DE;0;0;Inland
+456553;NL;NL;0;0;Kein Bezug
+458176;DE;CH;0;0;Kein Bezug
+459656;DE;DE;0;0;Inland
+460183;NL;NL;0;0;Kein Bezug
+460289;PL;PL;0;0;Kein Bezug
+460516;DE;DE;0;0;Inland
+461493;NL;NL;0;0;Kein Bezug
+450726;NL;DE;1;0;Einfahrt
+454206;CH;CH;0;0;Kein Bezug
+454785;DE;DE;0;0;Inland
+454792;DE;DE;0;0;Inland
+455003;HU;HU;0;0;Kein Bezug
+455234;DE;DE;0;0;Inland
+457175;NL;NL;0;0;Kein Bezug
+457229;NL;NL;0;0;Kein Bezug
+457526;NL;NL;0;0;Kein Bezug
+457529;DE;DE;0;0;Inland
+458264;NL;NL;0;0;Kein Bezug
+459016;SK;SK;0;0;Kein Bezug
+459209;NL;NL;0;0;Kein Bezug
+450581;DE;NL;0;1;Ausfahrt
+450728;NL;DE;0;0;Kein Bezug
+451839;DE;CH;0;0;Kein Bezug
+451844;CH;CH;0;0;Kein Bezug
+455035;IT;DE;0;0;Kein Bezug
+457066;PL;PL;0;0;Kein Bezug
+458243;NL;NL;0;0;Kein Bezug
+458568;NL;NL;0;0;Kein Bezug
+459227;PL;PL;0;0;Kein Bezug
+460008;NL;NL;0;0;Kein Bezug
+460085;CZ;SK;0;0;Kein Bezug
+461874;AT;AT;0;0;Kein Bezug
+450597;DE;DE;0;0;Inland
+451770;CH;CH;0;0;Kein Bezug
+455233;DE;DE;0;0;Inland
+456370;CH;CH;0;0;Kein Bezug
+456416;DE;SK;0;0;Kein Bezug
+456965;SK;SK;0;0;Kein Bezug
+457398;DE;SK;0;0;Kein Bezug
+457887;DE;DE;0;0;Inland
+457905;DE;DE;0;0;Inland
+458080;NL;NL;0;0;Kein Bezug
+458283;CZ;CZ;0;0;Kein Bezug
+458431;PL;PL;0;0;Kein Bezug
+459473;CH;DE;0;0;Kein Bezug
+460194;NL;NL;0;0;Kein Bezug
+460374;NL;NL;0;0;Kein Bezug
+461507;CH;CH;0;0;Kein Bezug
+461942;SK;SK;0;0;Kein Bezug
+451901;DE;PL;0;1;Ausfahrt
+452927;DE;PL;0;1;Ausfahrt
+454224;NL;CH;0;0;Kein Bezug
+454235;CH;CH;0;0;Kein Bezug
+454627;NL;PL;1;1;Passiert (Transit)
+454946;HU;HU;0;0;Kein Bezug
+455701;CZ;NL;0;1;Komplex (mehrfach/Schleife)
+456605;DE;HR;0;0;Kein Bezug
+456694;PL;NL;1;1;Passiert (Transit)
+456743;PL;DE;1;0;Einfahrt
+457161;NL;HU;1;0;Komplex (mehrfach/Schleife)
+457577;DE;DE;0;0;Inland
+457891;DE;DE;0;0;Inland
+457924;DE;DE;0;0;Inland
+458845;SI;AT;0;0;Kein Bezug
+459266;NL;NL;0;0;Kein Bezug
+459345;NL;NL;0;0;Kein Bezug
+459482;CH;CH;0;0;Kein Bezug
+459995;PL;PL;0;0;Kein Bezug
+460065;NL;NL;0;0;Kein Bezug
+461346;DE;DE;0;0;Inland
+454562;DE;NL;0;0;Kein Bezug
+454638;NL;PL;1;1;Passiert (Transit)
+455708;DE;DE;0;0;Inland
+457542;RO;RO;0;0;Kein Bezug
+457863;SI;AT;0;0;Kein Bezug
+457973;PL;PL;0;0;Kein Bezug
+459439;NL;NL;0;0;Kein Bezug
+450632;IT;NL;0;0;Kein Bezug
+451794;CH;CH;0;0;Kein Bezug
+454303;PL;PL;0;0;Kein Bezug
+456697;NL;PL;1;1;Passiert (Transit)
+457141;PL;PL;0;0;Kein Bezug
+457435;DE;PL;0;1;Ausfahrt
+457521;IT;IT;0;0;Kein Bezug
+457575;SK;PL;0;0;Kein Bezug
+457829;NL;NL;0;0;Kein Bezug
+457984;CZ;SK;0;0;Kein Bezug
+458261;NL;NL;0;0;Kein Bezug
+459096;HU;HU;0;0;Kein Bezug
+460529;PL;PL;0;0;Kein Bezug
+461775;CZ;CZ;0;0;Kein Bezug
+454571;PL;NL;1;1;Passiert (Transit)
+456430;DE;HU;0;0;Kein Bezug
+457292;UA;DE;0;0;Kein Bezug
+457352;NL;NL;0;0;Kein Bezug
+457547;NL;NL;0;0;Kein Bezug
+457765;CH;CH;0;0;Kein Bezug
+458095;CZ;CZ;0;0;Kein Bezug
+458418;SK;SK;0;0;Kein Bezug
+459090;NL;NL;0;0;Kein Bezug
+459269;IT;IT;0;0;Kein Bezug
+460188;SK;SK;0;0;Kein Bezug
+453553;PL;BE;0;0;Kein Bezug
+454657;PL;NL;1;1;Passiert (Transit)
+455126;NL;DE;1;0;Einfahrt
+456951;DE;DE;0;0;Inland
+457893;DE;DE;0;0;Inland
+457987;PL;PL;0;0;Kein Bezug
+458021;HU;IT;0;0;Kein Bezug
+458462;HU;HU;0;0;Kein Bezug
+459078;RO;RO;0;0;Kein Bezug
+459238;NL;NL;0;0;Kein Bezug
+459295;NL;NL;0;0;Kein Bezug
+459759;PL;PL;0;0;Kein Bezug
+460170;RO;RO;0;0;Kein Bezug
+460219;NL;DE;1;0;Einfahrt
+460233;AT;HU;0;0;Kein Bezug
+460386;NL;NL;0;0;Kein Bezug
+461506;CH;CH;0;0;Kein Bezug
+461540;NL;NL;0;0;Kein Bezug
+461591;NL;NL;0;0;Kein Bezug
+447459;DE;HU;0;0;Kein Bezug
+450920;NL;CZ;1;0;Komplex (mehrfach/Schleife)
+454416;NL;DE;1;0;Einfahrt
+455290;HR;DE;0;0;Kein Bezug
+456413;DE;CZ;0;0;Kein Bezug
+456646;AT;SI;0;0;Kein Bezug
+457503;DE;CH;0;0;Kein Bezug
+457504;DE;CH;0;0;Kein Bezug
+457519;NL;NL;0;0;Kein Bezug
+457591;PL;PL;0;0;Kein Bezug
+458309;NL;NL;0;0;Kein Bezug
+458613;SK;PL;0;0;Kein Bezug
+458690;NL;NL;0;0;Kein Bezug
+458837;AT;AT;0;0;Kein Bezug
+459019;SK;SK;0;0;Kein Bezug
+459354;NL;NL;0;0;Kein Bezug
+459428;DE;DE;0;0;Inland
+459698;HU;HU;0;0;Kein Bezug
+460355;NL;NL;0;0;Kein Bezug
+460575;NL;NL;0;0;Kein Bezug
+451133;DE;PL;0;1;Ausfahrt
+451827;CH;CH;0;0;Kein Bezug
+455015;DE;NL;0;0;Kein Bezug
+456787;CH;CH;0;0;Kein Bezug
+456968;SK;SK;0;0;Kein Bezug
+457133;CH;CH;0;0;Kein Bezug
+457332;DE;PL;0;1;Ausfahrt
+457691;DE;DE;0;0;Inland
+458088;HU;SI;0;0;Kein Bezug
+458247;NL;NL;0;0;Kein Bezug
+458391;IT;IT;0;0;Kein Bezug
+459155;NL;NL;0;0;Kein Bezug
+459765;HU;RO;0;0;Kein Bezug
+459796;NL;NL;0;0;Kein Bezug
+460098;HU;HU;0;0;Kein Bezug
+460146;PL;PL;0;0;Kein Bezug
+460326;NL;NL;0;0;Kein Bezug
+450712;NL;DE;0;0;Kein Bezug
+452209;IT;HU;0;0;Kein Bezug
+454694;NL;DE;0;0;Kein Bezug
+457339;DE;DE;0;0;Inland
+458478;NL;NL;0;0;Kein Bezug
+458797;SI;AT;0;0;Kein Bezug
+459044;CH;CH;0;0;Kein Bezug
+459490;CH;CH;0;0;Kein Bezug
+460300;NL;NL;0;0;Kein Bezug
+460322;RO;RO;0;0;Kein Bezug
+460576;NL;NL;0;0;Kein Bezug
+461518;NL;NL;0;0;Kein Bezug
+451896;DE;PL;0;1;Ausfahrt
+452236;IT;HU;0;0;Kein Bezug
+454546;DE;NL;0;1;Ausfahrt
+455057;DE;NL;0;1;Ausfahrt
+456500;DE;DE;0;0;Inland
+458846;SI;AT;0;0;Kein Bezug
+458980;DE;PL;0;0;Kein Bezug
+459173;NL;NL;0;0;Kein Bezug
+459326;DE;DE;0;0;Inland
+460573;NL;NL;0;0;Kein Bezug
+461485;NL;NL;0;0;Kein Bezug
+449541;AT;AT;0;0;Kein Bezug
+454632;NL;DE;0;0;Kein Bezug
+455078;NL;DE;0;0;Kein Bezug
+456886;HU;DE;0;0;Kein Bezug
+456974;NL;IT;1;0;Komplex (mehrfach/Schleife)
+458122;IT;HU;0;0;Kein Bezug
+458328;NL;NL;0;0;Kein Bezug
+459292;NL;NL;0;0;Kein Bezug
+460159;CH;CH;0;0;Kein Bezug
+460323;NL;NL;0;0;Kein Bezug
+461541;NL;NL;0;0;Kein Bezug
+449633;DE;PL;0;0;Kein Bezug
+450659;NL;IT;0;0;Kein Bezug
+454233;CH;CH;0;0;Kein Bezug
+455301;SK;DE;0;0;Kein Bezug
+455681;IT;IT;0;0;Kein Bezug
+455778;HU;AT;0;0;Kein Bezug
+456296;CH;AT;0;0;Kein Bezug
+456305;CZ;SK;0;0;Kein Bezug
+456892;HU;HU;0;0;Kein Bezug
+458170;PL;PL;0;0;Kein Bezug
+458351;SK;SK;0;0;Kein Bezug
+458367;NL;NL;0;0;Kein Bezug
+459095;PL;PL;0;0;Kein Bezug
+459379;RO;RO;0;0;Kein Bezug
+459805;NL;NL;0;0;Kein Bezug
+459830;SI;AT;0;0;Kein Bezug
+460186;NL;NL;0;0;Kein Bezug
+460250;DE;PL;0;1;Ausfahrt
+451840;DE;CH;0;0;Kein Bezug
+454703;DE;NL;0;0;Kein Bezug
+454988;PL;PL;0;0;Kein Bezug
+455317;AT;SK;0;0;Kein Bezug
+456854;AT;AT;0;0;Kein Bezug
+457158;NL;NL;0;0;Kein Bezug
+457620;NL;NL;0;0;Kein Bezug
+457815;NL;NL;0;0;Kein Bezug
+457904;DE;DE;0;0;Inland
+457974;AT;AT;0;0;Kein Bezug
+458338;NL;NL;0;0;Kein Bezug
+458342;NL;NL;0;0;Kein Bezug
+458416;NL;NL;0;0;Kein Bezug
+458450;SK;CZ;0;0;Kein Bezug
+459049;NL;NL;0;0;Kein Bezug
+459202;NL;NL;0;0;Kein Bezug
+459643;DE;DE;0;0;Inland
+460364;NL;NL;0;0;Kein Bezug
+460831;DE;CZ;0;0;Kein Bezug
+454536;NL;DE;1;0;Einfahrt
+454964;PL;DE;1;0;Einfahrt
+455050;NL;NL;0;0;Kein Bezug
+456041;SK;SK;0;0;Kein Bezug
+456510;DE;DE;0;0;Inland
+458222;AT;CZ;0;0;Kein Bezug
+458329;NL;NL;0;0;Kein Bezug
+458363;NL;NL;0;0;Kein Bezug
+458907;CH;CH;0;0;Kein Bezug
+458924;RO;RO;0;0;Kein Bezug
+459125;PL;DE;0;0;Kein Bezug
+459276;RS;HU;0;0;Kein Bezug
+459356;HU;HU;0;0;Kein Bezug
+459666;DE;DE;0;0;Inland
+453527;PL;BE;0;0;Kein Bezug
+454544;DE;NL;0;1;Ausfahrt
+456244;HU;HU;0;0;Kein Bezug
+456520;IT;IT;0;0;Kein Bezug
+457443;PL;DE;1;0;Einfahrt
+458066;HU;HU;0;0;Kein Bezug
+458867;IT;IT;0;0;Kein Bezug
+460895;NL;NL;0;0;Kein Bezug
+461539;NL;NL;0;0;Kein Bezug
+449279;PL;DE;1;0;Einfahrt
+450416;DE;NL;0;1;Ausfahrt
+454521;NL;DE;1;0;Einfahrt
+454533;NL;DE;0;0;Kein Bezug
+454967;DE;PL;0;1;Ausfahrt
+456921;IT;IT;0;0;Kein Bezug
+457410;HU;DE;0;0;Kein Bezug
+457978;PL;PL;0;0;Kein Bezug
+458115;RO;HU;0;0;Kein Bezug
+458241;SK;SK;0;0;Kein Bezug
+458254;BE;NL;0;0;Kein Bezug
+458548;IT;HU;0;0;Kein Bezug
+458629;AT;DE;1;0;Einfahrt
+458968;CZ;SK;0;0;Kein Bezug
+459091;DE;DE;0;0;Inland
+459240;NL;NL;0;0;Kein Bezug
+459799;NL;NL;0;0;Kein Bezug
+460099;PL;PL;0;0;Kein Bezug
+460134;PL;PL;0;0;Kein Bezug
+460301;NL;NL;0;0;Kein Bezug
+461954;NL;NL;0;0;Kein Bezug
+448716;DE;AT;0;0;Kein Bezug
+452215;PL;PL;0;0;Kein Bezug
+454449;DE;NL;0;1;Ausfahrt
+457617;NL;NL;0;0;Kein Bezug
+458572;RO;RO;0;0;Kein Bezug
+458591;IT;IT;0;0;Kein Bezug
+459870;SK;SK;0;0;Kein Bezug
+450494;NL;IT;0;0;Kein Bezug
+453541;PL;BE;0;0;Kein Bezug
+454676;NL;NL;0;0;Kein Bezug
+456258;AT;AT;0;0;Kein Bezug
+457483;PL;PL;0;0;Kein Bezug
+457640;IT;IT;0;0;Kein Bezug
+457702;DE;DE;0;0;Inland
+457782;NL;NL;0;0;Kein Bezug
+457958;NL;NL;0;0;Kein Bezug
+458291;NL;NL;0;0;Kein Bezug
+458643;IT;HU;0;0;Kein Bezug
+458904;NL;NL;0;0;Kein Bezug
+458951;DE;SK;0;0;Kein Bezug
+459061;NL;NL;0;0;Kein Bezug
+459248;NL;NL;0;0;Kein Bezug
+459259;NL;NL;0;0;Kein Bezug
+459682;HU;SI;0;0;Kein Bezug
+459722;SK;DE;0;0;Kein Bezug
+459822;AT;SI;0;0;Kein Bezug
+460032;NL;NL;0;0;Kein Bezug
+460313;CZ;CZ;0;0;Kein Bezug
+450707;NL;DE;0;0;Kein Bezug
+454985;BG;PL;0;0;Kein Bezug
+455953;NL;NL;0;0;Kein Bezug
+456671;DE;RO;0;0;Kein Bezug
+456837;AT;AT;1;1;Passiert (Transit)
+456925;AT;HU;0;0;Kein Bezug
+457812;CH;DE;0;0;Kein Bezug
+458369;NL;NL;0;0;Kein Bezug
+458705;DE;HR;0;0;Kein Bezug
+459884;IT;IT;0;0;Kein Bezug
+460287;PL;PL;0;0;Kein Bezug
+460389;NL;NL;0;0;Kein Bezug
+461491;RO;HU;0;0;Kein Bezug
+461926;NL;NL;0;0;Kein Bezug
+450586;PL;NL;1;1;Passiert (Transit)
+453525;DE;PL;0;0;Kein Bezug
+455210;DE;DE;0;0;Inland
+457692;DE;DE;0;0;Inland
+457810;DE;CH;0;0;Kein Bezug
+457928;DE;DE;0;0;Inland
+458500;NL;NL;0;0;Kein Bezug
+458620;CZ;CZ;0;0;Kein Bezug
+458732;DE;DE;0;0;Inland
+459430;DE;DE;0;0;Inland
+459678;DE;DE;0;0;Inland
+459789;SK;SK;0;0;Kein Bezug
+459916;NL;NL;0;0;Kein Bezug
+459920;IT;IT;0;0;Kein Bezug
+460254;NL;NL;0;0;Kein Bezug
+461970;NL;NL;0;0;Kein Bezug
+445645;NL;AT;1;0;Komplex (mehrfach/Schleife)
+447918;DE;HU;0;0;Kein Bezug
+450620;NL;DE;0;0;Kein Bezug
+451150;DE;RO;0;0;Kein Bezug
+453522;PL;BE;0;0;Kein Bezug
+454422;RO;BE;0;1;Komplex (mehrfach/Schleife)
+454620;DE;NL;0;0;Kein Bezug
+456740;IT;IT;0;0;Kein Bezug
+456859;CH;CH;0;0;Kein Bezug
+457386;DE;DE;0;0;Inland
+457499;CZ;CZ;0;0;Kein Bezug
+457623;NL;PL;1;1;Passiert (Transit)
+457786;CH;CH;0;0;Kein Bezug
+457944;PL;SI;0;0;Kein Bezug
+458012;NL;NL;0;0;Kein Bezug
+458366;NL;NL;0;0;Kein Bezug
+458678;NL;NL;0;0;Kein Bezug
+458908;CH;CH;0;0;Kein Bezug
+459715;PL;PL;0;0;Kein Bezug
+459966;NL;NL;0;0;Kein Bezug
+460095;PL;PL;0;0;Kein Bezug
+460246;NL;NL;0;0;Kein Bezug
+454208;CH;CH;0;0;Kein Bezug
+454275;AT;DE;0;0;Kein Bezug
+454529;NL;CH;1;0;Komplex (mehrfach/Schleife)
+456113;NL;CZ;1;0;Komplex (mehrfach/Schleife)
+456254;DE;PL;0;0;Kein Bezug
+456790;CZ;CZ;0;0;Kein Bezug
+457242;BG;BG;0;0;Kein Bezug
+458313;NL;NL;0;0;Kein Bezug
+458383;PL;PL;0;0;Kein Bezug
+458484;RO;RO;0;0;Kein Bezug
+458558;BE;HU;0;0;Kein Bezug
+458709;NL;NL;0;0;Kein Bezug
+459157;DE;AT;0;0;Kein Bezug
+459237;NL;NL;0;0;Kein Bezug
+461338;CZ;CZ;0;0;Kein Bezug
+461602;NL;NL;0;0;Kein Bezug
+450689;NL;NL;0;0;Kein Bezug
+454475;NL;DE;1;0;Einfahrt
+455087;NL;PL;1;1;Passiert (Transit)
+456639;AT;SI;0;0;Kein Bezug
+457396;HU;DE;0;0;Kein Bezug
+457647;IT;IT;0;0;Kein Bezug
+458739;DE;DE;0;0;Inland
+458816;IT;IT;0;0;Kein Bezug
+459902;NL;NL;0;0;Kein Bezug
+459939;NL;NL;0;0;Kein Bezug
+461332;NL;NL;0;0;Kein Bezug
+451135;PL;DE;1;0;Einfahrt
+454553;NL;DE;0;0;Kein Bezug
+456102;CZ;CZ;0;0;Kein Bezug
+456418;DE;HU;0;0;Kein Bezug
+457053;HU;HU;0;0;Kein Bezug
+457324;HU;HU;0;0;Kein Bezug
+457500;SK;SK;0;0;Kein Bezug
+458001;AT;AT;0;0;Kein Bezug
+458343;SK;CZ;0;0;Kein Bezug
+458400;AT;SI;0;0;Kein Bezug
+458614;PL;SK;0;0;Kein Bezug
+459287;NL;NL;0;0;Kein Bezug
+460181;NL;NL;0;0;Kein Bezug
+460345;NL;NL;0;0;Kein Bezug
+461835;NL;NL;0;0;Kein Bezug
+453711;PL;NL;1;1;Passiert (Transit)
+454564;DE;NL;0;0;Kein Bezug
+455026;NL;DE;0;0;Kein Bezug
+457658;NL;NL;0;0;Kein Bezug
+457888;DE;DE;0;0;Inland
+458074;IT;IT;0;0;Kein Bezug
+458139;HU;HU;0;0;Kein Bezug
+458731;DE;DE;0;0;Inland
+458950;CZ;CZ;0;0;Kein Bezug
+459927;SI;AT;0;0;Kein Bezug
+459931;AT;SI;0;0;Kein Bezug
+459957;NL;NL;0;0;Kein Bezug
+460168;PL;PL;0;0;Kein Bezug
+460281;HU;SK;0;0;Kein Bezug
+460426;NL;NL;0;0;Kein Bezug
+450678;PL;NL;1;1;Passiert (Transit)
+451835;CH;CH;0;0;Kein Bezug
+455687;SK;DE;0;0;Kein Bezug
+455710;DE;HU;0;0;Kein Bezug
+457358;PL;PL;0;0;Kein Bezug
+457968;AT;IT;0;0;Kein Bezug
+458996;NL;DE;1;0;Einfahrt
+459003;CH;CH;0;0;Kein Bezug
+459105;AT;AT;0;0;Kein Bezug
+459112;PL;PL;0;0;Kein Bezug
+460117;CH;CH;0;0;Kein Bezug
+460353;NL;NL;0;0;Kein Bezug
+461812;DE;NL;0;1;Ausfahrt
+454232;CH;CH;0;0;Kein Bezug
+454516;NL;NL;0;0;Kein Bezug
+455019;PL;NL;1;1;Passiert (Transit)
+455024;CH;NL;0;0;Kein Bezug
+456680;PL;PL;0;0;Kein Bezug
+457336;BG;RS;0;0;Kein Bezug
+457725;NL;NL;0;0;Kein Bezug
+457917;DE;DE;0;0;Inland
+457943;CZ;HU;0;0;Kein Bezug
+458201;CH;AT;0;0;Kein Bezug
+458489;IT;IT;0;0;Kein Bezug
+458686;NL;NL;0;0;Kein Bezug
+459214;NL;NL;0;0;Kein Bezug
+459780;SK;SK;0;0;Kein Bezug
+460255;SK;PL;0;0;Kein Bezug
+460825;PL;PL;0;0;Kein Bezug
+461526;NL;NL;0;0;Kein Bezug
+461537;NL;NL;0;0;Kein Bezug
+461808;CH;CH;0;0;Kein Bezug
+461822;NL;NL;0;0;Kein Bezug
+446984;IT;HU;0;0;Kein Bezug
+453910;PL;PL;0;0;Kein Bezug
+454436;NL;NL;0;0;Kein Bezug
+455002;HU;HU;0;0;Kein Bezug
+455131;DE;NL;0;0;Kein Bezug
+455331;IT;PL;0;0;Kein Bezug
+455810;IT;IT;0;0;Kein Bezug
+456259;AT;AT;0;0;Kein Bezug
+456633;SI;AT;0;0;Kein Bezug
+456799;CH;CH;0;0;Kein Bezug
+456802;IT;IT;0;0;Kein Bezug
+457139;IT;RO;0;0;Kein Bezug
+457302;PL;PL;0;0;Kein Bezug
+458091;NL;NL;0;0;Kein Bezug
+458116;AT;IT;0;0;Kein Bezug
+458181;DE;CH;0;0;Kein Bezug
+458237;AT;IT;0;0;Kein Bezug
+459596;TR;RS;0;0;Kein Bezug
+459684;NL;NL;0;0;Kein Bezug
+460826;CH;CH;0;0;Kein Bezug
+460827;PL;PL;0;0;Kein Bezug
+461409;HU;SK;0;0;Kein Bezug
+453994;PL;PL;0;0;Kein Bezug
+455947;BG;TR;0;0;Kein Bezug
+456352;CH;AT;0;0;Kein Bezug
+457243;NL;NL;0;0;Kein Bezug
+457291;CZ;CZ;0;0;Kein Bezug
+457629;NL;NL;0;0;Kein Bezug
+457877;DE;DE;0;0;Inland
+458404;NL;NL;0;0;Kein Bezug
+458649;PL;DE;1;0;Einfahrt
+459212;NL;NL;0;0;Kein Bezug
+459509;CH;CH;0;0;Kein Bezug
+460282;SK;SK;0;0;Kein Bezug
+460517;NL;NL;0;0;Kein Bezug
+453775;RO;RO;0;0;Kein Bezug
+454406;DE;NL;0;1;Ausfahrt
+456501;DE;DE;0;0;Inland
+456725;SK;CZ;0;0;Kein Bezug
+456757;AT;RO;0;0;Kein Bezug
+457088;DE;PL;0;0;Kein Bezug
+457481;PL;PL;0;0;Kein Bezug
+457508;CH;DE;0;0;Kein Bezug
+458199;NL;NL;0;0;Kein Bezug
+459731;HU;DE;0;0;Kein Bezug
+460239;NL;NL;0;0;Kein Bezug
+460666;PL;DE;1;0;Einfahrt
+461843;NL;NL;0;0;Kein Bezug
+453547;BE;PL;0;0;Kein Bezug
+455023;CH;NL;0;0;Kein Bezug
+455027;NL;DE;0;0;Kein Bezug
+455140;NL;DE;0;0;Kein Bezug
+455219;DE;DE;0;0;Inland
+456300;CZ;CZ;0;0;Kein Bezug
+456645;SI;AT;0;0;Kein Bezug
+456648;SI;AT;0;0;Kein Bezug
+457580;DE;DE;0;0;Inland
+457957;BG;BG;0;0;Kein Bezug
+458000;IT;IT;0;0;Kein Bezug
+458119;IT;PL;0;0;Kein Bezug
+458419;NL;NL;0;0;Kein Bezug
+458505;SK;SK;0;0;Kein Bezug
+458551;RS;IT;0;0;Kein Bezug
+458592;CH;CH;0;0;Kein Bezug
+458676;NL;NL;0;0;Kein Bezug
+458805;SI;AT;0;0;Kein Bezug
+459700;NL;NL;0;0;Kein Bezug
+459718;PL;PL;0;0;Kein Bezug
+459753;NL;NL;0;0;Kein Bezug
+460130;PL;PL;0;0;Kein Bezug
+460376;NL;NL;0;0;Kein Bezug
+460893;NL;NL;0;0;Kein Bezug
+461587;HU;HU;0;0;Kein Bezug
+461820;NL;NL;0;0;Kein Bezug
+450730;NL;DE;0;0;Kein Bezug
+451234;DE;UA;0;0;Kein Bezug
+452207;HU;IT;0;0;Kein Bezug
+454698;NL;DE;0;0;Kein Bezug
+455339;IT;PL;0;0;Kein Bezug
+457379;PL;DE;1;0;Einfahrt
+457719;HU;HU;0;0;Kein Bezug
+457853;AT;SI;0;0;Kein Bezug
+458526;HU;HU;0;0;Kein Bezug
+458571;HU;DE;1;0;Einfahrt
+458718;AT;AT;0;0;Kein Bezug
+459216;NL;NL;0;0;Kein Bezug
+459272;IT;IT;0;0;Kein Bezug
+459365;PL;PL;0;0;Kein Bezug
+459612;NL;NL;0;0;Kein Bezug
+460073;IT;IT;0;0;Kein Bezug
+460129;PL;PL;0;0;Kein Bezug
+460497;SK;SK;0;0;Kein Bezug
+453514;CZ;SK;0;0;Kein Bezug
+455111;DE;NL;0;0;Kein Bezug
+455216;DE;DE;0;0;Inland
+455323;IT;IT;0;0;Kein Bezug
+456368;CH;CH;0;0;Kein Bezug
+456620;PL;PL;0;0;Kein Bezug
+456625;CH;SK;0;0;Kein Bezug
+456665;RO;DE;0;0;Kein Bezug
+457122;CH;CH;0;0;Kein Bezug
+457309;NL;NL;0;0;Kein Bezug
+457323;DE;PL;0;0;Kein Bezug
+457334;TR;BG;0;0;Kein Bezug
+458474;SK;SK;0;0;Kein Bezug
+458725;DE;DE;0;0;Inland
+459053;NL;NL;0;0;Kein Bezug
+459355;NL;NL;0;0;Kein Bezug
+459453;NL;NL;0;0;Kein Bezug
+459879;NL;NL;0;0;Kein Bezug
+459944;SK;SK;0;0;Kein Bezug
+459972;PL;PL;0;0;Kein Bezug
+460166;NL;NL;0;0;Kein Bezug
+460252;SK;SK;0;0;Kein Bezug
+461354;HU;HU;0;0;Kein Bezug
+461508;CH;CH;0;0;Kein Bezug
+461933;NL;NL;0;0;Kein Bezug
+455004;HU;HU;0;0;Kein Bezug
+455163;NL;DE;0;0;Kein Bezug
+457120;DE;DE;0;0;Inland
+457236;RO;RO;0;0;Kein Bezug
+457555;HU;AT;0;0;Kein Bezug
+457828;SK;SK;0;0;Kein Bezug
+458306;AT;HU;0;0;Kein Bezug
+460231;NL;NL;0;0;Kein Bezug
+460249;PL;DE;1;0;Einfahrt
+461935;NL;NL;0;0;Kein Bezug
+450506;HU;RO;0;0;Kein Bezug
+457318;NL;NL;0;0;Kein Bezug
+457737;CH;DE;0;0;Kein Bezug
+457746;DE;CH;0;0;Kein Bezug
+457880;DE;DE;0;0;Inland
+458318;NL;NL;0;0;Kein Bezug
+458702;HU;HU;0;0;Kein Bezug
+458986;DE;NL;0;1;Ausfahrt
+459075;NL;NL;0;0;Kein Bezug
+459933;AT;SI;0;0;Kein Bezug
+459990;PL;PL;0;0;Kein Bezug
+460663;NL;NL;0;0;Kein Bezug
+461910;NL;NL;0;0;Kein Bezug
+448704;DE;AT;0;0;Kein Bezug
+454419;NL;DE;1;0;Einfahrt
+454479;NL;PL;1;1;Passiert (Transit)
+454615;IT;NL;0;1;Komplex (mehrfach/Schleife)
+455028;NL;DE;0;0;Kein Bezug
+455102;BE;HU;1;0;Komplex (mehrfach/Schleife)
+456683;PL;PL;0;0;Kein Bezug
+456889;DE;HU;0;0;Kein Bezug
+457266;NL;NL;0;0;Kein Bezug
+457590;PL;PL;0;0;Kein Bezug
+457941;PL;PL;0;0;Kein Bezug
+458665;DE;DE;0;0;Inland
+459055;HU;HU;0;0;Kein Bezug
+453976;HU;DE;0;0;Kein Bezug
+454278;AT;DE;0;0;Kein Bezug
+454528;DE;NL;0;1;Ausfahrt
+454582;RO;DE;0;0;Kein Bezug
+454793;DE;DE;0;0;Inland
+454976;IT;IT;0;0;Kein Bezug
+456391;CZ;CZ;0;0;Kein Bezug
+457662;HU;HU;0;0;Kein Bezug
+458245;RO;RO;0;0;Kein Bezug
+458274;NL;NL;0;0;Kein Bezug
+458302;SK;SK;0;0;Kein Bezug
+459148;NL;NL;0;0;Kein Bezug
+459461;NL;NL;0;0;Kein Bezug
+459943;DE;DE;0;0;Inland
+460257;NL;NL;0;0;Kein Bezug
+461550;DE;CH;0;0;Kein Bezug
+461811;NL;NL;0;0;Kein Bezug
+448714;AT;DE;0;0;Kein Bezug
+449054;DE;HU;0;0;Kein Bezug
+451146;DE;RO;0;0;Kein Bezug
+453545;PL;BE;0;0;Kein Bezug
+453696;PL;DE;0;0;Kein Bezug
+455937;PL;DE;1;0;Einfahrt
+457183;HU;HU;0;0;Kein Bezug
+457420;DE;HU;0;0;Kein Bezug
+457558;PL;PL;0;0;Kein Bezug
+458857;NL;NL;0;0;Kein Bezug
+459255;NL;NL;0;0;Kein Bezug
+459651;DE;DE;0;0;Inland
+459922;SI;AT;0;0;Kein Bezug
+460103;PL;PL;0;0;Kein Bezug
+460916;IT;IT;0;0;Kein Bezug
+453758;DE;DE;0;0;Inland
+454609;DE;NL;0;1;Ausfahrt
+455156;DE;NL;0;0;Kein Bezug
+455757;AT;SI;0;0;Kein Bezug
+456551;RO;NL;0;1;Komplex (mehrfach/Schleife)
+456637;AT;SI;0;0;Kein Bezug
+457125;AT;AT;0;0;Kein Bezug
+457274;SK;SK;0;0;Kein Bezug
+457307;PL;PL;0;0;Kein Bezug
+457406;SK;DE;0;0;Kein Bezug
+457546;RO;RO;0;0;Kein Bezug
+457581;DE;DE;0;0;Inland
+457634;IT;IT;0;0;Kein Bezug
+458312;NL;NL;0;0;Kein Bezug
+458530;IT;IT;0;0;Kein Bezug
+459081;NL;NL;0;0;Kein Bezug
+459084;PL;PL;0;0;Kein Bezug
+459741;DE;SK;0;0;Kein Bezug
+459803;NL;NL;0;0;Kein Bezug
+459809;SK;SK;0;0;Kein Bezug
+459982;PL;PL;0;0;Kein Bezug
+460420;RS;TR;0;0;Kein Bezug
+461781;CZ;CZ;0;0;Kein Bezug
+461972;NL;NL;0;0;Kein Bezug
+454404;DE;NL;0;1;Ausfahrt
+454474;NL;DE;1;0;Einfahrt
+456504;DE;DE;0;0;Inland
+457823;NL;NL;0;0;Kein Bezug
+458059;PL;NL;1;1;Passiert (Transit)
+458437;CZ;CZ;0;0;Kein Bezug
+459793;NL;NL;0;0;Kein Bezug
+459861;HR;AT;0;0;Kein Bezug
+450613;NL;NL;0;0;Kein Bezug
+450652;NL;NL;0;0;Kein Bezug
+455048;NL;NL;0;0;Kein Bezug
+456548;IT;IT;0;0;Kein Bezug
+456857;IT;AT;0;0;Kein Bezug
+459324;DE;DE;0;0;Inland
+461859;NL;NL;0;0;Kein Bezug
+450661;NL;IT;0;0;Kein Bezug
+452322;CZ;SK;0;0;Kein Bezug
+454347;DE;NL;0;0;Kein Bezug
+454420;DE;DE;0;0;Inland
+455316;DE;DE;0;0;Inland
+457057;DE;DE;0;0;Inland
+457211;HU;HU;0;0;Kein Bezug
+457337;PL;PL;0;0;Kein Bezug
+457360;IT;IT;0;0;Kein Bezug
+457441;DE;PL;0;1;Ausfahrt
+457703;DE;DE;0;0;Inland
+459104;AT;AT;0;0;Kein Bezug
+459847;NL;NL;0;0;Kein Bezug
+450634;DE;DE;0;0;Inland
+451819;CH;CH;0;0;Kein Bezug
+454071;SK;NL;0;1;Komplex (mehrfach/Schleife)
+457706;HU;DE;0;0;Kein Bezug
+457858;SI;AT;0;0;Kein Bezug
+457889;DE;DE;0;0;Inland
+458103;NL;NL;0;0;Kein Bezug
+458744;DE;DE;0;0;Inland
+459260;NL;NL;0;0;Kein Bezug
+459261;SK;SK;0;0;Kein Bezug
+459996;PL;PL;0;0;Kein Bezug
+460174;NL;NL;0;0;Kein Bezug
+460532;SK;SK;0;0;Kein Bezug
+461803;CH;CH;0;0;Kein Bezug
+451320;CH;CH;0;0;Kein Bezug
+453519;BE;PL;0;0;Kein Bezug
+454637;NL;PL;1;1;Passiert (Transit)
+455358;DE;HU;0;0;Kein Bezug
+457106;DE;DE;0;0;Inland
+457240;NL;NL;0;0;Kein Bezug
+457446;DE;PL;0;1;Ausfahrt
+457505;CH;DE;0;0;Kein Bezug
+457511;CH;DE;0;0;Kein Bezug
+457651;CZ;SK;0;0;Kein Bezug
+457814;CH;CH;0;0;Kein Bezug
+459969;DE;DE;0;0;Inland
+460401;NL;NL;0;0;Kein Bezug
+453552;PL;DE;0;0;Kein Bezug
+454519;NL;DE;1;0;Einfahrt
+456613;SK;SK;0;0;Kein Bezug
+456952;DE;DE;0;0;Inland
+457415;SK;DE;0;0;Kein Bezug
+457764;CH;CH;0;0;Kein Bezug
+457793;DE;HU;0;0;Kein Bezug
+457942;PL;PL;0;0;Kein Bezug
+458557;DE;DE;0;0;Inland
+458648;IT;IT;0;0;Kein Bezug
+459097;NL;NL;0;0;Kein Bezug
+459110;BG;TR;0;0;Kein Bezug
+459256;RO;RO;0;0;Kein Bezug
+459693;HU;RO;0;0;Kein Bezug
+459983;DE;DE;0;0;Inland
+460475;NL;NL;0;0;Kein Bezug
+460538;HU;HU;0;0;Kein Bezug
+454239;CH;CH;0;0;Kein Bezug
+457033;NL;NL;0;0;Kein Bezug
+457262;CZ;CZ;0;0;Kein Bezug
+457567;RO;RO;0;0;Kein Bezug
+458834;IT;IT;0;0;Kein Bezug
+459057;SK;SK;0;0;Kein Bezug
+459153;CH;DE;0;0;Kein Bezug
+459327;PL;PL;0;0;Kein Bezug
+460315;NL;NL;0;0;Kein Bezug
+461339;NL;NL;0;0;Kein Bezug
+455699;IT;IT;0;0;Kein Bezug
+456411;DE;SK;0;0;Kein Bezug
+456415;DE;HU;0;0;Kein Bezug
+457220;IT;IT;0;0;Kein Bezug
+457535;RO;RO;0;0;Kein Bezug
+457805;DE;SK;0;0;Kein Bezug
+457868;SI;AT;0;0;Kein Bezug
+457908;DE;DE;0;0;Inland
+457983;NL;NL;0;0;Kein Bezug
+458148;PL;PL;0;0;Kein Bezug
+458772;NL;NL;0;0;Kein Bezug
+459297;NL;NL;0;0;Kein Bezug
+460021;HU;HU;0;0;Kein Bezug
+460167;NL;NL;0;0;Kein Bezug
+460382;NL;NL;0;0;Kein Bezug
+460431;NL;NL;0;0;Kein Bezug
+451836;CH;CH;0;0;Kein Bezug
+455021;PL;NL;1;1;Passiert (Transit)
+455162;NL;DE;0;0;Kein Bezug
+455247;DE;DE;0;0;Inland
+455255;DE;DE;0;0;Inland
+456619;DE;SK;0;0;Kein Bezug
+457245;NL;NL;0;0;Kein Bezug
+457609;HU;SK;0;0;Kein Bezug
+457675;DE;HR;0;0;Kein Bezug
+458251;IT;IT;0;0;Kein Bezug
+459027;NL;NL;0;0;Kein Bezug
+459974;DE;DE;0;0;Inland
+461867;NL;NL;0;0;Kein Bezug
+456304;SK;SK;0;0;Kein Bezug
+457516;IT;IT;0;0;Kein Bezug
+458888;DE;AT;0;1;Ausfahrt
+459067;NL;NL;0;0;Kein Bezug
+459160;NL;NL;0;0;Kein Bezug
+459645;DE;DE;0;0;Inland
+459833;AT;SI;0;0;Kein Bezug
+460788;NL;NL;0;0;Kein Bezug
+461314;NL;NL;0;0;Kein Bezug
+461385;NL;NL;0;0;Kein Bezug
+450692;NL;NL;0;0;Kein Bezug
+451825;CH;CH;0;0;Kein Bezug
+454004;PL;PL;0;0;Kein Bezug
+454635;NL;DE;0;0;Kein Bezug
+455246;DE;DE;0;0;Inland
+456696;NL;PL;0;1;Komplex (mehrfach/Schleife)
+456781;IT;IT;0;0;Kein Bezug
+457837;NL;NL;0;0;Kein Bezug
+458692;HU;HU;0;0;Kein Bezug
+458820;DE;DE;0;0;Inland
+459301;NL;NL;0;0;Kein Bezug
+459702;IT;IT;0;0;Kein Bezug
+460536;NL;NL;0;0;Kein Bezug
+461911;RO;RO;0;0;Kein Bezug
+450487;NL;DE;0;0;Kein Bezug
+450705;NL;CH;0;0;Kein Bezug
+450721;DE;NL;0;1;Ausfahrt
+450946;NL;CZ;1;0;Komplex (mehrfach/Schleife)
+454238;CH;CH;0;0;Kein Bezug
+454535;NL;DE;0;0;Kein Bezug
+454610;DE;NL;0;1;Ausfahrt
+455285;SK;PL;0;0;Kein Bezug
+455858;DE;SK;0;0;Kein Bezug
+457347;NL;NL;0;0;Kein Bezug
+457821;NL;NL;0;0;Kein Bezug
+458384;PL;PL;0;0;Kein Bezug
+458538;IT;IT;0;0;Kein Bezug
+459836;SI;AT;0;0;Kein Bezug
+450553;NL;NL;0;0;Kein Bezug
+450641;DE;NL;0;1;Ausfahrt
+451828;CH;CH;0;0;Kein Bezug
+454273;AT;DE;0;0;Kein Bezug
+454526;DE;NL;0;1;Ausfahrt
+455683;DE;DE;0;0;Inland
+456390;CZ;CZ;0;0;Kein Bezug
+456954;NL;NL;0;0;Kein Bezug
+457579;DE;DE;0;0;Inland
+457757;CH;CH;0;0;Kein Bezug
+458079;NL;NL;0;0;Kein Bezug
+458289;SK;SK;0;0;Kein Bezug
+458825;PL;PL;0;0;Kein Bezug
+458890;BE;DE;1;0;Einfahrt
+460941;DE;CH;0;1;Ausfahrt
+461528;NL;NL;0;0;Kein Bezug
+449055;DE;AT;0;0;Kein Bezug
+451831;CH;CH;0;0;Kein Bezug
+455030;DE;DE;0;0;Inland
+456962;NL;NL;0;0;Kein Bezug
+457149;NL;NL;0;0;Kein Bezug
+457953;AT;AT;0;0;Kein Bezug
+457989;HU;HU;0;0;Kein Bezug
+458408;DE;AT;0;1;Ausfahrt
+458664;DE;DE;0;0;Inland
+458726;DE;DE;0;0;Inland
+460262;CZ;PL;0;0;Kein Bezug
+460574;NL;NL;0;0;Kein Bezug
+452320;DE;CZ;0;0;Kein Bezug
+457295;DE;UA;0;0;Kein Bezug
+457319;NL;NL;0;0;Kein Bezug
+457403;DE;HU;0;0;Kein Bezug
+457903;DE;DE;0;0;Inland
+458155;NL;NL;0;0;Kein Bezug
+459391;IT;IT;0;0;Kein Bezug
+459779;PL;PL;0;0;Kein Bezug
+460856;DE;DE;0;0;Inland
+461516;HU;HU;0;0;Kein Bezug
+461521;HU;RO;0;0;Kein Bezug
+450647;NL;PL;0;1;Komplex (mehrfach/Schleife)
+451808;CH;CH;0;0;Kein Bezug
+455025;NL;DE;0;0;Kein Bezug
+455085;NL;PL;1;1;Passiert (Transit)
+456492;NL;CZ;1;0;Komplex (mehrfach/Schleife)
+456669;RO;DE;0;0;Kein Bezug
+457142;PL;PL;0;0;Kein Bezug
+457253;SK;SK;0;0;Kein Bezug
+457260;PL;PL;0;0;Kein Bezug
+458449;SK;DE;0;0;Kein Bezug
+458585;IT;IT;0;0;Kein Bezug
+458612;HU;RO;0;0;Kein Bezug
+458622;PL;PL;0;0;Kein Bezug
+458934;NL;NL;0;0;Kein Bezug
+460162;HU;HU;0;0;Kein Bezug
+461313;NL;NL;0;0;Kein Bezug
+461805;DE;DE;0;0;Inland
+461827;SK;CZ;0;0;Kein Bezug
+461950;SK;SK;0;0;Kein Bezug
+457224;NL;NL;0;0;Kein Bezug
+457710;HU;HU;0;0;Kein Bezug
+458720;PL;PL;0;0;Kein Bezug
+459224;NL;CH;0;0;Kein Bezug
+459296;NL;NL;0;0;Kein Bezug
+459881;NL;NL;0;0;Kein Bezug
+460338;SK;SK;0;0;Kein Bezug
+450711;NL;DE;1;0;Einfahrt
+453947;DE;SK;0;0;Kein Bezug
+454624;DE;NL;0;0;Kein Bezug
+454738;DE;PL;0;1;Ausfahrt
+456552;IT;NL;0;0;Kein Bezug
+456612;SK;DE;0;0;Kein Bezug
+456876;HU;DE;0;0;Kein Bezug
+456978;NL;CH;0;0;Kein Bezug
+458206;NL;NL;0;0;Kein Bezug
+458228;NL;CZ;1;0;Komplex (mehrfach/Schleife)
+458257;NL;NL;0;0;Kein Bezug
+458295;NL;NL;0;0;Kein Bezug
+458345;SK;SK;0;0;Kein Bezug
+458421;CH;DE;0;0;Kein Bezug
+459977;IT;AT;0;0;Kein Bezug
+460011;NL;NL;0;0;Kein Bezug
+461520;DE;DE;0;0;Inland
+461584;NL;NL;0;0;Kein Bezug
+456468;PL;SK;0;0;Kein Bezug
+456721;SK;CZ;0;0;Kein Bezug
+457404;SK;DE;0;0;Kein Bezug
+457668;DE;DE;0;0;Inland
+458085;NL;NL;0;0;Kein Bezug
+458255;CH;CH;0;0;Kein Bezug
+458386;PL;DE;1;0;Einfahrt
+458792;AT;SI;0;0;Kein Bezug
+458918;NL;NL;0;0;Kein Bezug
+459390;DE;PL;0;1;Ausfahrt
+459859;DE;AT;0;0;Kein Bezug
+459883;IT;IT;0;0;Kein Bezug
+460040;NL;NL;0;0;Kein Bezug
+460418;CZ;AT;0;0;Kein Bezug
+450415;DE;NL;0;0;Kein Bezug
+450715;NL;PL;1;1;Passiert (Transit)
+453755;DE;DE;0;0;Inland
+454568;DE;NL;0;0;Kein Bezug
+455128;NL;DE;0;0;Kein Bezug
+456659;SI;AT;0;0;Kein Bezug
+457225;SK;SK;0;0;Kein Bezug
+457277;CZ;SK;0;0;Kein Bezug
+458197;NL;NL;0;0;Kein Bezug
+458368;NL;NL;0;0;Kein Bezug
+458875;DE;DE;0;0;Inland
+458877;DE;DE;0;0;Inland
+461529;NL;NL;0;0;Kein Bezug
+454183;NL;CH;0;0;Kein Bezug
+454276;DE;AT;0;0;Kein Bezug
+454586;IT;DE;0;0;Kein Bezug
+454701;NL;PL;1;1;Passiert (Transit)
+455715;NL;CZ;1;0;Komplex (mehrfach/Schleife)
+456367;CH;CH;0;0;Kein Bezug
+456512;DE;DE;0;0;Inland
+456751;PL;SK;0;0;Kein Bezug
+457208;DE;DE;0;0;Inland
+457971;AT;SK;0;0;Kein Bezug
+458120;NL;NL;0;0;Kein Bezug
+458507;NL;NL;0;0;Kein Bezug
+460116;CH;CH;0;0;Kein Bezug
+460441;PL;PL;0;0;Kein Bezug
+461796;NL;NL;0;0;Kein Bezug
+450639;DE;NL;0;0;Kein Bezug
+451568;PL;DE;1;0;Einfahrt
+454212;CH;CH;0;0;Kein Bezug
+456664;DE;RO;0;0;Kein Bezug
+457333;PL;PL;0;0;Kein Bezug
+457514;IT;IT;0;0;Kein Bezug
+457517;IT;IT;0;0;Kein Bezug
+457678;DE;HR;0;0;Kein Bezug
+457852;AT;SI;0;0;Kein Bezug
+458036;HU;HU;0;0;Kein Bezug
+458275;NL;NL;0;0;Kein Bezug
+458327;NL;NL;0;0;Kein Bezug
+458567;NL;NL;0;0;Kein Bezug
+458810;NL;NL;0;0;Kein Bezug
+459186;NL;NL;0;0;Kein Bezug
+460332;NL;NL;0;0;Kein Bezug
+460356;NL;NL;0;0;Kein Bezug
+460358;NL;NL;0;0;Kein Bezug
+451569;DE;PL;0;1;Ausfahrt
+453690;DE;DE;0;0;Inland
+453700;DE;PL;0;0;Kein Bezug
+454552;NL;DE;0;0;Kein Bezug
+455101;BE;DE;1;0;Einfahrt
+456634;AT;SI;0;0;Kein Bezug
+456773;IT;IT;0;0;Kein Bezug
+457097;PL;PL;0;0;Kein Bezug
+457538;RO;RO;0;0;Kein Bezug
+458650;DE;PL;0;1;Ausfahrt
+458697;IT;AT;0;0;Kein Bezug
+458903;HU;NL;0;1;Komplex (mehrfach/Schleife)
+460080;PL;PL;0;0;Kein Bezug
+460292;NL;NL;0;0;Kein Bezug
+460298;NL;NL;0;0;Kein Bezug
+461393;IT;IT;0;0;Kein Bezug
+461847;NL;NL;0;0;Kein Bezug
+452934;NL;PL;1;1;Passiert (Transit)
+453092;DE;HU;0;0;Kein Bezug
+456868;AT;AT;0;0;Kein Bezug
+457729;PL;PL;0;0;Kein Bezug
+458094;NL;NL;0;0;Kein Bezug
+459021;SK;SK;0;0;Kein Bezug
+460187;NL;NL;0;0;Kein Bezug
+460192;NL;NL;0;0;Kein Bezug
+460902;NL;NL;0;0;Kein Bezug
+454414;CH;NL;0;1;Komplex (mehrfach/Schleife)
+455236;DE;DE;0;0;Inland
+456687;PL;PL;0;0;Kein Bezug
+457412;SK;DE;0;0;Kein Bezug
+459843;AT;SI;0;0;Kein Bezug
+460108;HU;RO;0;0;Kein Bezug
+460330;NL;NL;0;0;Kein Bezug
+460566;NL;NL;0;0;Kein Bezug
+450724;DE;IT;0;1;Ausfahrt
+453944;SK;DE;0;0;Kein Bezug
+454708;DE;IT;0;0;Kein Bezug
+456666;DE;RO;0;0;Kein Bezug
+456806;NL;BG;1;0;Komplex (mehrfach/Schleife)
+457439;DE;PL;0;1;Ausfahrt
+457612;SK;PL;0;0;Kein Bezug
+458476;NL;NL;0;0;Kein Bezug
+458541;IT;IT;0;0;Kein Bezug
+459871;HR;AT;0;0;Kein Bezug
+461961;NL;NL;0;0;Kein Bezug
+450627;DE;NL;0;1;Ausfahrt
+454538;NL;DE;1;0;Einfahrt
+457589;DE;DE;0;0;Inland
+458204;IT;AT;0;0;Kein Bezug
+458422;AT;AT;0;0;Kein Bezug
+458735;DE;DE;0;0;Inland
+458876;DE;DE;0;0;Inland
+459196;NL;NL;0;0;Kein Bezug
+459437;NL;NL;0;0;Kein Bezug
+461387;HU;HU;0;0;Kein Bezug
+451250;SK;CZ;0;0;Kein Bezug
+453533;PL;BE;0;0;Kein Bezug
+453867;DE;DE;0;0;Inland
+454987;IT;IT;0;0;Kein Bezug
+456774;CZ;CZ;0;0;Kein Bezug
+457716;PL;DE;1;0;Einfahrt
+458359;RO;RO;0;0;Kein Bezug
+458415;SK;SK;0;0;Kein Bezug
+459107;BG;BG;0;0;Kein Bezug
+459376;CZ;CZ;0;0;Kein Bezug
+460037;PL;PL;0;0;Kein Bezug
+460408;NL;NL;0;0;Kein Bezug
+460817;DE;DE;0;0;Inland
+452217;HU;IT;0;0;Kein Bezug
+454477;NL;PL;1;1;Passiert (Transit)
+454500;PL;NL;1;1;Passiert (Transit)
+457669;DE;DE;0;0;Inland
+458111;NL;NL;0;0;Kein Bezug
+458501;NL;NL;0;0;Kein Bezug
+459122;PL;DE;0;0;Kein Bezug
+459149;DE;DE;0;0;Inland
+459328;NL;NL;0;0;Kein Bezug
+450617;NL;NL;0;0;Kein Bezug
+454423;RO;HU;0;0;Kein Bezug
+454573;CH;NL;0;0;Kein Bezug
+456509;DE;DE;0;0;Inland
+456884;HU;DE;0;0;Kein Bezug
+457320;NL;NL;0;0;Kein Bezug
+459201;NL;NL;0;0;Kein Bezug
+460031;SK;SK;0;0;Kein Bezug
+450697;NL;DE;1;0;Einfahrt
+453706;DE;PL;0;0;Kein Bezug
+455014;DE;NL;0;0;Kein Bezug
+455254;DE;DE;0;0;Inland
+456681;PL;PL;0;0;Kein Bezug
+457150;NL;NL;0;0;Kein Bezug
+457349;NL;NL;0;0;Kein Bezug
+457690;DE;DE;0;0;Inland
+457965;IT;AT;0;0;Kein Bezug
+458061;PL;DE;1;0;Einfahrt
+458539;IT;IT;0;0;Kein Bezug
+458660;HU;HU;0;0;Kein Bezug
+458694;HU;HU;0;0;Kein Bezug
+458774;AT;RO;0;0;Kein Bezug
+459283;NL;NL;0;0;Kein Bezug
+459433;DE;DE;0;0;Inland
+460310;NL;NL;0;0;Kein Bezug
+461814;PL;PL;0;0;Kein Bezug
+461868;NL;NL;0;0;Kein Bezug
+448706;AT;DE;0;0;Kein Bezug
+451131;PL;DE;1;0;Einfahrt
+454222;CH;CH;0;0;Kein Bezug
+454453;IT;NL;0;0;Kein Bezug
+454554;NL;DE;1;0;Einfahrt
+456050;PL;PL;0;0;Kein Bezug
+456717;NL;NL;0;0;Kein Bezug
+457128;DE;PL;0;1;Ausfahrt
+457136;NL;NL;0;0;Kein Bezug
+457494;NL;NL;0;0;Kein Bezug
+457543;SK;SK;0;0;Kein Bezug
+457777;SK;DE;0;0;Kein Bezug
+457822;NL;NL;0;0;Kein Bezug
+459501;CH;CH;0;0;Kein Bezug
+459653;NL;NL;0;0;Kein Bezug
+460029;NL;NL;0;0;Kein Bezug
+460054;PL;SK;0;0;Kein Bezug
+460141;PL;PL;0;0;Kein Bezug
+460870;SK;SK;0;0;Kein Bezug
+453524;BE;PL;0;0;Kein Bezug
+453945;SK;DE;0;0;Kein Bezug
+453999;PL;PL;0;0;Kein Bezug
+455143;NL;DE;0;0;Kein Bezug
+456875;DE;HU;0;0;Kein Bezug
+456949;DE;DE;0;0;Inland
+457221;NL;NL;0;0;Kein Bezug
+457294;UA;DE;0;0;Kein Bezug
+458107;NL;NL;0;0;Kein Bezug
+458258;PL;PL;0;0;Kein Bezug
+458354;CZ;CZ;0;0;Kein Bezug
+458395;NL;NL;0;0;Kein Bezug
+458399;NL;NL;0;0;Kein Bezug
+460412;CZ;AT;0;0;Kein Bezug
+460572;NL;NL;0;0;Kein Bezug
+450648;NL;DE;0;0;Kein Bezug
+450706;NL;CH;1;0;Komplex (mehrfach/Schleife)
+451222;CH;AT;0;0;Kein Bezug
+454440;NL;NL;0;0;Kein Bezug
+454481;NL;IT;0;0;Kein Bezug
+455252;DE;DE;0;0;Inland
+457076;PL;DE;0;0;Kein Bezug
+457400;DE;SK;0;0;Kein Bezug
+459664;DE;DE;0;0;Inland
+460093;SK;SK;0;0;Kein Bezug
+453687;DE;PL;0;0;Kein Bezug
+455077;NL;NL;0;0;Kein Bezug
+455307;AT;SK;0;0;Kein Bezug
+456860;PL;DE;0;0;Kein Bezug
+458084;NL;NL;0;0;Kein Bezug
+458098;NL;NL;0;0;Kein Bezug
+458278;NL;NL;0;0;Kein Bezug
+458300;HU;HU;0;0;Kein Bezug
+458900;NL;AT;1;0;Komplex (mehrfach/Schleife)
+459170;PL;PL;0;0;Kein Bezug
+459230;RO;RO;0;0;Kein Bezug
+460020;NL;NL;0;0;Kein Bezug
+461849;NL;NL;0;0;Kein Bezug
+461916;DE;DE;0;0;Inland
+453689;PL;DE;0;0;Kein Bezug
+453702;PL;DE;0;0;Kein Bezug
+454584;RO;BE;0;1;Komplex (mehrfach/Schleife)
+455297;DE;DE;0;0;Inland
+457026;HU;HU;0;0;Kein Bezug
+458392;HU;HU;0;0;Kein Bezug
+458514;RS;BG;0;0;Kein Bezug
+458853;AT;SI;0;0;Kein Bezug
+459088;DE;AT;0;1;Ausfahrt
+459321;DE;DE;0;0;Inland
+460175;NL;NL;0;0;Kein Bezug
+460406;NL;NL;0;0;Kein Bezug
+460526;DE;DE;0;0;Inland
+454462;DE;NL;0;1;Ausfahrt
+454664;DE;NL;0;0;Kein Bezug
+454689;NL;CH;0;0;Kein Bezug
+455265;DE;DE;0;0;Inland
+455874;DE;SK;0;0;Kein Bezug
+456797;IT;IT;0;0;Kein Bezug
+456863;BG;BG;0;0;Kein Bezug
+458420;DE;CH;0;0;Kein Bezug
+459017;NL;NL;0;0;Kein Bezug
+459042;NL;NL;0;0;Kein Bezug
+459930;SI;AT;0;0;Kein Bezug
+459968;NL;NL;0;0;Kein Bezug
+460046;AT;HU;0;0;Kein Bezug
+460404;RO;HU;0;0;Kein Bezug
+461918;DE;CZ;0;0;Kein Bezug
+450612;NL;NL;0;0;Kein Bezug
+451124;DE;PL;0;0;Kein Bezug
+453672;BE;CZ;0;0;Kein Bezug
+456283;PL;PL;0;0;Kein Bezug
+456292;CH;AT;0;0;Kein Bezug
+456471;SK;PL;0;0;Kein Bezug
+456689;PL;PL;0;0;Kein Bezug
+457275;CZ;SK;0;0;Kein Bezug
+457548;NL;NL;0;0;Kein Bezug
+457563;RO;RO;0;0;Kein Bezug
+457803;DE;SK;0;0;Kein Bezug
+458026;NL;NL;0;0;Kein Bezug
+458149;PL;PL;0;0;Kein Bezug
+458617;NL;NL;0;0;Kein Bezug
+459284;NL;NL;0;0;Kein Bezug
+459372;CZ;CZ;0;0;Kein Bezug
+459820;SI;AT;0;0;Kein Bezug
+459860;AT;AT;0;0;Kein Bezug
+459935;AT;SI;0;0;Kein Bezug
+460331;NL;NL;0;0;Kein Bezug
+460336;NL;NL;0;0;Kein Bezug
+460509;DE;PL;0;1;Ausfahrt
+461418;NL;NL;0;0;Kein Bezug
+461547;NL;NL;0;0;Kein Bezug
+450550;NL;PL;1;1;Passiert (Transit)
+450640;DE;NL;0;0;Kein Bezug
+454279;DE;AT;0;0;Kein Bezug
+454465;DE;NL;0;1;Ausfahrt
+454527;DE;NL;0;1;Ausfahrt
+456511;DE;DE;0;0;Inland
+457137;NL;NL;0;0;Kein Bezug
+457672;AT;AT;0;0;Kein Bezug
+458688;NL;NL;0;0;Kein Bezug
+458902;DE;CH;0;1;Ausfahrt
+459025;HU;RO;0;0;Kein Bezug
+459361;HU;SK;0;0;Kein Bezug
+460803;BG;BG;0;0;Kein Bezug
+460866;HU;HU;0;0;Kein Bezug
+461940;NL;NL;0;0;Kein Bezug
+453122;PL;PL;0;0;Kein Bezug
+454626;DE;NL;0;0;Kein Bezug
+455088;NL;IT;0;0;Kein Bezug
+456286;PL;PL;0;0;Kein Bezug
+456959;DE;DE;0;0;Inland
+457351;NL;NL;0;0;Kein Bezug
+457536;RO;RO;0;0;Kein Bezug
+457598;SK;SK;0;0;Kein Bezug
+457883;DE;DE;0;0;Inland
+458029;SK;CZ;0;0;Kein Bezug
+459018;SK;SK;0;0;Kein Bezug
+461810;NL;NL;0;0;Kein Bezug
+445653;NL;AT;0;0;Kein Bezug
+450489;NL;PL;1;1;Passiert (Transit)
+450535;NL;NL;0;0;Kein Bezug
+455084;NL;NL;0;0;Kein Bezug
+456922;SK;SK;0;0;Kein Bezug
+457176;NL;PL;1;1;Passiert (Transit)
+457385;AT;AT;0;0;Kein Bezug
+457520;IT;IT;0;0;Kein Bezug
+458485;RO;RO;0;0;Kein Bezug
+458632;DE;DE;0;0;Inland
+458982;NL;NL;0;0;Kein Bezug
+459176;CZ;CZ;0;0;Kein Bezug
+459841;AT;SI;0;0;Kein Bezug
+460328;NL;NL;0;0;Kein Bezug
+454438;NL;NL;0;0;Kein Bezug
+454551;NL;DE;1;0;Einfahrt
+455139;NL;DE;0;0;Kein Bezug
+455231;DE;DE;0;0;Inland
+457205;NL;NL;0;0;Kein Bezug
+457573;PL;SK;0;0;Kein Bezug
+458233;AT;CH;0;0;Kein Bezug
+458858;NL;NL;0;0;Kein Bezug
+459094;HU;HU;0;0;Kein Bezug
+459158;AT;DE;0;0;Kein Bezug
+459225;RO;RO;0;0;Kein Bezug
+459497;CH;CH;0;0;Kein Bezug
+459828;AT;SI;0;0;Kein Bezug
+459850;HU;HU;0;0;Kein Bezug
+454585;IT;DE;0;0;Kein Bezug
+455228;DE;DE;0;0;Inland
+456958;DE;DE;0;0;Inland
+456976;NL;IT;0;0;Kein Bezug
+457369;DE;DE;0;0;Inland
+459218;NL;NL;0;0;Kein Bezug
+459346;RO;HU;0;0;Kein Bezug
+459600;PL;PL;0;0;Kein Bezug
+460005;IT;IT;0;0;Kein Bezug
+460087;IT;IT;0;0;Kein Bezug
+460413;NL;NL;0;0;Kein Bezug
+460540;NL;NL;0;0;Kein Bezug
+460789;NL;NL;0;0;Kein Bezug
+460797;RO;RO;0;0;Kein Bezug
+461838;NL;NL;0;0;Kein Bezug
+454685;DE;NL;0;0;Kein Bezug
+454790;DE;DE;0;0;Inland
+456436;IT;IT;0;0;Kein Bezug
+456618;SK;DE;0;0;Kein Bezug
+457826;SK;PL;0;0;Kein Bezug
+457922;DE;DE;0;0;Inland
+458048;PL;PL;0;0;Kein Bezug
+458324;NL;NL;0;0;Kein Bezug
+459459;NL;NL;0;0;Kein Bezug
+460136;PL;PL;0;0;Kein Bezug
+461327;NL;NL;0;0;Kein Bezug
+461598;NL;NL;0;0;Kein Bezug
+451817;CH;CH;0;0;Kein Bezug
+453549;BE;PL;0;0;Kein Bezug
+454706;DE;NL;0;0;Kein Bezug
+455164;NL;DE;0;0;Kein Bezug
+455751;AT;IT;0;0;Kein Bezug
+457584;SK;SK;0;0;Kein Bezug
+459329;HU;HU;0;0;Kein Bezug
+459976;AT;HU;0;0;Kein Bezug
+453537;BE;DE;0;0;Kein Bezug
+454966;PL;PL;0;0;Kein Bezug
+455060;IT;NL;0;0;Kein Bezug
+455798;PL;DE;1;0;Einfahrt
+457375;PL;PL;0;0;Kein Bezug
+457800;DE;SK;0;0;Kein Bezug
+458333;NL;NL;0;0;Kein Bezug
+458804;AT;SI;0;0;Kein Bezug
+458818;PL;CZ;0;0;Kein Bezug
+459184;AT;AT;0;0;Kein Bezug
+459389;SK;CZ;0;0;Kein Bezug
+459887;IT;IT;0;0;Kein Bezug
+461951;NL;NL;0;0;Kein Bezug
+449606;PL;DE;0;0;Kein Bezug
+453546;BE;PL;0;0;Kein Bezug
+454163;CH;NL;0;0;Kein Bezug
+454445;CH;CH;0;0;Kein Bezug
+456518;IT;IT;0;0;Kein Bezug
+456747;IT;IT;0;0;Kein Bezug
+457321;NL;NL;0;0;Kein Bezug
+457502;DE;CH;0;0;Kein Bezug
+457892;DE;DE;0;0;Inland
+458385;HU;HU;0;0;Kein Bezug
+458698;AT;IT;0;0;Kein Bezug
+459205;NL;NL;0;0;Kein Bezug
+459726;DE;SK;0;0;Kein Bezug
+459857;PL;PL;0;0;Kein Bezug
+461546;NL;NL;0;0;Kein Bezug
+450551;DE;PL;0;1;Ausfahrt
+451252;CZ;SK;0;0;Kein Bezug
+451310;CH;DE;0;0;Kein Bezug
+454219;CH;CH;0;0;Kein Bezug
+454688;DE;NL;0;0;Kein Bezug
+454713;NL;DE;0;0;Kein Bezug
+455081;NL;DE;0;0;Kein Bezug
+455132;DE;NL;0;0;Kein Bezug
+457216;NL;NL;0;0;Kein Bezug
+458865;DE;SK;0;0;Kein Bezug
+459161;NL;NL;0;0;Kein Bezug
+459493;CH;CH;0;0;Kein Bezug
+460295;RO;RO;0;0;Kein Bezug
+460390;NL;NL;0;0;Kein Bezug
+460812;NL;NL;0;0;Kein Bezug
+461334;NL;NL;0;0;Kein Bezug
+461846;NL;NL;0;0;Kein Bezug
+450493;NL;IT;0;0;Kein Bezug
+454194;CH;CH;0;0;Kein Bezug
+454569;PL;NL;1;1;Passiert (Transit)
+454710;DE;IT;0;1;Ausfahrt
+455225;DE;DE;0;0;Inland
+455258;DE;DE;0;0;Inland
+456663;DE;RO;0;0;Kein Bezug
+456865;IT;AT;0;0;Kein Bezug
+456963;NL;IT;1;0;Komplex (mehrfach/Schleife)
+457289;PL;PL;0;0;Kein Bezug
+457315;NL;NL;0;0;Kein Bezug
+457561;AT;AT;0;0;Kein Bezug
+457576;DE;DE;0;0;Inland
+457676;HR;DE;0;0;Kein Bezug
+458069;IT;IT;0;0;Kein Bezug
+458603;IT;IT;0;0;Kein Bezug
+459503;CH;CH;0;0;Kein Bezug
+460006;IT;IT;0;0;Kein Bezug
+461936;SK;SK;0;0;Kein Bezug
+461958;NL;NL;0;0;Kein Bezug
+450938;DE;NL;0;1;Ausfahrt
+454424;RO;BE;0;1;Komplex (mehrfach/Schleife)
+454695;NL;DE;0;0;Kein Bezug
+455845;HU;BE;0;1;Komplex (mehrfach/Schleife)
+456276;PL;PL;0;0;Kein Bezug
+456394;CZ;CZ;0;0;Kein Bezug
+456896;PL;PL;0;0;Kein Bezug
+457145;DE;DE;0;0;Inland
+457219;DE;DE;0;0;Inland
+458134;DE;NL;0;1;Ausfahrt
+458569;NL;NL;0;0;Kein Bezug
+459210;NL;NL;0;0;Kein Bezug
+459254;SK;SK;0;0;Kein Bezug
+459962;AT;AT;0;0;Kein Bezug
+460013;NL;NL;0;0;Kein Bezug
+460107;AT;AT;0;0;Kein Bezug
+460524;HU;SK;0;0;Kein Bezug
+461316;NL;NL;0;0;Kein Bezug
+461509;PL;PL;0;0;Kein Bezug
+461542;NL;NL;0;0;Kein Bezug
+450596;NL;DE;1;0;Einfahrt
+457645;IT;IT;0;0;Kein Bezug
+457979;DE;AT;0;1;Ausfahrt
+458515;AT;AT;0;0;Kein Bezug
+458942;PL;DE;1;0;Einfahrt
+459467;AT;AT;0;0;Kein Bezug
+460309;NL;NL;0;0;Kein Bezug
+460335;SK;SK;0;0;Kein Bezug
+454659;PL;NL;1;1;Passiert (Transit)
+455159;DE;IT;0;0;Kein Bezug
+457835;NL;NL;0;0;Kein Bezug
+457845;AT;SI;0;0;Kein Bezug
+458057;DE;DE;0;0;Inland
+458086;HU;HU;0;0;Kein Bezug
+458121;HU;HU;0;0;Kein Bezug
+458377;CZ;CZ;0;0;Kein Bezug
+458947;NL;NL;0;0;Kein Bezug
+459382;HU;HU;0;0;Kein Bezug
+460214;BG;TR;0;0;Kein Bezug
+460293;NL;NL;0;0;Kein Bezug
+461321;NL;NL;0;0;Kein Bezug
+461919;RO;HU;0;0;Kein Bezug
+450592;NL;DE;0;0;Kein Bezug
+454021;RO;HU;0;0;Kein Bezug
+454179;CH;CH;0;0;Kein Bezug
+454450;DE;NL;0;1;Ausfahrt
+454460;DE;NL;0;1;Ausfahrt
+455964;DE;DE;0;0;Inland
+456377;IT;PL;0;0;Kein Bezug
+456983;NL;IT;0;0;Kein Bezug
+457028;BG;BG;0;0;Kein Bezug
+457167;NL;PL;1;1;Passiert (Transit)
+457438;PL;DE;1;0;Einfahrt
+458878;CZ;PL;0;0;Kein Bezug
+458920;SK;SK;0;0;Kein Bezug
+459056;NL;NL;0;0;Kein Bezug
+460860;NL;NL;0;0;Kein Bezug
+453746;DE;DE;0;0;Inland
+454464;DE;NL;0;1;Ausfahrt
+455833;PL;DE;1;0;Einfahrt
+455989;DE;DE;0;0;Inland
+456427;SK;DE;0;0;Kein Bezug
+456503;DE;DE;0;0;Inland
+457178;NL;PL;1;1;Passiert (Transit)
+457348;NL;NL;0;0;Kein Bezug
+457801;DE;SK;0;0;Kein Bezug
+457870;DE;DE;0;0;Inland
+457972;PL;PL;0;0;Kein Bezug
+458426;NL;NL;0;0;Kein Bezug
+458843;HU;HU;0;0;Kein Bezug
+459599;PL;PL;0;0;Kein Bezug
+459691;HU;HU;0;0;Kein Bezug
+460373;NL;NL;0;0;Kein Bezug
+454496;PL;DE;1;0;Einfahrt
+455305;HU;DE;0;0;Kein Bezug
+456779;CZ;DE;0;0;Kein Bezug
+457671;DE;DE;0;0;Inland
+458554;SI;SK;0;0;Kein Bezug
+458577;PL;DE;1;0;Einfahrt
+458656;HU;HU;0;0;Kein Bezug
+459494;NL;CH;0;0;Kein Bezug
+460217;PL;PL;0;0;Kein Bezug
+460296;IT;IT;0;0;Kein Bezug
+460828;NL;NL;0;0;Kein Bezug
+461594;NL;NL;0;0;Kein Bezug
+450713;NL;DE;1;0;Einfahrt
+450714;NL;DE;0;0;Kein Bezug
+450910;CZ;NL;0;1;Komplex (mehrfach/Schleife)
+454437;NL;NL;0;0;Kein Bezug
+454452;DE;NL;0;1;Ausfahrt
+455286;BE;DE;0;0;Kein Bezug
+456676;DE;PL;0;1;Ausfahrt
+457059;CZ;CZ;0;0;Kein Bezug
+458024;NL;NL;0;0;Kein Bezug
+458724;DE;DE;0;0;Inland
+458850;AT;SI;0;0;Kein Bezug
+459070;NL;NL;0;0;Kein Bezug
+459286;NL;NL;0;0;Kein Bezug
+459506;CH;CH;0;0;Kein Bezug
+461574;NL;NL;0;0;Kein Bezug
+454520;NL;DE;1;0;Einfahrt
+455237;DE;DE;0;0;Inland
+455792;IT;IT;0;0;Kein Bezug
+456076;DE;DE;0;0;Inland
+456449;SK;NL;0;1;Komplex (mehrfach/Schleife)
+457228;NL;NL;0;0;Kein Bezug
+457714;HU;DE;0;0;Kein Bezug
+457961;NL;NL;0;0;Kein Bezug
+459508;CH;CH;0;0;Kein Bezug
+459938;IT;IT;0;0;Kein Bezug
+460121;PL;PL;0;0;Kein Bezug
+460274;CH;CH;0;0;Kein Bezug
+460433;NL;NL;0;0;Kein Bezug
+455879;IT;IT;0;0;Kein Bezug
+456441;DE;DE;0;0;Inland
+457472;PL;PL;0;0;Kein Bezug
+457665;DE;DE;0;0;Inland
+457802;DE;SK;0;0;Kein Bezug
+457920;DE;DE;0;0;Inland
+458142;PL;PL;0;0;Kein Bezug
+458294;NL;NL;0;0;Kein Bezug
+458528;IT;IT;0;0;Kein Bezug
+458597;IT;IT;0;0;Kein Bezug
+458852;SI;AT;0;0;Kein Bezug
+459009;NL;NL;0;0;Kein Bezug
+459347;NL;NL;0;0;Kein Bezug
+459463;NL;NL;0;0;Kein Bezug
+460288;PL;PL;0;0;Kein Bezug
+454680;NL;DE;1;0;Einfahrt
+455157;DE;NL;0;0;Kein Bezug
+456039;SK;CZ;0;0;Kein Bezug
+457217;NL;NL;0;0;Kein Bezug
+457303;NL;NL;0;0;Kein Bezug
+458267;NL;NL;0;0;Kein Bezug
+458448;DE;SK;0;0;Kein Bezug
+458881;CH;CH;0;0;Kein Bezug
+458905;HU;HU;0;0;Kein Bezug
+458999;SK;SK;0;0;Kein Bezug
+459012;SK;SK;0;0;Kein Bezug
+459183;NL;NL;0;0;Kein Bezug
+459258;NL;NL;0;0;Kein Bezug
+459377;HU;HU;0;0;Kein Bezug
+459767;NL;NL;0;0;Kein Bezug
+460209;HU;RO;0;0;Kein Bezug
+460437;NL;NL;0;0;Kein Bezug
+455214;DE;DE;0;0;Inland
+456265;AT;AT;0;0;Kein Bezug
+456485;DE;DE;0;0;Inland
+457325;NL;NL;0;0;Kein Bezug
+457656;CH;CH;0;0;Kein Bezug
+458446;SK;CZ;0;0;Kein Bezug
+458700;AT;IT;0;0;Kein Bezug
+459008;SK;SK;0;0;Kein Bezug
+459449;NL;NL;0;0;Kein Bezug
+459470;PL;PL;0;0;Kein Bezug
+459658;DE;DE;0;0;Inland
+459687;SK;DE;0;0;Kein Bezug
+459896;IT;IT;0;0;Kein Bezug
+460096;DE;DE;0;0;Inland
+445655;AT;NL;0;0;Kein Bezug
+453118;DE;PL;0;1;Ausfahrt
+454205;NL;CH;0;0;Kein Bezug
+454226;CH;CH;0;0;Kein Bezug
+454641;NL;IT;0;0;Kein Bezug
+454678;NL;NL;0;0;Kein Bezug
+455108;PL;DE;1;0;Einfahrt
+456912;PL;PL;0;0;Kein Bezug
+456918;DE;NL;0;0;Kein Bezug
+457527;NL;NL;0;0;Kein Bezug
+458041;DE;DE;0;0;Inland
+459375;CZ;SK;0;0;Kein Bezug
+459380;SK;SK;0;0;Kein Bezug
+460017;NL;NL;0;0;Kein Bezug
+460439;NL;NL;0;0;Kein Bezug
+460571;NL;NL;0;0;Kein Bezug
+461523;PL;PL;0;0;Kein Bezug
+448712;AT;DE;0;0;Kein Bezug
+454441;NL;NL;0;0;Kein Bezug
+456980;NL;IT;0;0;Kein Bezug
+456981;IT;NL;0;0;Kein Bezug
+457152;SK;SK;0;0;Kein Bezug
+457830;NL;NL;0;0;Kein Bezug
+458574;NL;NL;0;0;Kein Bezug
+459460;NL;NL;0;0;Kein Bezug
+459988;PL;PL;0;0;Kein Bezug
+460261;SK;SK;0;0;Kein Bezug
+460530;CZ;CZ;0;0;Kein Bezug
+456366;CH;CH;0;0;Kein Bezug
+457425;NL;NL;0;0;Kein Bezug
+457770;CH;CH;0;0;Kein Bezug
+458022;NL;NL;0;0;Kein Bezug
+458112;CZ;SK;0;0;Kein Bezug
+458220;CH;CH;0;0;Kein Bezug
+458315;NL;NL;0;0;Kein Bezug
+458479;PL;PL;0;0;Kein Bezug
+458522;RO;RO;0;0;Kein Bezug
+458683;NL;NL;0;0;Kein Bezug
+458708;HR;DE;0;0;Kein Bezug
+458949;SK;SK;0;0;Kein Bezug
+459434;DE;DE;0;0;Inland
+459689;HU;RS;0;0;Kein Bezug
+459727;DE;AT;0;0;Kein Bezug
+459739;SK;DE;0;0;Kein Bezug
+459818;BG;TR;0;0;Kein Bezug
+459932;SI;AT;0;0;Kein Bezug
+460034;AT;AT;0;0;Kein Bezug
+460400;NL;NL;0;0;Kein Bezug
+460503;NL;NL;0;0;Kein Bezug
+460814;NL;NL;0;0;Kein Bezug
+460896;PL;PL;0;0;Kein Bezug
+461394;PL;PL;0;0;Kein Bezug
+448713;DE;AT;0;0;Kein Bezug
+454493;HU;RO;0;0;Kein Bezug
+454574;CH;NL;0;0;Kein Bezug
+455070;DE;NL;0;0;Kein Bezug
+456042;SK;SK;0;0;Kein Bezug
+456270;PL;DE;0;0;Kein Bezug
+457075;PL;DE;0;0;Kein Bezug
+457855;SI;AT;0;0;Kein Bezug
+458068;IT;IT;0;0;Kein Bezug
+459949;AT;RO;0;0;Kein Bezug
+460097;PL;PL;0;0;Kein Bezug
+451775;CH;CH;0;0;Kein Bezug
+453884;IT;SK;0;0;Kein Bezug
+454223;NL;CH;0;0;Kein Bezug
+454600;NL;NL;0;0;Kein Bezug
+456350;AT;CH;0;0;Kein Bezug
+457287;CZ;CZ;0;0;Kein Bezug
+457562;RO;RO;0;0;Kein Bezug
+458498;NL;NL;0;0;Kein Bezug
+458689;NL;NL;0;0;Kein Bezug
+458711;NL;NL;0;0;Kein Bezug
+460083;CH;CH;0;0;Kein Bezug
+460816;DE;DE;0;0;Inland
+461920;DE;DE;0;0;Inland
+456719;NL;NL;0;0;Kein Bezug
+457207;DE;DE;0;0;Inland
+457388;CZ;AT;0;0;Kein Bezug
+457618;SI;SK;0;0;Kein Bezug
+458023;NL;NL;0;0;Kein Bezug
+458680;NL;NL;0;0;Kein Bezug
+459182;NL;NL;0;0;Kein Bezug
+460432;NL;NL;0;0;Kein Bezug
+461474;PL;CZ;0;0;Kein Bezug
+461495;RO;RO;0;0;Kein Bezug
+451633;PL;PL;0;0;Kein Bezug
+454658;PL;NL;1;1;Passiert (Transit)
+456934;AT;CH;0;0;Kein Bezug
+457064;NL;NL;0;0;Kein Bezug
+457367;PL;PL;0;0;Kein Bezug
+458087;HU;HU;0;0;Kein Bezug
+458556;DE;DE;0;0;Inland
+458562;DE;DE;0;0;Inland
+459674;DE;DE;0;0;Inland
+451503;NL;PL;1;1;Passiert (Transit)
+455125;NL;NL;0;0;Kein Bezug
+455130;DE;NL;0;0;Kein Bezug
+456369;CH;CH;0;0;Kein Bezug
+456472;CZ;NL;0;1;Komplex (mehrfach/Schleife)
+457534;NL;NL;0;0;Kein Bezug
+458150;PL;PL;0;0;Kein Bezug
+458232;PL;PL;0;0;Kein Bezug
+458872;IT;IT;0;0;Kein Bezug
+459043;NL;NL;0;0;Kein Bezug
+459291;NL;NL;0;0;Kein Bezug
+459878;SK;SK;0;0;Kein Bezug
+460256;CZ;CZ;0;0;Kein Bezug
+461347;AT;AT;0;0;Kein Bezug
+461968;CZ;CZ;0;0;Kein Bezug
+450954;CZ;AT;0;0;Kein Bezug
+454198;CH;CH;0;0;Kein Bezug
+455059;DE;NL;0;1;Ausfahrt
+456407;DE;SK;0;0;Kein Bezug
+456607;HR;DE;0;0;Kein Bezug
+456760;IT;IT;0;0;Kein Bezug
+457646;IT;IT;0;0;Kein Bezug
+457980;DE;NL;0;1;Ausfahrt
+459197;SK;SK;0;0;Kein Bezug
+459440;CZ;CZ;0;0;Kein Bezug
+459457;CH;CH;0;0;Kein Bezug
+459781;SK;UA;0;0;Kein Bezug
+450907;NL;IT;0;0;Kein Bezug
+456969;SK;SK;0;0;Kein Bezug
+457048;DE;DE;0;0;Inland
+457079;DE;DE;0;0;Inland
+457112;HU;CZ;0;0;Kein Bezug
+458589;IT;IT;0;0;Kein Bezug
+458681;NL;NL;0;0;Kein Bezug
+459062;NL;NL;0;0;Kein Bezug
+459068;NL;NL;0;0;Kein Bezug
+460312;NL;NL;0;0;Kein Bezug
+461533;CH;CH;0;0;Kein Bezug
+461809;CH;CH;0;0;Kein Bezug
+454530;NL;CH;1;0;Komplex (mehrfach/Schleife)
+454625;DE;NL;0;0;Kein Bezug
+456798;RO;RO;0;0;Kein Bezug
+457055;HU;HU;0;0;Kein Bezug
+458293;NL;NL;0;0;Kein Bezug
+458314;NL;NL;0;0;Kein Bezug
+459045;DE;DE;0;0;Inland
+459242;NL;NL;0;0;Kein Bezug
+460077;CH;CH;0;0;Kein Bezug
+460244;NL;NL;0;0;Kein Bezug
+460385;NL;NL;0;0;Kein Bezug
+460537;SK;CZ;0;0;Kein Bezug
+460564;CZ;CZ;0;0;Kein Bezug
+450673;PL;NL;1;0;Komplex (mehrfach/Schleife)
+451886;PL;DE;1;0;Einfahrt
+454455;IT;NL;0;1;Komplex (mehrfach/Schleife)
+455133;DE;NL;0;0;Kein Bezug
+456360;BG;TR;0;0;Kein Bezug
+456885;DE;HU;0;0;Kein Bezug
+456888;PL;PL;0;0;Kein Bezug
+457091;DE;DE;0;0;Inland
+457627;NL;NL;0;0;Kein Bezug
+457693;DE;DE;0;0;Inland
+457856;SI;AT;0;0;Kein Bezug
+457964;AT;CZ;0;0;Kein Bezug
+458004;AT;DE;0;0;Kein Bezug
+460423;CZ;CZ;0;0;Kein Bezug
+450425;NL;NL;0;0;Kein Bezug
+453692;DE;PL;0;0;Kein Bezug
+454692;NL;DE;0;0;Kein Bezug
+456146;RO;RO;0;0;Kein Bezug
+456376;PL;IT;0;0;Kein Bezug
+456807;BE;RO;1;0;Komplex (mehrfach/Schleife)
+457582;NL;NL;0;0;Kein Bezug
+458141;NL;NL;0;0;Kein Bezug
+458305;DE;AT;0;1;Ausfahrt
+458388;HU;HU;0;0;Kein Bezug
+458627;PL;PL;0;0;Kein Bezug
+460387;NL;NL;0;0;Kein Bezug
+449050;RO;DE;0;0;Kein Bezug
+451805;CH;NL;0;0;Kein Bezug
+453995;SK;DE;0;0;Kein Bezug
+454712;NL;DE;0;0;Kein Bezug
+455079;NL;DE;0;0;Kein Bezug
+455137;NL;NL;0;0;Kein Bezug
+455977;CZ;CZ;0;0;Kein Bezug
+456507;DE;DE;0;0;Inland
+457296;PL;PL;0;0;Kein Bezug
+457383;HU;AT;0;0;Kein Bezug
+458242;NL;NL;0;0;Kein Bezug
+458445;DE;PL;0;1;Ausfahrt
+458540;IT;IT;0;0;Kein Bezug
+458916;NL;NL;0;0;Kein Bezug
+459211;NL;NL;0;0;Kein Bezug
+459771;NL;NL;0;0;Kein Bezug
+459928;IT;IT;0;0;Kein Bezug
+460527;PL;SK;0;0;Kein Bezug
+447458;RO;DE;0;0;Kein Bezug
+450511;NL;NL;0;0;Kein Bezug
+451882;PL;DE;1;0;Einfahrt
+453713;PL;NL;1;1;Passiert (Transit)
+454561;DE;NL;0;0;Kein Bezug
+456295;AT;CH;0;0;Kein Bezug
+457269;PL;PL;0;0;Kein Bezug
+457389;DE;DE;0;0;Inland
+457780;SK;DE;0;0;Kein Bezug
+457901;DE;DE;0;0;Inland
+458375;NL;NL;0;0;Kein Bezug
+458706;HR;DE;0;0;Kein Bezug
+459271;IT;IT;0;0;Kein Bezug
+459826;SI;AT;0;0;Kein Bezug
+461830;NL;NL;0;0;Kein Bezug
+454030;DE;SK;0;0;Kein Bezug
+454425;IT;DE;0;0;Kein Bezug
+454716;NL;DE;0;0;Kein Bezug
+455106;PL;NL;1;1;Passiert (Transit)
+456421;DE;HU;0;0;Kein Bezug
+456474;HU;HU;0;0;Kein Bezug
+456850;CZ;AT;0;0;Kein Bezug
+458020;CZ;CZ;0;0;Kein Bezug
+458196;NL;NL;0;0;Kein Bezug
+458211;NL;NL;0;0;Kein Bezug
+458337;PL;PL;0;0;Kein Bezug
+458928;NL;NL;0;0;Kein Bezug
+459069;NL;NL;0;0;Kein Bezug
+459889;IT;IT;0;0;Kein Bezug
+460284;NL;NL;0;0;Kein Bezug
+460317;NL;NL;0;0;Kein Bezug
+451824;NL;CH;0;0;Kein Bezug
+452971;DE;HU;0;0;Kein Bezug
+454484;NL;IT;0;0;Kein Bezug
+454628;NL;PL;1;1;Passiert (Transit)
+455046;NL;NL;0;0;Kein Bezug
+455239;DE;DE;0;0;Inland
+455341;IT;HU;0;0;Kein Bezug
+456494;CZ;NL;0;1;Komplex (mehrfach/Schleife)
+456821;RO;RO;0;0;Kein Bezug
+457354;SK;SK;0;0;Kein Bezug
+457724;CZ;CZ;0;0;Kein Bezug
+458216;AT;CZ;0;0;Kein Bezug
+458268;NL;NL;0;0;Kein Bezug
+458417;NL;NL;0;0;Kein Bezug
+458472;SK;HU;0;0;Kein Bezug
+458988;DE;DE;0;0;Inland
+459229;RO;RO;0;0;Kein Bezug
+459458;NL;NL;0;0;Kein Bezug
+450468;IT;NL;0;1;Komplex (mehrfach/Schleife)
+450720;DE;NL;0;0;Kein Bezug
+451812;CH;CH;0;0;Kein Bezug
+453667;IT;PL;0;0;Kein Bezug
+455863;AT;AT;0;0;Kein Bezug
+457023;NL;NL;0;0;Kein Bezug
+457419;HU;DE;0;0;Kein Bezug
+457539;RO;RO;0;0;Kein Bezug
+457981;SK;SK;0;0;Kein Bezug
+458371;CZ;CZ;0;0;Kein Bezug
+458477;NL;NL;0;0;Kein Bezug
+459786;CZ;CZ;0;0;Kein Bezug
+460357;NL;NL;0;0;Kein Bezug
+460391;NL;NL;0;0;Kein Bezug
+460813;NL;NL;0;0;Kein Bezug
+461548;BG;BG;0;0;Kein Bezug
+461850;HU;HU;0;0;Kein Bezug
+448708;DE;AT;0;0;Kein Bezug
+449600;HU;IT;0;0;Kein Bezug
+454210;CH;CH;0;0;Kein Bezug
+456344;DE;PL;0;1;Ausfahrt
+457293;DE;UA;0;0;Kein Bezug
+457387;SK;DE;0;0;Kein Bezug
+458039;HU;SK;0;0;Kein Bezug
+458482;RO;RO;0;0;Kein Bezug
+458889;AT;DE;0;0;Kein Bezug
+459073;NL;NL;0;0;Kein Bezug
+459663;DE;DE;0;0;Inland
+460316;NL;NL;0;0;Kein Bezug
+451232;UA;DE;0;0;Kein Bezug
+454470;NL;PL;1;1;Passiert (Transit)
+454572;PL;NL;1;1;Passiert (Transit)
+454672;NL;NL;0;0;Kein Bezug
+456423;DE;HU;0;0;Kein Bezug
+456641;AT;SI;0;0;Kein Bezug
+456647;PL;PL;0;0;Kein Bezug
+457297;PL;PL;0;0;Kein Bezug
+457898;DE;DE;0;0;Inland
+458301;SK;SK;0;0;Kein Bezug
+458523;RO;RO;0;0;Kein Bezug
+458544;IT;IT;0;0;Kein Bezug
+458712;NL;NL;0;0;Kein Bezug
+459351;CH;DE;0;0;Kein Bezug
+459483;CH;CH;0;0;Kein Bezug
+460661;NL;NL;0;0;Kein Bezug
+461819;NL;NL;0;0;Kein Bezug
+454499;PL;NL;1;1;Passiert (Transit)
+454501;PL;NL;1;1;Passiert (Transit)
+454690;NL;CH;0;0;Kein Bezug
+456381;PL;IT;0;0;Kein Bezug
+456464;SK;PL;0;0;Kein Bezug
+457197;NL;NL;0;0;Kein Bezug
+457914;DE;DE;0;0;Inland
+458822;IT;IT;0;0;Kein Bezug
+458885;SK;CZ;0;0;Kein Bezug
+459030;SK;SK;0;0;Kein Bezug
+459144;PL;PL;0;0;Kein Bezug
+459953;AT;AT;0;0;Kein Bezug
+461840;NL;NL;0;0;Kein Bezug
+450601;RO;HU;0;0;Kein Bezug
+450955;AT;CZ;0;0;Kein Bezug
+454269;AT;DE;0;0;Kein Bezug
+456858;CH;CH;0;0;Kein Bezug
+457194;NL;NL;0;0;Kein Bezug
+458195;NL;NL;0;0;Kein Bezug
+458339;NL;NL;0;0;Kein Bezug
+458379;NL;NL;0;0;Kein Bezug
+458584;NL;NL;0;0;Kein Bezug
+458691;HU;HU;0;0;Kein Bezug
+458935;NL;NL;0;0;Kein Bezug
+459481;CH;CH;0;0;Kein Bezug
+460193;NL;NL;0;0;Kein Bezug
+461899;NL;NL;0;0;Kein Bezug
+450452;NL;NL;0;0;Kein Bezug
+451147;RO;DE;0;0;Kein Bezug
+454293;PL;PL;0;0;Kein Bezug
+456498;DE;DE;0;0;Inland
+457405;SK;DE;0;0;Kein Bezug
+457411;DE;HU;0;0;Kein Bezug
+458083;NL;NL;0;0;Kein Bezug
+458105;NL;NL;0;0;Kein Bezug
+458265;NL;NL;0;0;Kein Bezug
+459093;HU;HU;0;0;Kein Bezug
+459468;NL;NL;0;0;Kein Bezug
+460321;RO;RO;0;0;Kein Bezug
+460415;DE;DE;0;0;Inland
+461306;NL;NL;0;0;Kein Bezug
+461971;CZ;CZ;0;0;Kein Bezug
+449177;DE;HU;0;0;Kein Bezug
+454443;NL;DE;1;0;Einfahrt
+454687;DE;NL;0;0;Kein Bezug
+456371;CH;CH;0;0;Kein Bezug
+456766;IT;IT;0;0;Kein Bezug
+457568;PL;BE;0;0;Kein Bezug
+458444;HU;HU;0;0;Kein Bezug
+459117;TR;BG;0;0;Kein Bezug
+460110;HU;HU;0;0;Kein Bezug
+460180;NL;NL;0;0;Kein Bezug
+453998;PL;PL;0;0;Kein Bezug
+454782;DE;DE;0;0;Inland
+456402;DE;SK;0;0;Kein Bezug
+457060;SK;SK;0;0;Kein Bezug
+457940;DE;HR;0;0;Kein Bezug
+458630;CZ;CZ;0;0;Kein Bezug
+458993;SK;SK;0;0;Kein Bezug
+459231;NL;NL;0;0;Kein Bezug
+459646;DE;DE;0;0;Inland
+459661;DE;DE;0;0;Inland
+459706;IT;IT;0;0;Kein Bezug
+461330;NL;NL;0;0;Kein Bezug
+453714;NL;PL;1;1;Passiert (Transit)
+455144;NL;NL;0;0;Kein Bezug
+456704;DE;CH;0;0;Kein Bezug
+457054;HU;HU;0;0;Kein Bezug
+457196;NL;NL;0;0;Kein Bezug
+457365;DE;PL;0;1;Ausfahrt
+457376;AT;NL;0;1;Komplex (mehrfach/Schleife)
+457622;NL;NL;0;0;Kein Bezug
+457915;DE;DE;0;0;Inland
+458320;NL;NL;0;0;Kein Bezug
+458922;RO;RO;0;0;Kein Bezug
+459247;NL;NL;0;0;Kein Bezug
+459270;IT;IT;0;0;Kein Bezug
+459762;RO;RO;0;0;Kein Bezug
+459821;SI;SI;0;0;Kein Bezug
+461834;NL;NL;0;0;Kein Bezug
+461844;NL;NL;0;0;Kein Bezug
+450638;DE;NL;0;0;Kein Bezug
+454213;CH;CH;0;0;Kein Bezug
+454555;NL;DE;1;0;Einfahrt
+454631;NL;DE;0;0;Kein Bezug
+455779;AT;RO;0;0;Kein Bezug
+456855;AT;CZ;0;0;Kein Bezug
+457356;IT;IT;0;0;Kein Bezug
+457416;DE;SK;0;0;Kein Bezug
+457875;DE;DE;0;0;Inland
+457988;PL;PL;0;0;Kein Bezug
+458244;NL;NL;0;0;Kein Bezug
+458800;SI;AT;0;0;Kein Bezug
+459816;NL;NL;0;0;Kein Bezug
+460869;HU;HU;0;0;Kein Bezug
+454467;NL;PL;1;1;Passiert (Transit)
+456700;AT;SI;0;0;Kein Bezug
+456853;AT;AT;0;0;Kein Bezug
+456930;NL;NL;0;0;Kein Bezug
+458583;IT;IT;0;0;Kein Bezug
+458937;NL;NL;0;0;Kein Bezug
+459047;CZ;CZ;0;0;Kein Bezug
+459058;SK;SK;0;0;Kein Bezug
+459675;DE;DE;0;0;Inland
+459724;DE;HU;0;0;Kein Bezug
+460038;NL;NL;0;0;Kein Bezug
+460138;PL;PL;0;0;Kein Bezug
+460360;NL;NL;0;0;Kein Bezug
+461855;NL;NL;0;0;Kein Bezug
+454267;AT;DE;0;0;Kein Bezug
+454271;AT;DE;0;0;Kein Bezug
+454418;NL;DE;1;0;Einfahrt
+454965;PL;PL;0;0;Kein Bezug
+456408;SK;DE;0;0;Kein Bezug
+457995;SK;AT;0;0;Kein Bezug
+458520;NL;NL;0;0;Kein Bezug
+458874;DE;DE;0;0;Inland
+459195;NL;NL;0;0;Kein Bezug
+459387;SK;SK;0;0;Kein Bezug
+459480;CH;CH;0;0;Kein Bezug
+459812;NL;NL;0;0;Kein Bezug
+459925;AT;SI;0;0;Kein Bezug
+460367;RO;RO;0;0;Kein Bezug
+460405;HU;HU;0;0;Kein Bezug
+460476;NL;NL;0;0;Kein Bezug
+461938;NL;NL;0;0;Kein Bezug
+450588;PL;NL;1;1;Passiert (Transit)
+451823;NL;CH;0;0;Kein Bezug
+457166;PL;NL;1;1;Passiert (Transit)
+457509;DE;CH;0;0;Kein Bezug
+458801;SI;AT;0;0;Kein Bezug
+459031;SK;SK;0;0;Kein Bezug
+459736;SK;DE;0;0;Kein Bezug
+460829;HU;HU;0;0;Kein Bezug
+461543;NL;NL;0;0;Kein Bezug
+461779;SK;SK;0;0;Kein Bezug
+450654;NL;PL;1;1;Passiert (Transit)
+454229;CH;CH;0;0;Kein Bezug
+454611;DE;NL;0;1;Ausfahrt
+454663;PL;NL;1;1;Passiert (Transit)
+456754;DE;SK;0;0;Kein Bezug
+457531;NL;NL;0;0;Kein Bezug
+457717;CH;CH;0;0;Kein Bezug
+458699;AT;IT;0;0;Kein Bezug
+458870;IT;IT;0;0;Kein Bezug
+459250;SK;SK;0;0;Kein Bezug
+459794;NL;NL;0;0;Kein Bezug
+460182;NL;NL;0;0;Kein Bezug
+460818;HU;RO;0;0;Kein Bezug
+447975;PL;PL;0;0;Kein Bezug
+451318;SI;CH;0;0;Kein Bezug
+453865;DE;DE;0;0;Inland
+454073;SK;BE;0;1;Komplex (mehrfach/Schleife)
+454078;CH;DE;0;0;Kein Bezug
+454274;DE;AT;0;0;Kein Bezug
+454549;DE;IT;0;0;Kein Bezug
+455091;NL;IT;0;0;Kein Bezug
+455294;SK;DE;0;0;Kein Bezug
+457477;PL;PL;0;0;Kein Bezug
+457840;NL;NL;0;0;Kein Bezug
+458566;HU;HU;0;0;Kein Bezug
+458651;PL;DE;1;0;Einfahrt
+458927;NL;NL;0;0;Kein Bezug
+459163;NL;NL;0;0;Kein Bezug
+459960;HU;HU;0;0;Kein Bezug
+460041;SK;SK;0;0;Kein Bezug
+450919;CZ;NL;0;1;Komplex (mehrfach/Schleife)
+451826;CH;CH;0;0;Kein Bezug
+454679;NL;DE;1;0;Einfahrt
+456761;IT;IT;0;0;Kein Bezug
+456909;PL;PL;0;0;Kein Bezug
+457284;SK;SK;0;0;Kein Bezug
+457811;DE;CH;0;0;Kein Bezug
+457927;DE;DE;0;0;Inland
+458277;NL;NL;0;0;Kein Bezug
+458322;NL;NL;0;0;Kein Bezug
+458513;IT;PL;0;0;Kein Bezug
+458743;DE;DE;0;0;Inland
+458793;AT;SI;0;0;Kein Bezug
+458842;NL;NL;0;0;Kein Bezug
+458994;SK;SK;0;0;Kein Bezug
+459378;RO;RO;0;0;Kein Bezug
+459644;DE;DE;0;0;Inland
+460030;NL;NL;0;0;Kein Bezug
+460409;NL;NL;0;0;Kein Bezug
+451214;AT;CH;0;0;Kein Bezug
+454629;NL;PL;1;1;Passiert (Transit)
+454715;NL;DE;0;0;Kein Bezug
+455293;DE;HR;0;0;Kein Bezug
+456745;NL;IT;0;0;Kein Bezug
+457286;SK;SK;0;0;Kein Bezug
+457478;PL;PL;0;0;Kein Bezug
+458101;HU;HU;0;0;Kein Bezug
+458330;UA;SK;0;0;Kein Bezug
+459199;SK;SK;0;0;Kein Bezug
+459744;HU;HU;0;0;Kein Bezug
+460016;NL;NL;0;0;Kein Bezug
+460164;NL;NL;0;0;Kein Bezug
+460346;NL;NL;0;0;Kein Bezug
+461561;RS;HU;0;0;Kein Bezug
+448703;AT;DE;0;0;Kein Bezug
+454986;IT;IT;0;0;Kein Bezug
+455075;NL;PL;1;1;Passiert (Transit)
+457123;DE;DE;0;0;Inland
+458938;NL;NL;0;0;Kein Bezug
+460308;NL;NL;0;0;Kein Bezug
+460319;NL;NL;0;0;Kein Bezug
+460320;NL;NL;0;0;Kein Bezug
+461841;NL;NL;0;0;Kein Bezug
+451893;DE;PL;0;1;Ausfahrt
+453997;PL;PL;0;0;Kein Bezug
+454636;NL;DE;0;0;Kein Bezug
+455063;IT;NL;0;0;Kein Bezug
+455257;DE;DE;0;0;Inland
+455907;PL;DE;1;0;Einfahrt
+457127;CZ;SK;0;0;Kein Bezug
+458011;NL;NL;0;0;Kein Bezug
+458582;NL;NL;0;0;Kein Bezug
+459279;NL;NL;0;0;Kein Bezug
+459648;DE;DE;0;0;Inland
+459989;AT;CZ;0;0;Kein Bezug
+461579;NL;NL;0;0;Kein Bezug
+461949;NL;NL;0;0;Kein Bezug
+451804;CH;NL;0;0;Kein Bezug
+453518;DE;PL;0;0;Kein Bezug
+453529;PL;BE;0;0;Kein Bezug
+453694;DE;PL;0;0;Kein Bezug
+456515;CZ;NL;0;1;Komplex (mehrfach/Schleife)
+457285;SK;SK;0;0;Kein Bezug
+457713;HU;NL;0;1;Komplex (mehrfach/Schleife)
+458144;SK;SK;0;0;Kein Bezug
+458207;NL;NL;0;0;Kein Bezug
+459725;DE;HU;0;0;Kein Bezug
+459742;SK;DE;0;0;Kein Bezug
+460354;NL;NL;0;0;Kein Bezug
+450657;NL;PL;1;1;Passiert (Transit)
+451295;CH;CH;0;0;Kein Bezug
+455218;DE;DE;0;0;Inland
+456462;PL;SI;0;0;Kein Bezug
+456502;DE;DE;0;0;Inland
+456903;PL;PL;0;0;Kein Bezug
+457428;HU;HU;0;0;Kein Bezug
+457909;DE;DE;0;0;Inland
+458236;PL;PL;0;0;Kein Bezug
+460811;NL;NL;0;0;Kein Bezug
+448379;HU;HU;0;0;Kein Bezug
+450918;NL;CZ;1;0;Komplex (mehrfach/Schleife)
+454480;NL;PL;1;1;Passiert (Transit)
+454684;DE;NL;0;0;Kein Bezug
+455017;DE;NL;0;0;Kein Bezug
+455697;IT;IT;0;0;Kein Bezug
+455761;AT;AT;0;0;Kein Bezug
+456484;DE;DE;0;0;Inland
+456770;IT;IT;0;0;Kein Bezug
+457304;NL;NL;0;0;Kein Bezug
+457565;IT;IT;0;0;Kein Bezug
+457650;SK;CZ;0;0;Kein Bezug
+458405;PL;PL;0;0;Kein Bezug
+458841;NL;DE;1;0;Einfahrt
+437635;PL;PL;0;0;Kein Bezug
+451837;CH;CH;0;0;Kein Bezug
+453556;BE;PL;0;0;Kein Bezug
+453750;DE;DE;0;0;Inland
+454466;DE;NL;0;1;Ausfahrt
+455082;NL;DE;0;0;Kein Bezug
+457180;NL;AT;0;0;Kein Bezug
+457679;NL;NL;0;0;Kein Bezug
+457722;CZ;CZ;0;0;Kein Bezug
+457783;DE;SK;0;0;Kein Bezug
+458861;HU;DE;0;0;Kein Bezug
+458936;NL;NL;0;0;Kein Bezug
+459697;HU;HU;0;0;Kein Bezug
+459772;NL;NL;0;0;Kein Bezug
+460859;NL;NL;0;0;Kein Bezug
+450729;NL;DE;1;0;Einfahrt
+451841;CH;DE;0;0;Kein Bezug
+455127;NL;DE;1;0;Einfahrt
+456341;AT;AT;0;0;Kein Bezug
+457111;DE;DE;0;0;Inland
+457402;DE;SK;0;0;Kein Bezug
+457507;CH;DE;0;0;Kein Bezug
+457564;RO;RO;0;0;Kein Bezug
+457613;SI;SK;0;0;Kein Bezug
+457666;DE;DE;0;0;Inland
+458032;HU;HU;0;0;Kein Bezug
+458050;AT;HU;0;0;Kein Bezug
+458430;PL;PL;0;0;Kein Bezug
+459079;SK;SK;0;0;Kein Bezug
+459111;AT;AT;0;0;Kein Bezug
+459274;IT;IT;0;0;Kein Bezug
+459330;PL;PL;0;0;Kein Bezug
+459438;NL;NL;0;0;Kein Bezug
+459807;NL;NL;0;0;Kein Bezug
+460339;SK;SK;0;0;Kein Bezug
+460518;DE;DE;0;0;Inland
+461582;NL;NL;0;0;Kein Bezug
+461845;NL;NL;0;0;Kein Bezug
+450479;NL;PL;1;1;Passiert (Transit)
+450548;NL;DE;0;0;Kein Bezug
+454602;NL;NL;0;0;Kein Bezug
+456640;SI;AT;0;0;Kein Bezug
+457021;NL;NL;0;0;Kein Bezug
+457474;PL;PL;0;0;Kein Bezug
+458075;IT;IT;0;0;Kein Bezug
+458374;NL;NL;0;0;Kein Bezug
+459652;DE;DE;0;0;Inland
+460203;CZ;CZ;0;0;Kein Bezug
+461813;NL;NL;0;0;Kein Bezug
+450618;NL;NL;0;0;Kein Bezug
+454503;PL;NL;1;1;Passiert (Transit)
+454518;NL;NL;0;0;Kein Bezug
+457399;DE;HU;0;0;Kein Bezug
+457524;NL;NL;0;0;Kein Bezug
+457549;NL;NL;0;0;Kein Bezug
+457960;AT;AT;0;0;Kein Bezug
+458642;AT;AT;0;0;Kein Bezug
+458813;SK;SK;0;0;Kein Bezug
+459673;DE;DE;0;0;Inland
+459800;NL;NL;0;0;Kein Bezug
+459973;AT;NL;0;1;Komplex (mehrfach/Schleife)
+461876;NL;NL;0;0;Kein Bezug
+454531;NL;DE;1;0;Einfahrt
+454700;DE;PL;0;1;Ausfahrt
+455864;DE;AT;0;1;Ausfahrt
+456749;IT;IT;0;0;Kein Bezug
+457299;NL;NL;0;0;Kein Bezug
+457723;CZ;CZ;0;0;Kein Bezug
+457779;SK;DE;0;0;Kein Bezug
+458250;NL;NL;0;0;Kein Bezug
+458463;DE;DE;0;0;Inland
+458628;AT;SI;0;0;Kein Bezug
+458917;NL;NL;0;0;Kein Bezug
+458957;NL;NL;0;0;Kein Bezug
+460184;NL;NL;0;0;Kein Bezug
+460381;NL;NL;0;0;Kein Bezug
+456541;CZ;CZ;0;0;Kein Bezug
+457550;NL;NL;0;0;Kein Bezug
+457894;DE;DE;0;0;Inland
+458414;SK;CZ;0;0;Kein Bezug
+459277;NL;NL;0;0;Kein Bezug
+459611;NL;NL;0;0;Kein Bezug
+459886;IT;IT;0;0;Kein Bezug
+450532;DE;DE;0;0;Inland
+450578;DE;NL;0;0;Kein Bezug
+451890;DE;DE;0;0;Inland
+455304;DE;DE;0;0;Inland
+456685;PL;PL;0;0;Kein Bezug
+457083;DE;DE;0;0;Inland
+458046;PL;PL;0;0;Kein Bezug
+458292;NL;NL;0;0;Kein Bezug
+458365;NL;NL;0;0;Kein Bezug
+458413;CZ;CZ;0;0;Kein Bezug
+459263;SK;SK;0;0;Kein Bezug
+459654;DE;DE;0;0;Inland
+461325;HU;HU;0;0;Kein Bezug
+461600;PL;PL;0;0;Kein Bezug
+450939;NL;DE;1;0;Einfahrt
+453885;SK;PL;0;0;Kein Bezug
+454242;CH;CH;0;0;Kein Bezug
+454579;NL;DE;0;0;Kein Bezug
+454682;NL;DE;1;0;Einfahrt
+455104;PL;DE;1;0;Einfahrt
+456467;IT;IT;0;0;Kein Bezug
+457248;NL;NL;0;0;Kein Bezug
+457374;HU;DE;0;0;Kein Bezug
+457611;SI;SK;0;0;Kein Bezug
+457774;SK;DE;0;0;Kein Bezug
+458248;DE;DE;0;0;Inland
+458547;AT;AT;0;0;Kein Bezug
+459185;HU;HU;0;0;Kein Bezug
+459222;RO;RO;0;0;Kein Bezug
+459281;NL;NL;0;0;Kein Bezug
+459696;PL;PL;0;0;Kein Bezug
+460329;NL;NL;0;0;Kein Bezug
+461944;DE;DE;0;0;Inland
+451773;CH;CH;0;0;Kein Bezug
+453781;HU;IT;0;0;Kein Bezug
+453908;PL;PL;0;0;Kein Bezug
+454612;DE;NL;0;1;Ausfahrt
+456519;IT;IT;0;0;Kein Bezug
+456756;RO;AT;0;0;Kein Bezug
+456767;IT;IT;0;0;Kein Bezug
+457257;UA;SK;0;0;Kein Bezug
+457345;NL;NL;0;0;Kein Bezug
+457407;DE;SK;0;0;Kein Bezug
+457934;AT;RO;0;0;Kein Bezug
+458090;NL;NL;0;0;Kein Bezug
+458109;NL;NL;0;0;Kein Bezug
+458387;DE;PL;0;1;Ausfahrt
+458674;DE;HU;0;0;Kein Bezug
+458773;RO;AT;0;0;Kein Bezug
+459294;NL;NL;0;0;Kein Bezug
+459315;PL;PL;0;0;Kein Bezug
+459680;DE;DE;0;0;Inland
+459757;CH;CH;0;0;Kein Bezug
+460542;PL;DE;1;0;Einfahrt
+453021;NL;RO;1;0;Komplex (mehrfach/Schleife)
+453708;PL;DE;0;0;Kein Bezug
+454691;NL;DE;0;0;Kein Bezug
+454719;PL;DE;1;0;Einfahrt
+457230;NL;NL;0;0;Kein Bezug
+458019;NL;NL;0;0;Kein Bezug
+458465;CZ;SK;0;0;Kein Bezug
+458490;IT;IT;0;0;Kein Bezug
+459004;HU;HU;0;0;Kein Bezug
+460190;HU;HU;0;0;Kein Bezug
+460327;NL;NL;0;0;Kein Bezug
+461943;NL;NL;0;0;Kein Bezug
+449057;HU;DE;0;0;Kein Bezug
+453907;PL;PL;0;0;Kein Bezug
+454168;CH;CH;0;0;Kein Bezug
+455018;DE;NL;0;1;Ausfahrt
+455150;NL;NL;0;0;Kein Bezug
+457825;SK;SK;0;0;Kein Bezug
+457866;AT;SI;0;0;Kein Bezug
+457939;HR;DE;0;0;Kein Bezug
+457999;PL;PL;0;0;Kein Bezug
+458496;NL;NL;0;0;Kein Bezug
+459679;DE;DE;0;0;Inland
+459936;AT;SI;0;0;Kein Bezug
+461934;NL;NL;0;0;Kein Bezug
+450645;NL;PL;1;1;Passiert (Transit)
+451809;CH;CH;0;0;Kein Bezug
+455818;PL;DE;1;0;Einfahrt
+455988;DE;DE;0;0;Inland
+457311;NL;NL;0;0;Kein Bezug
+457874;AT;SI;0;0;Kein Bezug
+457936;AT;AT;0;0;Kein Bezug
+458040;SK;HU;0;0;Kein Bezug
+458352;CZ;CZ;0;0;Kein Bezug
+458483;NL;NL;0;0;Kein Bezug
+459006;NL;NL;0;0;Kein Bezug
+459349;CH;CH;0;0;Kein Bezug
+460378;NL;NL;0;0;Kein Bezug
+460790;NL;NL;0;0;Kein Bezug
+460906;PL;PL;0;0;Kein Bezug
+449612;DE;DE;0;0;Inland
+450691;NL;NL;0;0;Kein Bezug
+453691;DE;PL;0;0;Kein Bezug
+454268;DE;AT;0;0;Kein Bezug
+456955;AT;HR;0;0;Kein Bezug
+457212;AT;AT;0;0;Kein Bezug
+457649;IT;IT;0;0;Kein Bezug
+458740;DE;DE;0;0;Inland
+459221;NL;NL;0;0;Kein Bezug
+459384;SK;SK;0;0;Kein Bezug
+460324;NL;NL;0;0;Kein Bezug
+450727;NL;DE;0;0;Kein Bezug
+452216;IT;HU;0;0;Kein Bezug
+454469;NL;PL;1;1;Passiert (Transit)
+454504;DE;NL;0;0;Kein Bezug
+456872;NL;NL;0;0;Kein Bezug
+457604;IT;PL;0;0;Kein Bezug
+457624;NL;NL;0;0;Kein Bezug
+457639;IT;IT;0;0;Kein Bezug
+457976;NL;NL;0;0;Kein Bezug
+458273;NL;NL;0;0;Kein Bezug
+458653;PL;PL;0;0;Kein Bezug
+458835;AT;AT;0;0;Kein Bezug
+458898;HU;NL;0;1;Komplex (mehrfach/Schleife)
+459054;NL;NL;0;0;Kein Bezug
+459610;SI;HU;0;0;Kein Bezug
+459856;PL;DE;1;0;Einfahrt
+460416;NL;NL;0;0;Kein Bezug
+460586;SK;PL;0;0;Kein Bezug
+450508;PL;NL;1;1;Passiert (Transit)
+451891;PL;DE;1;0;Einfahrt
+452393;SK;SK;0;0;Kein Bezug
+454325;DE;CH;0;0;Kein Bezug
+454639;NL;PL;1;1;Passiert (Transit)
+457195;NL;NL;0;0;Kein Bezug
+457708;DE;HU;0;0;Kein Bezug
+459496;CH;CH;0;0;Kein Bezug
+459858;AT;DE;0;0;Kein Bezug
+456728;CZ;SK;0;0;Kein Bezug
+457882;DE;DE;0;0;Inland
+457900;DE;DE;0;0;Inland
+458403;PL;PL;0;0;Kein Bezug
+458440;SK;SK;0;0;Kein Bezug
+459721;SK;DE;0;0;Kein Bezug
+459735;HU;DE;0;0;Kein Bezug
+459937;NL;NL;0;0;Kein Bezug
+460211;NL;NL;0;0;Kein Bezug
+460414;PL;PL;0;0;Kein Bezug
+450699;DE;NL;0;1;Ausfahrt
+451134;DE;PL;0;1;Ausfahrt
+454697;NL;DE;0;0;Kein Bezug
+455055;CH;CH;0;0;Kein Bezug
+455749;IT;AT;0;0;Kein Bezug
+457089;PL;PL;0;0;Kein Bezug
+457316;NL;NL;0;0;Kein Bezug
+457381;CZ;CZ;0;0;Kein Bezug
+457545;RO;RO;0;0;Kein Bezug
+457913;DE;DE;0;0;Inland
+457921;DE;DE;0;0;Inland
+458010;NL;NL;0;0;Kein Bezug
+458358;NL;NL;0;0;Kein Bezug
+458411;NL;NL;0;0;Kein Bezug
+458512;PL;IT;0;0;Kein Bezug
+459300;NL;NL;0;0;Kein Bezug
+460127;DE;DE;0;0;Inland
+461780;NL;NL;0;0;Kein Bezug
+461815;RO;RO;0;0;Kein Bezug
+449635;IT;HU;0;0;Kein Bezug
+452321;CZ;SK;0;0;Kein Bezug
+454540;NL;PL;1;1;Passiert (Transit)
+455963;DE;DE;0;0;Inland
+456077;DE;DE;0;0;Inland
+457027;SK;SK;0;0;Kein Bezug
+457199;NL;NL;0;0;Kein Bezug
+457204;NL;NL;0;0;Kein Bezug
+457232;RO;BG;0;0;Kein Bezug
+457314;NL;NL;0;0;Kein Bezug
+457421;SK;DE;0;0;Kein Bezug
+457834;NL;NL;0;0;Kein Bezug
+458925;NL;NL;0;0;Kein Bezug
+458954;NL;NL;0;0;Kein Bezug
+459080;DE;AT;0;1;Ausfahrt
+459251;NL;NL;0;0;Kein Bezug
+459282;SK;SK;0;0;Kein Bezug
+460084;SK;CZ;0;0;Kein Bezug
+460534;HU;HU;0;0;Kein Bezug
+461512;PL;PL;0;0;Kein Bezug
+449168;HU;DE;0;0;Kein Bezug
+455022;PL;DE;1;0;Einfahrt
+455797;PL;DE;1;0;Einfahrt
+456691;PL;PL;0;0;Kein Bezug
+456966;SK;SK;0;0;Kein Bezug
+457200;NL;NL;0;0;Kein Bezug
+457787;CH;CH;0;0;Kein Bezug
+458723;DE;DE;0;0;Inland
+458943;DE;DE;0;0;Inland
+458970;BG;BG;0;0;Kein Bezug
+460039;NL;NL;0;0;Kein Bezug
+460291;NL;NL;0;0;Kein Bezug
+455242;DE;DE;0;0;Inland
+455975;CZ;CZ;0;0;Kein Bezug
+456282;PL;PL;0;0;Kein Bezug
+456718;NL;HU;0;0;Kein Bezug
+458471;CH;CH;0;0;Kein Bezug
+458956;DE;DE;0;0;Inland
+459179;SK;SK;0;0;Kein Bezug
+459357;PL;PL;0;0;Kein Bezug
+460185;NL;NL;0;0;Kein Bezug
+460228;NL;NL;0;0;Kein Bezug
+460299;NL;NL;0;0;Kein Bezug
+460399;UA;SK;0;0;Kein Bezug
+460531;SK;SK;0;0;Kein Bezug
+453558;BE;PL;0;0;Kein Bezug
+458053;HU;IT;0;0;Kein Bezug
+459252;NL;NL;0;0;Kein Bezug
+459452;NL;NL;0;0;Kein Bezug
+459795;NL;NL;0;0;Kein Bezug
+459952;SK;CZ;0;0;Kein Bezug
+460012;NL;NL;0;0;Kein Bezug
+460226;NL;NL;0;0;Kein Bezug
+450448;NL;NL;0;0;Kein Bezug
+450650;NL;DE;0;0;Kein Bezug
+450658;NL;IT;0;0;Kein Bezug
+454787;DE;DE;0;0;Inland
+455235;DE;DE;0;0;Inland
+455260;DE;DE;0;0;Inland
+457794;DE;SK;0;0;Kein Bezug
+458108;NL;NL;0;0;Kein Bezug
+458156;NL;NL;0;0;Kein Bezug
+458266;NL;NL;0;0;Kein Bezug
+458326;NL;NL;0;0;Kein Bezug
+458972;CH;CH;0;0;Kein Bezug
+459076;PL;PL;0;0;Kein Bezug
+461530;NL;NL;0;0;Kein Bezug
+461837;NL;NL;0;0;Kein Bezug
+450461;DE;NL;0;1;Ausfahrt
+451899;PL;DE;1;0;Einfahrt
+454350;HU;NL;0;1;Komplex (mehrfach/Schleife)
+454654;BE;RO;1;0;Komplex (mehrfach/Schleife)
+456514;DE;DE;0;0;Inland
+456950;DE;DE;0;0;Inland
+456971;IT;NL;0;0;Kein Bezug
+457268;SK;CZ;0;0;Kein Bezug
+457317;NL;NL;0;0;Kein Bezug
+457871;AT;AT;0;0;Kein Bezug
+457967;CZ;CZ;0;0;Kein Bezug
+458272;NL;NL;0;0;Kein Bezug
+458721;NL;NL;0;0;Kein Bezug
+458814;SK;SK;0;0;Kein Bezug
+458941;NL;NL;0;0;Kein Bezug
+459083;PL;PL;0;0;Kein Bezug
+459187;NL;NL;0;0;Kein Bezug
+459262;SK;SK;0;0;Kein Bezug
+459608;NL;NL;0;0;Kein Bezug
+460568;NL;NL;0;0;Kein Bezug
+460662;NL;NL;0;0;Kein Bezug
+461415;NL;NL;0;0;Kein Bezug
+453889;PL;SI;0;0;Kein Bezug
+455354;HU;DE;0;0;Kein Bezug
+456412;SK;DE;0;0;Kein Bezug
+457276;SK;CZ;0;0;Kein Bezug
+457397;DE;SK;0;0;Kein Bezug
+457818;CH;CH;0;0;Kein Bezug
+457854;SI;AT;0;0;Kein Bezug
+458439;PL;PL;0;0;Kein Bezug
+458508;RS;BG;0;0;Kein Bezug
+458668;HU;HU;0;0;Kein Bezug
+458848;AT;SI;0;0;Kein Bezug
+458913;NL;NL;0;0;Kein Bezug
+459959;SK;DE;0;0;Kein Bezug
+460018;NL;NL;0;0;Kein Bezug
+460283;NL;NL;0;0;Kein Bezug
+460563;CZ;CZ;0;0;Kein Bezug
+454413;CH;NL;0;1;Komplex (mehrfach/Schleife)
+456658;AT;SI;0;0;Kein Bezug
+457038;PL;PL;0;0;Kein Bezug
+457313;CZ;CZ;0;0;Kein Bezug
+457595;DE;DE;0;0;Inland
+457755;AT;HU;0;0;Kein Bezug
+458009;NL;RO;1;0;Komplex (mehrfach/Schleife)
+458510;PL;IT;0;0;Kein Bezug
+459000;RO;HU;0;0;Kein Bezug
+459498;CH;CH;0;0;Kein Bezug
+459703;IT;IT;0;0;Kein Bezug
+459997;IT;IT;0;0;Kein Bezug
+447463;DE;HU;0;0;Kein Bezug
+450703;DE;NL;0;0;Kein Bezug
+456695;PL;NL;1;1;Passiert (Transit)
+457423;DE;SK;0;0;Kein Bezug
+457434;DE;DE;0;0;Inland
+458054;IT;HU;0;0;Kein Bezug
+458104;NL;NL;0;0;Kein Bezug
+458117;NL;NL;0;0;Kein Bezug
+458580;NL;NL;0;0;Kein Bezug
+459193;NL;NL;0;0;Kein Bezug
+459273;NL;NL;0;0;Kein Bezug
+459662;DE;DE;0;0;Inland
+459791;RO;RO;0;0;Kein Bezug
+461807;CH;CH;0;0;Kein Bezug
+461829;DE;DE;0;0;Inland
+451766;NL;CH;0;0;Kein Bezug
+455107;PL;NL;1;1;Passiert (Transit)
+456386;HU;RO;0;0;Kein Bezug
+456440;IT;IT;0;0;Kein Bezug
+456521;IT;IT;0;0;Kein Bezug
+456651;AT;SI;0;0;Kein Bezug
+456982;IT;CH;0;0;Kein Bezug
+457686;DE;DE;0;0;Inland
+457969;IT;AT;0;0;Kein Bezug
+458336;NL;NL;0;0;Kein Bezug
+458518;AT;AT;0;0;Kein Bezug
+458946;NL;NL;0;0;Kein Bezug
+460049;PL;PL;0;0;Kein Bezug
+460430;PL;PL;0;0;Kein Bezug
+460551;NL;NL;0;0;Kein Bezug

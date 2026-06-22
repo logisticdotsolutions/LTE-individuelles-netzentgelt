@@ -1,0 +1,2 @@
+run_id;loco_no;transport_number;next_transport_number;destination_name;next_origin_name;actual_arrival_ts;next_actual_departure_ts;approximate_gap_start_utc;approximate_gap_end_utc;gap_context_class;source_table;source_row_id
+RUN_20260621_191259;91806186943-7;458943;458943;Małaszewicze Południowe;Rheinhausen;;2026-06-20 15:07:00;2026-06-20 14:36:00;2026-06-20 15:07:00;DE_CONTINUITY;raw_locomotivemovement;2431

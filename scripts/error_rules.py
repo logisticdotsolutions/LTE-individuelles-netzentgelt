@@ -50,6 +50,9 @@ def _table_exists(con, table_name: str) -> bool:
     )
 
 
+table_exists = _table_exists
+
+
 def _columns(con, table_name: str) -> list[str]:
     """Spalten einer DuckDB-Tabelle auslesen."""
     return [
@@ -166,7 +169,7 @@ def _get_error_cutoff_utc(con, run_id: str) -> tuple[str, str]:
 
     if "source_snapshot_at_utc" in raw_import_columns:
         snapshot_expression = (
-            "coalesce(" 
+            "coalesce("
             "try_cast(source_snapshot_at_utc as timestamp), "
             "try_cast(imported_at_utc as timestamp)"
             ")"
@@ -665,7 +668,6 @@ def build_findings(
         source_snapshot_at_utc,
         error_cutoff_utc,
     ])
-
     build_rule_catalog(con)
 
     con.execute(f"""
@@ -942,7 +944,6 @@ def build_findings(
         run_id=run_id,
         error_cutoff_utc=error_cutoff_utc,
     )
-
     con.execute("""
         insert into dq_findings
         select *
@@ -977,7 +978,6 @@ def build_findings(
         alter table dq_findings
         add column overlap_with_transport_number varchar
     """)
-
     con.execute("""
         update dq_findings as f
         set overlap_with_transport_number = o.prev_transport_number
@@ -1020,15 +1020,12 @@ def build_findings(
     finding_count = con.execute(
         "select count(*) from dq_findings"
     ).fetchone()[0]
-
     error_count = con.execute(
         "select count(*) from dq_findings where severity = 'ERROR'"
     ).fetchone()[0]
-
     info_count = con.execute(
         "select count(*) from dq_findings where severity = 'INFO'"
     ).fetchone()[0]
-
     manual_review_count = con.execute(
         "select count(*) from dq_findings where severity = 'MANUAL_REVIEW'"
     ).fetchone()[0]

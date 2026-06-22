@@ -183,7 +183,13 @@ def run_full_rebuild_from_raw(
         timed("build_loco_events", lambda: build_loco_events(con))
         timed("exclude_dummy_locomotives_from_staging", lambda: exclude_dummy_locomotives_from_staging(con))
         timed("apply_staging_manual_overrides", lambda: apply_staging_manual_overrides(con, ctx.run_id))
-        timed("build_transport_routes", lambda: build_transport_routes(con))
+        # core_transport_route hängt nicht von Manual Overrides ab und wird
+        # beim Raw-Import vorberechnet. Im Correction-Rebuild wird es übersprungen.
+        timed_if_missing(
+            "build_transport_routes",
+            "core_transport_route",
+            lambda: build_transport_routes(con),
+        )
         timed("build_core", lambda: build_core(con, ctx.run_id))
         timed("apply_core_assignment_fallbacks", lambda: apply_core_assignment_fallbacks(con, ctx.run_id))
         timed("prepare_timeline_context_phase6c", lambda: prepare_timeline_context_phase6c(con, ctx.run_id))

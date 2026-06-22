@@ -1,9 +1,0 @@
-cd C:\Users\OrglChri\netzentgelt_mvp_quickstart_package\netzentgelt_mvp_package
-
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-
-python -m pip install --upgrade pip
-python -m pip install duckdb azure-storage-blob pandas openpyxl pyyaml
-
-python -c "import duckdb; from azure.storage.blob import BlobServiceClient; print('OK')"

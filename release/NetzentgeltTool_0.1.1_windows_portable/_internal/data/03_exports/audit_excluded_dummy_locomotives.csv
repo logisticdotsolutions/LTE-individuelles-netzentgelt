@@ -1,0 +1,20 @@
+source_table;loco_no;match_reason;affected_rows;affected_transports;first_seen_utc;last_seen_utc
+raw_locomotivemovement;00000000015-8;Bekannte Planungs-/Dummy-Loknummer | LocomotiveType enthaelt Dummy: Dummy;2;2;2026-05-28 13:20:00;2026-05-28 14:05:00
+raw_locomotivemovement;92561740778-6;LocomotiveType enthaelt Dummy: Dummy SK/CZ;9;3;2026-06-04 01:17:00;2026-06-20 05:46:00
+raw_locomotivemovement;00000000013-3;Bekannte Planungs-/Dummy-Loknummer | LocomotiveType enthaelt Dummy: Dummy;9;5;2026-05-30 06:05:00;2026-06-19 03:47:00
+raw_locomotivemovement;91806185606-1;LocomotiveType enthaelt Dummy: Dummy;2;1;2026-05-29 06:45:00;2026-05-29 11:33:00
+raw_locomotivemovement;91806189000-3;Bekannte Planungs-/Dummy-Loknummer | LocomotiveType enthaelt Dummy: Dummy;38;4;2026-06-06 01:02:00;2026-06-10 07:50:00
+raw_locomotivemovement;91806193951-1;LocomotiveType enthaelt Dummy: Dummy;105;28;2026-05-22 21:25:00;2026-06-19 23:38:00
+raw_locomotivemovement;95710601054-0;LocomotiveType enthaelt Dummy: Dummy;27;11;2026-05-22 23:45:00;2026-06-15 05:00:00
+raw_locomotivemovement;00000000000-0;Bekannte Planungs-/Dummy-Loknummer | LocomotiveType enthaelt Dummy: Dummy;21;15;2026-05-26 10:36:00;2026-06-18 09:00:00
+raw_locomotivemovement;91806193000-7;LocomotiveType enthaelt Dummy: Dummy;32;3;2026-05-23 00:31:00;2026-06-02 15:09:00
+raw_locomotivemovement;91807193109-4;LocomotiveType enthaelt Dummy: Dummy;7;6;2026-06-03 03:03:00;2026-06-13 02:15:00
+raw_locomotivemovement;91850000002-4;Bekannte Planungs-/Dummy-Loknummer;147;14;2026-05-25 20:00:00;2026-06-20 16:02:00
+raw_locomotivemovement;91560383999-3;LocomotiveType enthaelt Dummy: Dummy SK/CZ;15;12;2026-06-01 10:19:00;2026-06-15 14:12:00
+raw_locomotivemovement;91850000001-6;Bekannte Planungs-/Dummy-Loknummer;7;2;2026-06-15 16:35:00;2026-06-15 22:00:00
+raw_locomotivemovement;91850000003-2;Bekannte Planungs-/Dummy-Loknummer;14;4;2026-05-28 11:41:00;2026-06-14 13:11:00
+raw_locomotivemovement;91807193110-2;LocomotiveType enthaelt Dummy: Dummy;75;37;2026-05-23 04:38:00;2026-06-20 20:48:00
+raw_locomotivemovement;91806999002-9;LocomotiveType enthaelt Dummy: Dummy;23;19;2026-05-23 01:00:00;2026-06-17 17:40:00
+raw_locomotivemovement;91850000004-0;Bekannte Planungs-/Dummy-Loknummer;6;2;2026-05-26 07:07:00;2026-05-30 12:46:00
+raw_locomotivemovement;95571061094-5;LocomotiveType enthaelt Dummy: Dummy;29;2;2026-05-25 19:00:00;2026-06-03 08:00:00
+raw_locomotivemovement;00000000001-8;Bekannte Planungs-/Dummy-Loknummer | LocomotiveType enthaelt Dummy: Dummy;5;5;2026-05-25 10:16:00;2026-06-04 12:02:00

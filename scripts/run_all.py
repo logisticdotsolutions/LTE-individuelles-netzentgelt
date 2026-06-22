@@ -38,9 +38,10 @@ import hashlib
 import re
 import unicodedata
 from datetime import datetime, timezone
-from error_rules import build_findings
+from error_rules import build_findings, qident, sql_lit, table_exists
 from export_module import build_export_tables
 from quality_gate_module import build_quality_gate_tables, refresh_reconciliation_table
+from pipeline.quality_gate_incremental import apply_r016_to_quality_gate_tables
 from manual_override_module import (
     apply_raw_manual_overrides,
     apply_staging_manual_overrides,
@@ -179,16 +180,6 @@ def safe_name(name):
     n = re.sub(r"[^a-z0-9_]+", "_", n)
     return "raw_" + n.strip("_")
 
-def qident(name):
-    """SQL-Identifier sicher quoten, z. B. Tabellen- oder Spaltennamen."""
-    return '"' + name.replace('"', '""') + '"'
-
-def table_exists(con, table):
-    """Prüfen, ob eine DuckDB-Tabelle bereits existiert."""
-    return con.execute(
-        "select count(*) from information_schema.tables where table_name = ?",
-        [table.lower()]
-    ).fetchone()[0] > 0
 
 def columns(con, table):
     """Alle Spaltennamen einer DuckDB-Tabelle auslesen."""
@@ -1270,50 +1261,50 @@ def build_loco_events(con):
 
     home = sql_lit(HOME_COUNTRY_ISO.upper())
 
+    # Rohdaten einmalig materialisieren. Dadurch werden der stg_loco_events-Build
+    # und stg_loco_events_skipped aus derselben physischen Tabelle bedient –
+    # statt 2–3 separater Quell-Scans nur noch einer.
+    con.execute(f"""
+        create or replace temp table tmp_loco_prepared as
+        select
+            row_number() over () as source_row_id,
+            {loco_no} as loco_no,
+            {holder_raw} as holder_raw,
+            {performing_ru} as performing_ru,
+            {traction_type} as traction_type,
+            upper({origin_country}) as origin_country_iso,
+            upper({destination_country}) as destination_country_iso,
+            try_cast({actual_departure} as timestamp) as actual_departure_ts,
+            try_cast({actual_arrival} as timestamp) as actual_arrival_ts,
+            {origin_name} as origin_name,
+            {destination_name} as destination_name,
+            upper({clean_dir_raw}) as clean_dir_raw,
+            upper({faulty_dir_raw}) as faulty_dir_raw,
+            {transport_number} as transport_number,
+            {train_no} as train_no,
+            {distance} as distance,
+            case
+                when upper({origin_country}) = {home}
+                  or upper({destination_country}) = {home}
+                then true else false
+            end as row_has_home
+        from {qident(source)}
+        where not exists (
+            select 1
+            from cfg_excluded_cancelled_transports excluded
+            where excluded.transport_number = {transport_number}
+        )
+    """)
+
     con.execute(f"""
         create or replace table stg_loco_events as
-        with base as (
-            select
-                row_number() over () as source_row_id,
-                {loco_no} as loco_no,
-                {holder_raw} as holder_raw,
-                {performing_ru} as performing_ru,
-                {traction_type} as traction_type,
-                upper({origin_country}) as origin_country_iso,
-                upper({destination_country}) as destination_country_iso,
-                try_cast({actual_departure} as timestamp) as actual_departure_ts,
-                try_cast({actual_arrival} as timestamp) as actual_arrival_ts,
-                {origin_name} as origin_name,
-                {destination_name} as destination_name,
-                upper({clean_dir_raw}) as clean_dir_raw,
-                upper({faulty_dir_raw}) as faulty_dir_raw,
-                {transport_number} as transport_number,
-                {train_no} as train_no,
-                {distance} as distance
-            from {qident(source)}
-            where not exists (
-                select 1
-                from cfg_excluded_cancelled_transports excluded
-                where excluded.transport_number = {transport_number}
-            )
-        ),
-        prepared as (
-            select
-                *,
-                case
-                    when origin_country_iso = {home}
-                      or destination_country_iso = {home}
-                    then true else false
-                end as row_has_home
-            from base
-        ),
-        anchor as (
+        with anchor as (
             select max(coalesce(actual_departure_ts, actual_arrival_ts)) as anchor_ts
-            from prepared
+            from tmp_loco_prepared
         ),
         relevant_loco as (
             select distinct p.loco_no
-            from prepared p
+            from tmp_loco_prepared p
             cross join anchor a
             where p.loco_no is not null
               and p.loco_no <> ''
@@ -1344,7 +1335,7 @@ def build_loco_events(con):
                     partition by loco_no
                     order by coalesce(actual_departure_ts, actual_arrival_ts) asc nulls last, source_row_id
                 ) as next_loco_no
-            from prepared p
+            from tmp_loco_prepared p
             where exists (
                 select 1
                 from relevant_loco rl
@@ -1523,46 +1514,14 @@ def build_loco_events(con):
         from sequenced
     """)
 
+    # stg_loco_events_skipped: Zeilen ableiten, die NICHT in stg_loco_events landen.
+    # tmp_loco_prepared wurde bereits aus dem Rohdaten-Scan befüllt (kein erneuter Scan).
+    # relevant_locos aus stg_loco_events entspricht der relevant_loco-Menge aus dem Build.
     con.execute(f"""
         create or replace table stg_loco_events_skipped as
-        with base as (
-            select
-                row_number() over () as source_row_id,
-                {loco_no} as loco_no,
-                upper({origin_country}) as origin_country_iso,
-                upper({destination_country}) as destination_country_iso,
-                try_cast({actual_departure} as timestamp) as actual_departure_ts,
-                try_cast({actual_arrival} as timestamp) as actual_arrival_ts
-            from {qident(source)}
-            where not exists (
-                select 1
-                from cfg_excluded_cancelled_transports excluded
-                where excluded.transport_number = {transport_number}
-            )
-        ),
-        prepared as (
-            select
-                *,
-                case
-                    when origin_country_iso = {home}
-                      or destination_country_iso = {home}
-                    then true else false
-                end as row_has_home
-            from base
-        ),
-        anchor as (
-            select max(coalesce(actual_departure_ts, actual_arrival_ts)) as anchor_ts
-            from prepared
-        ),
-        relevant_loco as (
-            select distinct p.loco_no
-            from prepared p
-            cross join anchor a
-            where p.loco_no is not null
-              and p.loco_no <> ''
-              and p.row_has_home = true
-              and a.anchor_ts is not null
-              and coalesce(p.actual_departure_ts, p.actual_arrival_ts) >= a.anchor_ts - interval '{LOOKBACK_MONTHS} months'
+        with relevant_locos as (
+            select distinct loco_no from stg_loco_events
+            where loco_no is not null and loco_no <> ''
         )
         select
             '{source}' as source_table,
@@ -1570,19 +1529,14 @@ def build_loco_events(con):
             case
                 when p.loco_no is null or p.loco_no = ''
                     then 'Loknummer fehlt; Datensatz kann keiner Lok-Zeitachse zugeordnet werden.'
-
-                when not exists (
-                    select 1 from relevant_loco rl where rl.loco_no = p.loco_no
-                )
-                    then 'Lok im Lookback-Zeitraum ohne DE-Bezug in OriginCountry/DestinationCountry; nicht in diese Auswertung aufgenommen.'
-
-                else 'Nicht verarbeitet.'
+                else
+                    'Lok im Lookback-Zeitraum ohne DE-Bezug in OriginCountry/DestinationCountry; nicht in diese Auswertung aufgenommen.'
             end as skip_reason
-        from prepared p
+        from tmp_loco_prepared p
         where p.loco_no is null
            or p.loco_no = ''
            or not exists (
-                select 1 from relevant_loco rl where rl.loco_no = p.loco_no
+                select 1 from relevant_locos r where r.loco_no = p.loco_no
            )
     """)
 
@@ -1593,10 +1547,6 @@ def build_loco_events(con):
         f"Staging erstellt: {loaded} Zeilen verarbeitet, {skipped} Zeilen nicht aufgenommen. "
         f"Logik: relevante Loks mit DE-Bezug im letzten {LOOKBACK_MONTHS}-Monatsfenster, danach komplette Lok-Historie."
     )
-
-def sql_lit(value):
-    """SQL-Textliteral sicher quoten."""
-    return "'" + str(value).replace("'", "''") + "'"
 
 def build_transport_routes(con, home_country=HOME_COUNTRY_ISO):
     """
@@ -1874,19 +1824,70 @@ def build_transport_routes(con, home_country=HOME_COUNTRY_ISO):
         f"{detail_rows} Segmente, {route_rows} Transporte, Home={home_country.upper()}"
     )
 
-def build_core(con, run_id):
+def _build_performing_ru_mp_lookup(con):
     """
-    Finale Lok-Zeitachse bilden.
+    MP-ID-Lookup für alle distinct performing_ru-Werte vorberechnen.
 
-    Zusätzlich zu den Bewegungszeilen werden künstliche GAP-Zeilen erzeugt,
-    wenn die Ortskette unterbrochen ist und die Lücke größer als
-    GAP_THRESHOLD_MINUTES ist.
-
-    GAP-Zeilen bleiben intern für Audit und Exportsegmentierung erhalten.
-    Als DE-relevant gelten sie aber nur bei einer fachlich zulässigen
-    Kombination der angrenzenden DE-Ereignisse. Nur solche GAPs dürfen in
-    Fehlerqueue und farblicher Lok-Detailprüfung erscheinen.
+    normalize_company_name() wird so nur einmal je distinct Wert berechnet
+    statt einmal pro Zeile in stg_loco_events. Bei typischen Datensätzen
+    reduziert das den Aufwand von ~100.000 auf ~100 Normalisierungsaufrufe.
     """
+    con.execute("""
+        create or replace temp table tmp_performing_ru_mp_lookup as
+        with distinct_values as (
+            select distinct performing_ru
+            from stg_loco_events
+            where performing_ru is not null
+        ),
+        normalized as (
+            select
+                performing_ru,
+                normalize_company_name(performing_ru) as performing_ru_normalized
+            from distinct_values
+        )
+        select
+            n.performing_ru,
+            coalesce(
+                mapping_anu.market_partner_id,
+                direct_anu.market_partner_id
+            ) as performing_ru_marktpartner_id,
+            case
+                when mapping_anu.market_partner_id is not null then 'MAPPING_IMPORT'
+                when direct_anu.market_partner_id is not null then 'OFFICIAL_NAME_EXACT'
+                else 'UNRESOLVED'
+            end as performing_ru_marktpartner_id_source,
+            coalesce(
+                mapping_ane.market_partner_id,
+                direct_ane.market_partner_id
+            ) as holder_market_partner_id,
+            case
+                when mapping_ane.market_partner_id is not null then 'MAPPING_IMPORT'
+                when direct_ane.market_partner_id is not null then 'OFFICIAL_NAME_EXACT'
+                else 'UNRESOLVED'
+            end as holder_market_partner_id_source,
+            exc.exempt_vens,
+            exc.exempt_tens,
+            exc.source_value_normalized as exc_source_value_normalized,
+            exc.comment as vens_tens_exception_comment
+        from normalized n
+        left join cfg_market_partner_mapping_effective mapping_anu
+            on mapping_anu.role_code = 'ANU_VENS'
+            and mapping_anu.source_value_normalized = n.performing_ru_normalized
+        left join cfg_market_partner_role_effective direct_anu
+            on direct_anu.role_code = 'ANU_VENS'
+            and direct_anu.company_name_normalized = n.performing_ru_normalized
+        left join cfg_market_partner_mapping_effective mapping_ane
+            on mapping_ane.role_code = 'ANE_TENS'
+            and mapping_ane.source_value_normalized = n.performing_ru_normalized
+        left join cfg_market_partner_role_effective direct_ane
+            on direct_ane.role_code = 'ANE_TENS'
+            and direct_ane.company_name_normalized = n.performing_ru_normalized
+        left join cfg_vens_tens_exception_effective exc
+            on exc.source_value_normalized = n.performing_ru_normalized
+    """)
+
+
+def _build_core_timeline_sql(con, run_id):
     con.execute(f"""
         create or replace table core_loco_timeline as
         with mapped as (
@@ -1915,42 +1916,21 @@ def build_core(con, run_id):
                 r.cal_exit_count_home,
                 r.cal_route_type_home,
 
-                               coalesce(
-                    performing_ru_anu_vens_mapping.market_partner_id,
-                    performing_ru_anu_vens_direct_role.market_partner_id
-                ) as performing_ru_marktpartner_id,
-
-                case
-                    when performing_ru_anu_vens_mapping.market_partner_id is not null
-                        then 'MAPPING_IMPORT'
-                    when performing_ru_anu_vens_direct_role.market_partner_id is not null
-                        then 'OFFICIAL_NAME_EXACT'
-                    else 'UNRESOLVED'
-                end as performing_ru_marktpartner_id_source,
-
-                coalesce(
-                    performing_ru_ane_tens_mapping.market_partner_id,
-                    performing_ru_ane_tens_direct_role.market_partner_id
-                ) as holder_market_partner_id,
-
-                case
-                    when performing_ru_ane_tens_mapping.market_partner_id is not null
-                        then 'MAPPING_IMPORT'
-                    when performing_ru_ane_tens_direct_role.market_partner_id is not null
-                        then 'OFFICIAL_NAME_EXACT'
-                    else 'UNRESOLVED'
-                end as holder_market_partner_id_source,
+                pru.performing_ru_marktpartner_id,
+                pru.performing_ru_marktpartner_id_source,
+                pru.holder_market_partner_id,
+                pru.holder_market_partner_id_source,
 
                 m.default_vens as user_vens,
 
-                coalesce(vens_tens_exception.exempt_vens, false) as exempt_vens,
-                coalesce(vens_tens_exception.exempt_tens, false) as exempt_tens,
+                coalesce(pru.exempt_vens, false) as exempt_vens,
+                coalesce(pru.exempt_tens, false) as exempt_tens,
                 case
-                    when vens_tens_exception.source_value_normalized is not null
+                    when pru.exc_source_value_normalized is not null
                         then true
                     else false
                 end as vens_tens_exception_flag,
-                vens_tens_exception.comment as vens_tens_exception_comment,
+                pru.vens_tens_exception_comment,
 
                 e.country,
                 e.origin_country_iso,
@@ -1971,18 +1951,12 @@ def build_core(con, run_id):
                 case
                     when m.default_vens is not null
                      and m.default_vens <> ''
-                     and coalesce(
-                            performing_ru_anu_vens_mapping.market_partner_id,
-                            performing_ru_anu_vens_direct_role.market_partner_id
-                         ) is not null
+                     and pru.performing_ru_marktpartner_id is not null
                      and coalesce(nullif(m.tfze_or_tens, ''), e.loco_no) is not null
                         then 'HIGH'
 
                     when m.default_vens is not null
-                      or coalesce(
-                            performing_ru_anu_vens_mapping.market_partner_id,
-                            performing_ru_anu_vens_direct_role.market_partner_id
-                         ) is not null
+                      or pru.performing_ru_marktpartner_id is not null
                       or coalesce(nullif(m.tfze_or_tens, ''), e.loco_no) is not null
                         then 'MEDIUM'
 
@@ -1996,10 +1970,10 @@ def build_core(con, run_id):
                     when e.performing_ru is null or e.performing_ru = ''
                         then 'PerformingRU fehlt. Manuelle Prüfung erforderlich.'
 
-                    when performing_ru_anu_vens_mapping.market_partner_id is not null
+                    when pru.performing_ru_marktpartner_id_source = 'MAPPING_IMPORT'
                         then 'PerformingRU-MP-ID über market_partner_mapping_import.csv rollenbezogen und offiziell validiert aufgelöst.'
 
-                    when performing_ru_anu_vens_direct_role.market_partner_id is not null
+                    when pru.performing_ru_marktpartner_id_source = 'OFFICIAL_NAME_EXACT'
                         then 'PerformingRU-MP-ID über exakten offiziellen Firmennamen und ANU_VENS-Rollenliste aufgelöst.'
 
                     else 'PerformingRU-MP-ID nicht eindeutig auflösbar. Mappingtabelle oder offiziellen Firmennamen prüfen.'
@@ -2021,33 +1995,10 @@ def build_core(con, run_id):
                  or m.valid_to_utc = ''
                  or e.period_start_utc < try_cast(replace(m.valid_to_utc,'Z','') as timestamp)
              )
-            
-             left join cfg_market_partner_mapping_effective performing_ru_anu_vens_mapping
-  on performing_ru_anu_vens_mapping.role_code = 'ANU_VENS'
- and performing_ru_anu_vens_mapping.source_value_normalized =
-        normalize_company_name(e.performing_ru)
-
-left join cfg_market_partner_role_effective performing_ru_anu_vens_direct_role
-  on performing_ru_anu_vens_direct_role.role_code = 'ANU_VENS'
- and performing_ru_anu_vens_direct_role.company_name_normalized =
-        normalize_company_name(e.performing_ru)
-
-left join cfg_market_partner_mapping_effective performing_ru_ane_tens_mapping
-  on performing_ru_ane_tens_mapping.role_code = 'ANE_TENS'
- and performing_ru_ane_tens_mapping.source_value_normalized =
-        normalize_company_name(e.performing_ru)
-
-left join cfg_market_partner_role_effective performing_ru_ane_tens_direct_role
-  on performing_ru_ane_tens_direct_role.role_code = 'ANE_TENS'
- and performing_ru_ane_tens_direct_role.company_name_normalized =
-        normalize_company_name(e.performing_ru)
-
-left join cfg_vens_tens_exception_effective vens_tens_exception
-  on vens_tens_exception.source_value_normalized =
-        normalize_company_name(e.performing_ru)
-
-left join core_transport_route r
-  on e.transport_number = r.transport_number
+            left join tmp_performing_ru_mp_lookup pru
+              on pru.performing_ru is not distinct from e.performing_ru
+            left join core_transport_route r
+              on e.transport_number = r.transport_number
 
         ),
         ordered_movements as (
@@ -2476,6 +2427,24 @@ left join core_transport_route r
         from all_rows
     """)
 
+
+def build_core(con, run_id):
+    """
+    Finale Lok-Zeitachse bilden.
+
+    Zusätzlich zu den Bewegungszeilen werden künstliche GAP-Zeilen erzeugt,
+    wenn die Ortskette unterbrochen ist und die Lücke größer als
+    GAP_THRESHOLD_MINUTES ist.
+
+    GAP-Zeilen bleiben intern für Audit und Exportsegmentierung erhalten.
+    Als DE-relevant gelten sie aber nur bei einer fachlich zulässigen
+    Kombination der angrenzenden DE-Ereignisse. Nur solche GAPs dürfen in
+    Fehlerqueue und farblicher Lok-Detailprüfung erscheinen.
+    """
+    _build_performing_ru_mp_lookup(con)
+    _build_core_timeline_sql(con, run_id)
+
+
 def build_exports(con):
     """
     Rückwärtskompatibler Wrapper.
@@ -2525,6 +2494,10 @@ def main():
         # Neue leere DuckDB-Datei öffnen.
         # DuckDB erstellt DB_BUILD_PATH automatisch neu.
         con = duckdb.connect(str(DB_BUILD_PATH))
+        import os as _os
+        _thread_count = max(1, min(_os.cpu_count() or 1, 8))
+        con.execute(f"set threads to {_thread_count}")
+        print(f"DuckDB Runtime: threads={_thread_count}")
 
         # 1. Rohdaten frisch importieren.
         run_id, imported = import_csvs(con)
@@ -2561,10 +2534,10 @@ def main():
         harden_findings_and_segments_phase6c(con, run_id)
         build_quality_gate_tables(con, run_id)
         # NETZENTGELT_RULE_ENGINE_HARDENING_PHASE6D_V1_20260608
-        # Zuerst GAP-only-Lok-Tage als sichtbare R016-Faelle dokumentieren,
-        # danach das Gate einmal neu aufbauen und exakte Overlap-Dauern ergaenzen.
+        # GAP-only-Lok-Tage als R016-Faelle dokumentieren, dann inkrementell
+        # ins Gate eintragen statt das Gate komplett neu aufzubauen.
         insert_gap_only_day_findings_phase6d(con, run_id)
-        build_quality_gate_tables(con, run_id)
+        apply_r016_to_quality_gate_tables(con)
         finalize_quality_gate_phase6d(con, run_id)
         build_exports(con)
         refresh_reconciliation_table(con, run_id)

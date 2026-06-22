@@ -54,3 +54,20 @@ def test_t01_ui_runtime_wraps_and_restores_renderer(monkeypatch):
     finally:
         ui.restore_t01_export_ui_extension(runtime)
     assert export_ui.render_zuordnungen_export_extension is original
+
+
+def test_t01_ui_runtime_install_is_idempotent(monkeypatch):
+    """Doppelter install ohne restore darf render_t01_export_extension() nicht zweimal aufrufen."""
+    calls = []
+    original = lambda: None
+    monkeypatch.setattr(export_ui, "render_zuordnungen_export_extension", original)
+    monkeypatch.setattr(ui, "render_t01_export_extension", lambda: calls.append(1))
+
+    runtime1 = ui.install_t01_export_ui_extension()
+    runtime2 = ui.install_t01_export_ui_extension()  # zweiter Aufruf ohne restore — darf nicht doppeln
+
+    export_ui.render_zuordnungen_export_extension()
+    assert calls == [1], f"render_t01_export_extension wurde {len(calls)}× aufgerufen statt 1×"
+
+    ui.restore_t01_export_ui_extension(runtime2)
+    assert export_ui.render_zuordnungen_export_extension is original

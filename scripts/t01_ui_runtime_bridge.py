@@ -140,12 +140,18 @@ def render_t01_export_extension() -> None:
 
 
 def install_t01_export_ui_extension() -> T01UIRuntime:
-    runtime = T01UIRuntime(original_renderer=export_ui.render_zuordnungen_export_extension)
+    current = export_ui.render_zuordnungen_export_extension
+    if getattr(current, "_t01_extension_installed", False):
+        return T01UIRuntime(original_renderer=getattr(current, "_t01_original_renderer"))
+
+    runtime = T01UIRuntime(original_renderer=current)
 
     def renderer() -> None:
         runtime.original_renderer()
         render_t01_export_extension()
 
+    renderer._t01_extension_installed = True
+    renderer._t01_original_renderer = current
     export_ui.render_zuordnungen_export_extension = renderer
     return runtime
 

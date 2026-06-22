@@ -74,6 +74,20 @@ def _steps_for_mode(mode: RebuildMode) -> list[PipelineStep]:
     )
 
 
+_MAX_PIPELINE_LOG_FILES = 60
+
+
+def _rotate_pipeline_logs(log_dir: Path) -> None:
+    """Älteste Pipeline-Logs löschen; behalte _MAX_PIPELINE_LOG_FILES neueste Dateien."""
+    try:
+        all_files = sorted(log_dir.glob("*"), key=lambda p: p.stat().st_mtime)
+        rotatable = [f for f in all_files if f.is_file()]
+        for old_file in rotatable[: max(0, len(rotatable) - _MAX_PIPELINE_LOG_FILES)]:
+            old_file.unlink(missing_ok=True)
+    except OSError:
+        pass
+
+
 def _write_step_log(ctx: PipelineContext, results: list[StepResult]) -> None:
     ctx.ensure_directories()
     log_path = ctx.log_dir / f"{ctx.run_id}_pipeline_steps.json"
@@ -139,6 +153,7 @@ def run_pipeline(
     finally:
         if results:
             _write_step_log(pipeline_context, results)
+        _rotate_pipeline_logs(pipeline_context.log_dir)
 
     return results
 
