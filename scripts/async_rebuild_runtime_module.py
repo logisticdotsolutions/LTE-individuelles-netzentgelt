@@ -1,6 +1,6 @@
 """Hintergrund-Neuberechnung nach lokalen Korrekturen.
 
-Dieses Modul beschleunigt den Korrektur-Workflow gefuehlt deutlich:
+Dieses Modul beschleunigt den Korrektur-Workflow:
 - Korrektur speichern bleibt synchron und schnell.
 - Neuberechnung startet danach im Hintergrund.
 - Es laeuft maximal ein Rebuild gleichzeitig.
@@ -8,7 +8,9 @@ Dieses Modul beschleunigt den Korrektur-Workflow gefuehlt deutlich:
 - Nach Abschluss des aktuellen Laufs wird bei Dirty-Flag automatisch erneut
   gerechnet.
 
-Die fachliche Pipeline `run_all.py` bleibt unveraendert.
+Seit Phase 13C wird fuer lokale Korrekturen nicht mehr der komplette
+`scripts/run_all.py`-Tageslauf gestartet, sondern bevorzugt der schnelle
+Pipeline-Modus `OVERRIDE_REBUILD`.
 """
 
 from __future__ import annotations
@@ -36,7 +38,9 @@ STATUS_DIR = ROOT / "data" / "02_duckdb"
 STATUS_PATH = STATUS_DIR / "rebuild_status.json"
 LOCK_PATH = STATUS_DIR / "rebuild.lock"
 LOG_DIR = ROOT / "_rebuild_logs"
-ASYNC_REBUILD_RUNTIME_MARKER = "NETZENTGELT_ASYNC_REBUILD_RUNTIME_PHASE13A_V1_20260621"
+PIPELINE_ENTRYPOINT = ROOT / "scripts" / "run_pipeline.py"
+DEFAULT_REBUILD_MODE = "OVERRIDE_REBUILD"
+ASYNC_REBUILD_RUNTIME_MARKER = "NETZENTGELT_ASYNC_REBUILD_RUNTIME_PHASE13C_V1_20260622"
 
 _LOCK = threading.RLock()
 _WORKER: threading.Thread | None = None
@@ -70,6 +74,7 @@ def _default_status() -> dict[str, object]:
         "pending_reason": "",
         "requested_by": "",
         "reason": "",
+        "mode": "",
     }
 
 
@@ -111,10 +116,17 @@ def request_background_rebuild(
     run_all_script: Path,
     requested_by: str | None = None,
     reason: str = "manual_override",
+    mode: str = DEFAULT_REBUILD_MODE,
 ) -> RebuildRequestResult:
-    """Startet den Rebuild im Hintergrund oder markiert einen Folgelauf."""
+    """Startet den Rebuild im Hintergrund oder markiert einen Folgelauf.
+
+    `run_all_script` bleibt aus Kompatibilitaetsgruenden Teil der Signatur,
+    wird aber fuer lokale Korrekturen nicht mehr direkt ausgefuehrt. Stattdessen
+    laeuft `scripts/run_pipeline.py --mode OVERRIDE_REBUILD`.
+    """
     global _WORKER
     requested_by = requested_by or getpass.getuser()
+    mode = str(mode or DEFAULT_REBUILD_MODE).strip().upper()
 
     with _LOCK:
         if _worker_alive():
@@ -124,12 +136,13 @@ def request_background_rebuild(
             status["pending_since_utc"] = _now()
             status["pending_reason"] = reason
             status["requested_by"] = requested_by
+            status["mode"] = mode
             _write_status(status)
             return RebuildRequestResult(
                 status="PENDING",
                 message=(
-                    "Neuberechnung läuft bereits. Die Korrektur wurde gespeichert "
-                    "und wird automatisch im nächsten Prüflauf berücksichtigt."
+                    "Neuberechnung laeuft bereits. Die Korrektur wurde gespeichert "
+                    "und wird automatisch im naechsten schnellen Prueflauf beruecksichtigt."
                 ),
                 run_id=str(status.get("current_run_id") or "") or None,
             )
@@ -142,6 +155,7 @@ def request_background_rebuild(
                 "current_run_id": run_id,
                 "requested_by": requested_by,
                 "reason": reason,
+                "mode": mode,
             }
         )
         _write_status(status)
@@ -149,7 +163,8 @@ def request_background_rebuild(
         _WORKER = threading.Thread(
             target=_worker_loop,
             kwargs={
-                "run_all_script": Path(run_all_script),
+                "pipeline_entrypoint": PIPELINE_ENTRYPOINT,
+                "mode": mode,
                 "run_id": run_id,
                 "requested_by": requested_by,
                 "reason": reason,
@@ -161,18 +176,26 @@ def request_background_rebuild(
 
         return RebuildRequestResult(
             status="QUEUED",
-            message="Neuberechnung wurde im Hintergrund gestartet.",
+            message=f"Schnelle Neuberechnung wurde im Hintergrund gestartet ({mode}).",
             run_id=run_id,
         )
 
 
-def _worker_loop(*, run_all_script: Path, run_id: str, requested_by: str, reason: str) -> None:
+def _worker_loop(
+    *,
+    pipeline_entrypoint: Path,
+    mode: str,
+    run_id: str,
+    requested_by: str,
+    reason: str,
+) -> None:
     global _WORKER
     current_run_id = run_id
     try:
         while True:
             result = _run_pipeline_in_process(
-                run_all_script=run_all_script,
+                pipeline_entrypoint=pipeline_entrypoint,
+                mode=mode,
                 run_id=current_run_id,
                 requested_by=requested_by,
                 reason=reason,
@@ -205,6 +228,7 @@ def _worker_loop(*, run_all_script: Path, run_id: str, requested_by: str, reason
                             "pending_rebuild": False,
                             "pending_since_utc": "",
                             "pending_reason": "",
+                            "mode": mode,
                         }
                     )
                     _write_status(status)
@@ -218,6 +242,7 @@ def _worker_loop(*, run_all_script: Path, run_id: str, requested_by: str, reason
                         "last_error": "",
                         "last_error_at_utc": "",
                         "pending_rebuild": False,
+                        "mode": mode,
                     }
                 )
                 _write_status(status)
@@ -233,7 +258,8 @@ def _worker_loop(*, run_all_script: Path, run_id: str, requested_by: str, reason
 
 def _run_pipeline_in_process(
     *,
-    run_all_script: Path,
+    pipeline_entrypoint: Path,
+    mode: str,
     run_id: str,
     requested_by: str,
     reason: str,
@@ -250,6 +276,7 @@ def _run_pipeline_in_process(
                 "finished_at_utc": "",
                 "requested_by": requested_by,
                 "reason": reason,
+                "mode": mode,
                 "last_error": "",
                 "last_error_at_utc": "",
             }
@@ -264,13 +291,13 @@ def _run_pipeline_in_process(
 
     try:
         os.chdir(ROOT)
-        sys.argv = [str(run_all_script)]
+        sys.argv = [str(pipeline_entrypoint), "--mode", mode]
         with redirect_stdout(stdout_buffer), redirect_stderr(stderr_buffer):
             try:
                 from overlap_tolerance_runtime_module import install_overlap_tolerance_runtime
 
                 install_overlap_tolerance_runtime()
-                runpy.run_path(str(run_all_script), run_name="__main__")
+                runpy.run_path(str(pipeline_entrypoint), run_name="__main__")
             except SystemExit as exit_error:
                 if isinstance(exit_error.code, int):
                     return_code = int(exit_error.code)
@@ -297,7 +324,7 @@ def _run_pipeline_in_process(
         _write_status(status)
 
     return subprocess.CompletedProcess(
-        args=[sys.executable, str(run_all_script)],
+        args=[sys.executable, str(pipeline_entrypoint), "--mode", mode],
         returncode=return_code,
         stdout=stdout,
         stderr=stderr,
@@ -329,11 +356,12 @@ def install_async_rebuild_runtime() -> None:
             run_all_script=Path(run_all_script),
             requested_by=getpass.getuser(),
             reason="manual_override",
+            mode=DEFAULT_REBUILD_MODE,
         )
         st.session_state["async_rebuild_last_request_status"] = request.status
         st.session_state["async_rebuild_last_request_message"] = request.message
         return subprocess.CompletedProcess(
-            args=[sys.executable, str(run_all_script)],
+            args=[sys.executable, str(PIPELINE_ENTRYPOINT), "--mode", DEFAULT_REBUILD_MODE],
             returncode=0,
             stdout=request.message,
             stderr="",
@@ -348,13 +376,15 @@ def render_async_rebuild_status() -> None:
     """Zeigt laufende oder fehlgeschlagene Hintergrund-Neuberechnungen an."""
     status = read_rebuild_status()
     state = str(status.get("state") or "CURRENT").upper()
+    mode = str(status.get("mode") or DEFAULT_REBUILD_MODE)
 
     if state in {"QUEUED", "RUNNING"}:
         st.warning(
-            "Neuberechnung läuft im Hintergrund. Du kannst weiter Korrekturen speichern. "
+            "Schnelle Neuberechnung laeuft im Hintergrund. Du kannst weiter Korrekturen speichern. "
             "Exporte gelten bis zum Abschluss als nicht final."
         )
         st.caption(
+            f"Modus: {mode} · "
             f"Lauf: {status.get('current_run_id') or '-'} · "
             f"Start: {status.get('started_at_utc') or 'wartet'}"
         )
@@ -362,10 +392,11 @@ def render_async_rebuild_status() -> None:
 
     if state == "PENDING":
         st.warning(
-            "Neuberechnung läuft bereits; weitere Korrekturen wurden vorgemerkt. "
-            "Nach dem aktuellen Lauf startet automatisch ein weiterer Prüflauf."
+            "Schnelle Neuberechnung laeuft bereits; weitere Korrekturen wurden vorgemerkt. "
+            "Nach dem aktuellen Lauf startet automatisch ein weiterer Prueflauf."
         )
         st.caption(
+            f"Modus: {mode} · "
             f"Aktueller Lauf: {status.get('current_run_id') or '-'} · "
             f"Vorgemerkt seit: {status.get('pending_since_utc') or '-'}"
         )
@@ -374,9 +405,10 @@ def render_async_rebuild_status() -> None:
     if state == "ERROR":
         st.error(
             "Die letzte Hintergrund-Neuberechnung ist fehlgeschlagen. "
-            "Der letzte gültige Stand bleibt bestehen."
+            "Der letzte gueltige Stand bleibt bestehen. Bei geaenderten Rohdaten-Overrides bitte den vollstaendigen Neuaufbau starten."
         )
         with st.expander("Technische Details zur Neuberechnung", expanded=False):
+            st.caption(f"Modus: {mode}")
             st.caption(f"Lauf: {status.get('current_run_id') or '-'}")
             st.text(status.get("last_error") or "Kein Fehlertext vorhanden.")
             if status.get("last_stdout_path"):
@@ -386,4 +418,7 @@ def render_async_rebuild_status() -> None:
         return
 
     if status.get("last_success_at_utc"):
-        st.success(f"Letzte Hintergrund-Neuberechnung erfolgreich: {status.get('last_success_at_utc')}")
+        st.success(
+            f"Letzte Hintergrund-Neuberechnung erfolgreich: {status.get('last_success_at_utc')} "
+            f"({mode})"
+        )
