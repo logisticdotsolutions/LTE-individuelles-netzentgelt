@@ -21,5 +21,6 @@ class RebuildMode(str, Enum):
         """True, wenn der Modus aktuell technisch angebunden ist."""
         return self in {
             RebuildMode.FULL_IMPORT_REBUILD,
+            RebuildMode.OVERRIDE_REBUILD,
             RebuildMode.EXPORT_REBUILD,
         }
