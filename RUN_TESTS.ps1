@@ -1,4 +1,4 @@
-﻿param(
+param(
     [switch]$InstallDependencies,
     [switch]$Fast,
     [switch]$KeepTemporaryFiles
@@ -38,7 +38,7 @@ if ($InstallDependencies) {
 }
 
 Write-Section 'Prüfe Test-Abhängigkeiten'
-& $Python -c "import duckdb, openpyxl, pypdf, pytest, pytest_html; print('PASS: Test-Abhängigkeiten verfügbar.')"
+& $Python -c "import duckdb, openpyxl, pypdf, pytest, pytest_html, pytz; print('PASS: Test-Abhängigkeiten verfügbar.')"
 if ($LASTEXITCODE -ne 0) {
     Write-Host ''
     Write-Host 'FAIL: Test-Abhängigkeiten fehlen.'
