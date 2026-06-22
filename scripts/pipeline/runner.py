@@ -16,6 +16,7 @@ from .full_rebuild_from_raw import run_full_rebuild_from_raw
 from .override_rebuild import run_override_rebuild
 from .raw_import import run_raw_import
 from .rebuild_modes import RebuildMode
+from .status import mark_pipeline_error, mark_pipeline_success
 from .step_result import StepResult
 
 
@@ -111,6 +112,12 @@ def run_pipeline(
                 result = StepResult.failed(step.step_id, started_at, exc)
                 results.append(result)
                 _write_step_log(pipeline_context, results)
+                mark_pipeline_error(
+                    pipeline_context.root,
+                    run_id=pipeline_context.run_id,
+                    mode=mode.value,
+                    error=exc,
+                )
                 raise
 
             result = StepResult.success(step.step_id, started_at, message=message)
@@ -119,6 +126,12 @@ def run_pipeline(
                 f"Pipeline-Step abgeschlossen: {step.step_id} "
                 f"({result.duration_seconds:.2f}s)"
             )
+
+        mark_pipeline_success(
+            pipeline_context.root,
+            run_id=pipeline_context.run_id,
+            mode=mode.value,
+        )
 
     finally:
         if results:
