@@ -70,6 +70,9 @@ from friendly_ui_theme_module import apply_theme, render_theme_toggle  # noqa: E
 from local_auth_runtime_bridge import authenticated_runtime  # noqa: E402
 from manual_override_gap_policy_runtime_module import install_gap_policy_labels  # noqa: E402
 from manual_override_overlap_runtime_module import install_overlap_correction_workflow  # noqa: E402
+from manual_override_suggestion_cache_runtime_module import (  # noqa: E402
+    install_suggestion_cache_runtime,
+)
 from n01_hardened_runtime_bridge import (  # noqa: E402
     install_n01_hardened_runtime,
     restore_n01_hardened_runtime,
@@ -91,6 +94,7 @@ install_compact_copy_runtime()
 install_compact_login_views()
 install_dual_operator_role_runtime()
 install_gap_policy_labels()
+install_suggestion_cache_runtime()
 install_remove_vens_runtime()
 install_operator_gate_detail_runtime()
 install_overlap_correction_workflow()
@@ -133,6 +137,7 @@ PHASE11S_DUAL_ROLE_MARKER = "NETZENTGELT_DUAL_OPERATOR_ROLE_PHASE11S_V1_20260618
 PHASE13A_ASYNC_REBUILD_MARKER = "NETZENTGELT_ASYNC_REBUILD_ENTRYPOINT_PHASE13A_V1_20260621"
 PHASE13B_OVERLAP_TOLERANCE_MARKER = "NETZENTGELT_OVERLAP_TOLERANCE_ENTRYPOINT_PHASE13B_V1_20260621"
 PHASE13E_ASYNC_STATUS_UI_MARKER = "NETZENTGELT_ASYNC_REBUILD_STATUS_UI_PHASE13E_V1_20260622"
+PHASE13F_SUGGESTION_CACHE_MARKER = "NETZENTGELT_SUGGESTION_CACHE_PHASE13F_V1_20260622"
 
 
 st.set_page_config(
