@@ -18,6 +18,7 @@ from typing import Callable
 
 from .context import PipelineContext
 from .export_rebuild import run_export_rebuild
+from .override_rebuild import run_override_rebuild
 from .rebuild_modes import RebuildMode
 from .step_result import StepResult
 
@@ -55,6 +56,9 @@ def _legacy_full_rebuild(_: PipelineContext) -> str:
 def _steps_for_mode(mode: RebuildMode) -> list[PipelineStep]:
     if mode is RebuildMode.FULL_IMPORT_REBUILD:
         return [PipelineStep("legacy_full_import_rebuild", _legacy_full_rebuild)]
+
+    if mode is RebuildMode.OVERRIDE_REBUILD:
+        return [PipelineStep("override_rebuild", run_override_rebuild)]
 
     if mode is RebuildMode.EXPORT_REBUILD:
         return [PipelineStep("export_rebuild", run_export_rebuild)]
