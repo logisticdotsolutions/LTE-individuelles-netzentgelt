@@ -152,7 +152,7 @@ def run_full_rebuild_from_raw(
             "cfg_dummy_locomotives_effective",
             lambda: build_dummy_locomotive_catalog(con),
         )
-        timed_if_missing("import_mapping", "cfg_company_mapping", lambda: import_mapping(con))
+        timed_if_missing("import_mapping", "cfg_loco_mapping", lambda: import_mapping(con))
         timed_if_missing(
             "import_market_partner_reference",
             "cfg_market_partner_role_effective",
