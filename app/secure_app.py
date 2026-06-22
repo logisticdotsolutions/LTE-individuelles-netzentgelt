@@ -54,10 +54,8 @@ from ae01_hardened_runtime_bridge import (  # noqa: E402
     install_ae01_hardened_runtime,
     restore_ae01_hardened_runtime,
 )
-from async_rebuild_runtime_module import (  # noqa: E402
-    install_async_rebuild_runtime,
-    render_async_rebuild_status,
-)
+from async_rebuild_runtime_module import install_async_rebuild_runtime  # noqa: E402
+from async_rebuild_status_ui_module import render_async_rebuild_status  # noqa: E402
 from browser_title_module import DEFAULT_BROWSER_TITLE, enforce_browser_title  # noqa: E402
 from compact_login_ui_runtime_module import install_compact_login_views  # noqa: E402
 from dual_role_runtime_module import install_dual_operator_role_runtime  # noqa: E402
@@ -134,6 +132,7 @@ PHASE11R_REMOVE_REVIEW_TAB_MARKER = "NETZENTGELT_REMOVE_REVIEW_TAB_PHASE11R_V1_2
 PHASE11S_DUAL_ROLE_MARKER = "NETZENTGELT_DUAL_OPERATOR_ROLE_PHASE11S_V1_20260618"
 PHASE13A_ASYNC_REBUILD_MARKER = "NETZENTGELT_ASYNC_REBUILD_ENTRYPOINT_PHASE13A_V1_20260621"
 PHASE13B_OVERLAP_TOLERANCE_MARKER = "NETZENTGELT_OVERLAP_TOLERANCE_ENTRYPOINT_PHASE13B_V1_20260621"
+PHASE13E_ASYNC_STATUS_UI_MARKER = "NETZENTGELT_ASYNC_REBUILD_STATUS_UI_PHASE13E_V1_20260622"
 
 
 st.set_page_config(
