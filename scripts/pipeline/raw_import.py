@@ -1,8 +1,4 @@
-"""Raw-DuckDB-Layer fuer den Netzentgelt-MVP.
-
-Dieser Schritt importiert nur die CSV-/Datalake-Rohdaten in eine eigene DuckDB.
-Die fachliche Berechnung laeuft danach separat aus diesem stabilen Raw-Snapshot.
-"""
+"""Raw-DuckDB-Layer fuer den Netzentgelt-MVP."""
 
 from __future__ import annotations
 
@@ -28,11 +24,19 @@ def _remove_if_exists(path: Path) -> None:
 
 
 def run_raw_import(ctx: PipelineContext) -> str:
-    """Rohdaten frisch nach `netzentgelt_raw.duckdb` importieren."""
+    """Rohdaten und stabile Referenztabellen nach `netzentgelt_raw.duckdb` importieren."""
     ctx.ensure_directories()
     _ensure_scripts_dir_on_path()
 
-    from run_all import import_csvs
+    from dummy_locomotive_module import build_dummy_locomotive_catalog
+    from run_all import (
+        build_cancelled_transport_exclusions,
+        import_csvs,
+        import_mapping,
+        import_market_partner_mapping,
+        import_market_partner_reference,
+        import_vens_tens_exception,
+    )
 
     _remove_if_exists(ctx.raw_db_path)
     _remove_if_exists(Path(str(ctx.raw_db_path) + ".wal"))
@@ -42,6 +46,15 @@ def run_raw_import(ctx: PipelineContext) -> str:
         print(f"Erzeuge Raw-Datenbank: {ctx.raw_db_path}")
         con = duckdb.connect(str(ctx.raw_db_path))
         run_id, imported_tables = import_csvs(con)
+
+        print("Erzeuge stabile Basistabellen im Raw-Snapshot...")
+        build_cancelled_transport_exclusions(con)
+        build_dummy_locomotive_catalog(con)
+        import_mapping(con)
+        import_market_partner_reference(con)
+        import_market_partner_mapping(con)
+        import_vens_tens_exception(con)
+
         con.close()
         con = None
         return f"RAW_IMPORT abgeschlossen. Raw-Run: {run_id}. Tabellen: {len(imported_tables)}"
