@@ -1,10 +1,4 @@
-"""Pipeline-Runner fuer den Netzentgelt-MVP.
-
-Der erste Schritt dieser Modularisierung ist bewusst risikoarm: Die bestehende
-Fachlogik in scripts/run_all.py bleibt unveraendert und wird als Legacy-Full-
-Rebuild-Schritt ausgefuehrt. Schnelle Teilmodi werden schrittweise angebunden,
-sobald ihre fachlichen Grenzen sauber isoliert sind.
-"""
+"""Pipeline runner for the Netzentgelt MVP."""
 
 from __future__ import annotations
 
@@ -18,26 +12,20 @@ from typing import Callable
 
 from .context import PipelineContext
 from .export_rebuild import run_export_rebuild
+from .full_rebuild_from_raw import run_full_rebuild_from_raw
 from .override_rebuild import run_override_rebuild
+from .raw_import import run_raw_import
 from .rebuild_modes import RebuildMode
 from .step_result import StepResult
 
 
 @dataclass(frozen=True)
 class PipelineStep:
-    """Ausfuehrbarer Pipeline-Schritt."""
-
     step_id: str
     action: Callable[[PipelineContext], str | None]
 
 
 def _import_legacy_run_all():
-    """Bestehendes scripts/run_all.py robust importieren.
-
-    run_all.py nutzt aktuell Imports relativ zum scripts-Verzeichnis
-    (z. B. error_rules). Deshalb wird das scripts-Verzeichnis explizit in den
-    Python-Pfad aufgenommen, bevor das Modul geladen wird.
-    """
     scripts_dir = Path(__file__).resolve().parents[1]
     scripts_dir_text = str(scripts_dir)
 
@@ -56,6 +44,12 @@ def _legacy_full_rebuild(_: PipelineContext) -> str:
 def _steps_for_mode(mode: RebuildMode) -> list[PipelineStep]:
     if mode is RebuildMode.FULL_IMPORT_REBUILD:
         return [PipelineStep("legacy_full_import_rebuild", _legacy_full_rebuild)]
+
+    if mode is RebuildMode.RAW_IMPORT_REBUILD:
+        return [PipelineStep("raw_import_rebuild", run_raw_import)]
+
+    if mode is RebuildMode.FULL_REBUILD_FROM_RAW:
+        return [PipelineStep("full_rebuild_from_raw", run_full_rebuild_from_raw)]
 
     if mode is RebuildMode.OVERRIDE_REBUILD:
         return [PipelineStep("override_rebuild", run_override_rebuild)]
@@ -95,7 +89,6 @@ def run_pipeline(
     mode: RebuildMode = RebuildMode.FULL_IMPORT_REBUILD,
     ctx: PipelineContext | None = None,
 ) -> list[StepResult]:
-    """Pipeline im angegebenen Rebuild-Modus ausfuehren."""
     pipeline_context = ctx or PipelineContext.from_project_root()
     pipeline_context.ensure_directories()
 
@@ -135,5 +128,4 @@ def run_pipeline(
 
 
 def run_full_rebuild() -> list[StepResult]:
-    """Rueckwaertskompatibler Einstieg fuer den vollstaendigen Neuaufbau."""
     return run_pipeline(RebuildMode.FULL_IMPORT_REBUILD)
