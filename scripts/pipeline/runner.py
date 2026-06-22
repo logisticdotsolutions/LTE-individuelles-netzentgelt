@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Callable
 
 from .context import PipelineContext
+from .correction_rebuild import run_correction_rebuild
 from .export_rebuild import run_export_rebuild
 from .full_rebuild_from_raw import run_full_rebuild_from_raw
 from .override_rebuild import run_override_rebuild
@@ -51,6 +52,9 @@ def _steps_for_mode(mode: RebuildMode) -> list[PipelineStep]:
 
     if mode is RebuildMode.FULL_REBUILD_FROM_RAW:
         return [PipelineStep("full_rebuild_from_raw", run_full_rebuild_from_raw)]
+
+    if mode is RebuildMode.CORRECTION_REBUILD:
+        return [PipelineStep("correction_rebuild", run_correction_rebuild)]
 
     if mode is RebuildMode.OVERRIDE_REBUILD:
         return [PipelineStep("override_rebuild", run_override_rebuild)]
