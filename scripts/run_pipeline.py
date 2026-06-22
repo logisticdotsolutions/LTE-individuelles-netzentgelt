@@ -1,4 +1,4 @@
-"""Alternativer Einstieg in die modularisierte Netzentgelt-Pipeline.
+r"""Alternativer Einstieg in die modularisierte Netzentgelt-Pipeline.
 
 Standard:
     .venv\Scripts\python.exe scripts\run_pipeline.py
