@@ -43,6 +43,12 @@ def _table_exists(con, table_name: str) -> bool:
     )
 
 
+def _configure_duckdb_runtime(con) -> None:
+    thread_count = max(1, min(os.cpu_count() or 1, 8))
+    con.execute(f"set threads to {thread_count}")
+    print(f"DuckDB Runtime: threads={thread_count}")
+
+
 def _write_timing_log(ctx: PipelineContext, timings: list[dict[str, object]]) -> None:
     ctx.ensure_directories()
     timing_path = ctx.log_dir / f"{ctx.run_id}_pipeline_timing.json"
@@ -141,6 +147,7 @@ def run_full_rebuild_from_raw(
 
     try:
         con = duckdb.connect(str(ctx.db_build_path))
+        _configure_duckdb_runtime(con)
 
         print("Berechne Exclusions, Referenzen und manuelle Overrides...")
         timed_if_missing(
