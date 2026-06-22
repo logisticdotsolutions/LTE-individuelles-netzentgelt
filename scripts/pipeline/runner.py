@@ -2,9 +2,8 @@
 
 Der erste Schritt dieser Modularisierung ist bewusst risikoarm: Die bestehende
 Fachlogik in scripts/run_all.py bleibt unveraendert und wird als Legacy-Full-
-Rebuild-Schritt ausgefuehrt. Dadurch entstehen bereits ein einheitlicher
-Einstieg, Rebuild-Modes und Laufzeitmessung, ohne die fachliche Berechnung zu
-veraendern.
+Rebuild-Schritt ausgefuehrt. Schnelle Teilmodi werden schrittweise angebunden,
+sobald ihre fachlichen Grenzen sauber isoliert sind.
 """
 
 from __future__ import annotations
@@ -18,6 +17,7 @@ from pathlib import Path
 from typing import Callable
 
 from .context import PipelineContext
+from .export_rebuild import run_export_rebuild
 from .rebuild_modes import RebuildMode
 from .step_result import StepResult
 
@@ -56,10 +56,19 @@ def _steps_for_mode(mode: RebuildMode) -> list[PipelineStep]:
     if mode is RebuildMode.FULL_IMPORT_REBUILD:
         return [PipelineStep("legacy_full_import_rebuild", _legacy_full_rebuild)]
 
+    if mode is RebuildMode.EXPORT_REBUILD:
+        return [PipelineStep("export_rebuild", run_export_rebuild)]
+
+    implemented_modes = ", ".join(
+        implemented_mode.value
+        for implemented_mode in RebuildMode
+        if implemented_mode.is_implemented
+    )
+
     raise NotImplementedError(
         f"RebuildMode {mode.value} ist als Zielbild angelegt, aber noch nicht "
-        "technisch implementiert. Aktuell produktiv angebunden ist nur "
-        f"{RebuildMode.FULL_IMPORT_REBUILD.value}."
+        "technisch implementiert. Aktuell produktiv angebunden: "
+        f"{implemented_modes}."
     )
 
 
