@@ -4,6 +4,10 @@ Streamlit reruns the script when a checkbox in the suggestion editor changes.
 Without this cache the suggestion engine is rebuilt on each rerun, including
 DuckDB reads and GAP policy evaluation. The cache is invalidated when the
 productive DuckDB timestamp or the visible finding/timeline fingerprint changes.
+
+This runtime is loaded early by the secure entrypoint. It also switches async
+correction rebuilds to CORRECTION_REBUILD, so corrections can use the raw-layer
+pipeline when available.
 """
 
 from __future__ import annotations
@@ -15,7 +19,7 @@ import pandas as pd
 import streamlit as st
 
 
-PATCH_MARKER = "NETZENTGELT_SUGGESTION_CACHE_PHASE13F_V1_20260622"
+PATCH_MARKER = "NETZENTGELT_SUGGESTION_CACHE_PHASE13G_V1_20260622"
 _PATCHED = False
 
 
@@ -84,6 +88,22 @@ def _copy_frame(data: pd.DataFrame) -> pd.DataFrame:
     return data.copy(deep=True)
 
 
+def _install_correction_rebuild_default() -> None:
+    try:
+        import async_rebuild_runtime_module
+    except ImportError:
+        return
+
+    async_rebuild_runtime_module.DEFAULT_REBUILD_MODE = "CORRECTION_REBUILD"
+
+    try:
+        import async_rebuild_status_ui_module
+    except ImportError:
+        return
+
+    async_rebuild_status_ui_module.DEFAULT_REBUILD_MODE = "CORRECTION_REBUILD"
+
+
 def clear_suggestion_cache() -> None:
     st.session_state.pop("manual_override_suggestion_table_cache", None)
 
@@ -91,6 +111,9 @@ def clear_suggestion_cache() -> None:
 def install_suggestion_cache_runtime() -> None:
     """Patch manual_override_ui_module.build_suggestion_table with a session cache."""
     global _PATCHED
+
+    _install_correction_rebuild_default()
+
     if _PATCHED:
         return
 
