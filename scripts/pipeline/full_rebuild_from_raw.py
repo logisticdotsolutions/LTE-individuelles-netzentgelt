@@ -28,6 +28,20 @@ def _remove_if_exists(path: Path) -> None:
         path.unlink()
 
 
+def _table_exists(con, table_name: str) -> bool:
+    return (
+        con.execute(
+            """
+            select count(*)
+            from information_schema.tables
+            where lower(table_name) = lower(?)
+            """,
+            [table_name],
+        ).fetchone()[0]
+        > 0
+    )
+
+
 def _write_timing_log(ctx: PipelineContext, timings: list[dict[str, object]]) -> None:
     ctx.ensure_directories()
     timing_path = ctx.log_dir / f"{ctx.run_id}_pipeline_timing.json"
@@ -109,6 +123,13 @@ def run_full_rebuild_from_raw(
         print(f"TIMING {label}: {seconds:.3f}s")
         return result
 
+    def timed_if_missing(label: str, table_name: str, func):
+        if _table_exists(con, table_name):
+            timings.append({"step": label, "seconds": 0.0, "skipped": True})
+            print(f"TIMING {label}: 0.000s skipped")
+            return None
+        return timed(label, func)
+
     _remove_if_exists(ctx.db_build_path)
     _remove_if_exists(Path(str(ctx.db_build_path) + ".wal"))
 
@@ -121,12 +142,32 @@ def run_full_rebuild_from_raw(
         con = duckdb.connect(str(ctx.db_build_path))
 
         print("Berechne Exclusions, Referenzen und manuelle Overrides...")
-        timed("build_cancelled_transport_exclusions", lambda: build_cancelled_transport_exclusions(con))
-        timed("build_dummy_locomotive_catalog", lambda: build_dummy_locomotive_catalog(con))
-        timed("import_mapping", lambda: import_mapping(con))
-        timed("import_market_partner_reference", lambda: import_market_partner_reference(con))
-        timed("import_market_partner_mapping", lambda: import_market_partner_mapping(con))
-        timed("import_vens_tens_exception", lambda: import_vens_tens_exception(con))
+        timed_if_missing(
+            "build_cancelled_transport_exclusions",
+            "audit_excluded_cancelled_transports",
+            lambda: build_cancelled_transport_exclusions(con),
+        )
+        timed_if_missing(
+            "build_dummy_locomotive_catalog",
+            "cfg_dummy_locomotives_effective",
+            lambda: build_dummy_locomotive_catalog(con),
+        )
+        timed_if_missing("import_mapping", "cfg_company_mapping", lambda: import_mapping(con))
+        timed_if_missing(
+            "import_market_partner_reference",
+            "cfg_market_partner_role_effective",
+            lambda: import_market_partner_reference(con),
+        )
+        timed_if_missing(
+            "import_market_partner_mapping",
+            "cfg_market_partner_mapping_effective",
+            lambda: import_market_partner_mapping(con),
+        )
+        timed_if_missing(
+            "import_vens_tens_exception",
+            "cfg_vens_tens_exception_effective",
+            lambda: import_vens_tens_exception(con),
+        )
         timed("import_manual_overrides", lambda: import_manual_overrides(con))
         timed("apply_raw_manual_overrides", lambda: apply_raw_manual_overrides(con, ctx.run_id))
 
