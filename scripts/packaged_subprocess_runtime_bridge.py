@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-"""Runtime bridge for Python script execution inside the packaged EXE.
+"""Runtime bridge for controlled Python script execution from the app.
 
 In a normal developer/runtime environment, ``sys.executable`` points to
 ``python.exe``. In the PyInstaller package it points to ``NetzentgeltMVP.exe``.
@@ -11,9 +11,13 @@ The legacy Streamlit app starts helper scripts via::
 
 Inside the packaged EXE this would start the app launcher again instead of the
 helper script. The visible symptom is a new browser tab with a fresh login
-screen. This bridge intercepts exactly that packaged-EXE case and executes the
-requested Python script in-process while preserving stdout, stderr and exit
-codes.
+screen. This bridge intercepts that case and executes the requested Python
+script in-process while preserving stdout, stderr and exit codes.
+
+It is also used in the secure Streamlit entrypoint with ``force=True`` so that
+full rebuilds started from the app always receive the same operational policy:
+- rolling 30-day calculation window
+- central 5-minute overlap tolerance before findings/gates are written
 """
 
 from contextlib import redirect_stderr, redirect_stdout
@@ -30,6 +34,8 @@ from typing import Any
 PACKAGED_SUBPROCESS_RUNTIME_MARKER = (
     "NETZENTGELT_PACKAGED_SUBPROCESS_RUNTIME_PHASE13G_V1_20260623"
 )
+OPERATIONAL_WINDOW_DAYS = 30
+CENTRAL_POLICY_MARKER = "NETZENTGELT_30D_OVERLAP_POLICY_PHASE13K_V1_20260623"
 
 
 _ORIGINAL_RUN = None
@@ -70,6 +76,70 @@ def _should_run_in_process(args: Any) -> tuple[bool, Path | None, list[str]]:
     return True, script_path, argv[2:]
 
 
+def _install_central_overlap_tolerance_if_needed(script_path: Path) -> None:
+    """Ensure run_all.py receives the 5-minute tolerance before imports bind."""
+    if script_path.name.lower() != "run_all.py":
+        return
+
+    try:
+        from overlap_tolerance_runtime_module import install_overlap_tolerance_runtime
+
+        install_overlap_tolerance_runtime()
+    except Exception:
+        # If the tolerance module itself fails, the real pipeline error should be
+        # visible through the normal stderr handling. Do not hide the original run.
+        traceback.print_exc()
+
+
+def _prepare_run_all_source(script_path: Path) -> str | None:
+    """Return patched run_all source for the agreed rolling 30-day window."""
+    if script_path.name.lower() != "run_all.py":
+        return None
+
+    source = script_path.read_text(encoding="utf-8-sig")
+    source = source.replace(
+        "LOOKBACK_MONTHS = 6",
+        f"LOOKBACK_DAYS = {OPERATIONAL_WINDOW_DAYS}",
+    )
+    source = source.replace(
+        "interval '{LOOKBACK_MONTHS} months'",
+        "interval '{LOOKBACK_DAYS} days'",
+    )
+    source = source.replace(
+        "{LOOKBACK_MONTHS}-Monatsfenster",
+        "{LOOKBACK_DAYS}-Tagefenster",
+    )
+    source = source.replace(
+        "relevante Loks mit DE-Bezug im letzten {LOOKBACK_MONTHS}-Monatsfenster",
+        "relevante Loks mit DE-Bezug im letzten {LOOKBACK_DAYS}-Tagefenster",
+    )
+    source = source.replace(
+        "# - Es werden nur Loks berücksichtigt, die innerhalb des Lookback-Zeitraums\n"
+        "#   mindestens einmal einen DE-Bezug haben.",
+        "# - Es werden nur Loks berücksichtigt, die innerhalb des 30-Tage-Fensters\n"
+        "#   mindestens einmal einen DE-Bezug haben.",
+    )
+    return source
+
+
+def _execute_script(script_path: Path, script_args: list[str]) -> int:
+    _install_central_overlap_tolerance_if_needed(script_path)
+    patched_source = _prepare_run_all_source(script_path)
+
+    if patched_source is None:
+        runpy.run_path(str(script_path), run_name="__main__")
+        return 0
+
+    namespace = {
+        "__name__": "__main__",
+        "__file__": str(script_path),
+        "__package__": None,
+        "__cached__": None,
+    }
+    exec(compile(patched_source, str(script_path), "exec"), namespace)
+    return 0
+
+
 def _run_python_script_in_process(
     *,
     args: Any,
@@ -98,7 +168,7 @@ def _run_python_script_in_process(
 
         with redirect_stdout(stdout_buffer), redirect_stderr(stderr_buffer):
             try:
-                runpy.run_path(str(script_path), run_name="__main__")
+                _execute_script(script_path, script_args)
             except SystemExit as exit_error:
                 if isinstance(exit_error.code, int):
                     return_code = int(exit_error.code)
@@ -139,11 +209,11 @@ def _run_python_script_in_process(
     return result
 
 
-def install_packaged_subprocess_runtime():
-    """Patch subprocess.run only inside the packaged EXE runtime."""
+def install_packaged_subprocess_runtime(*, force: bool = False):
+    """Patch subprocess.run inside the EXE or when force=True in secure app."""
     global _ORIGINAL_RUN
 
-    if not _is_packaged_runtime():
+    if not force and not _is_packaged_runtime():
         return None
 
     if getattr(subprocess.run, "_netzentgelt_packaged_bridge", False):
