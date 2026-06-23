@@ -24,7 +24,7 @@ import traceback
 import webbrowser
 
 
-LAUNCHER_SCRIPT_EXECUTION_MARKER = "NETZENTGELT_EXE_SCRIPT_EXECUTION_GUARD_PHASE13H_V1_20260623"
+LAUNCHER_SCRIPT_EXECUTION_MARKER = "NETZENTGELT_EXE_SCRIPT_EXECUTION_GUARD_PHASE13H_V2_20260623"
 
 
 def _project_root() -> Path:
@@ -153,13 +153,28 @@ def _resolve_script_argument(root: Path) -> Path | None:
     return candidate
 
 
+def _script_import_paths(root: Path, script_path: Path) -> list[str]:
+    """Mimic normal python.exe script execution import paths for runpy."""
+    paths = [script_path.parent, root, root / "scripts", root / "app"]
+    result: list[str] = []
+    for path in paths:
+        text = str(path)
+        if text not in result:
+            result.append(text)
+    return result
+
+
 def _run_script_argument(root: Path, script_path: Path) -> int:
     """Execute helper script and return its exit code without opening Streamlit."""
     old_argv = sys.argv[:]
     old_cwd = Path.cwd()
+    old_sys_path = sys.path[:]
 
     try:
         os.chdir(root)
+        for import_path in reversed(_script_import_paths(root, script_path)):
+            if import_path not in sys.path:
+                sys.path.insert(0, import_path)
         sys.argv = [str(script_path), *old_argv[2:]]
         runpy.run_path(str(script_path), run_name="__main__")
         return 0
@@ -175,6 +190,7 @@ def _run_script_argument(root: Path, script_path: Path) -> int:
         return 1
     finally:
         sys.argv = old_argv
+        sys.path = old_sys_path
         os.chdir(old_cwd)
 
 
