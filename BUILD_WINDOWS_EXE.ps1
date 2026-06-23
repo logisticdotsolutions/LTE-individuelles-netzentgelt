@@ -19,14 +19,12 @@ $PortableRuntimeTemplate = Join-Path $Root 'config\portable_runtime.template.jso
 $PackageCheckScript = Join-Path $Root 'scripts\check_keyuser_package.py'
 $DistRoot = Join-Path $Root 'dist'
 $DistDir = Join-Path $DistRoot 'NetzentgeltMVP'
-$InternalZipPath = Join-Path $DistRoot 'NetzentgeltMVP_Windows_Portable.zip'
-$KeyUserRoot = Join-Path $Root '_keyuser_package'
-$KeyUserDir = Join-Path $KeyUserRoot 'NetzentgeltMVP_KeyUser'
-$KeyUserZipPath = Join-Path $KeyUserRoot 'NetzentgeltMVP_KeyUser.zip'
+$ReleaseRoot = Join-Path $Root '_release'
 $BuildStamp = Get-Date -Format 'yyyyMMddTHHmmss'
-$KeyUserBuildParent = Join-Path (Join-Path $KeyUserRoot '_build') $BuildStamp
-$KeyUserStagingDir = Join-Path $KeyUserBuildParent 'NetzentgeltMVP_KeyUser'
-$KeyUserReadme = Join-Path $KeyUserStagingDir 'START_HIER.txt'
+$ReleaseDir = Join-Path $ReleaseRoot "NetzentgeltMVP_KeyUser_$BuildStamp"
+$KeyUserDir = Join-Path $ReleaseDir 'NetzentgeltMVP_KeyUser'
+$KeyUserZipPath = Join-Path $ReleaseDir 'NetzentgeltMVP_KeyUser.zip'
+$KeyUserReadme = Join-Path $KeyUserDir 'START_HIER.txt'
 
 function Write-Section([string]$Text) {
     Write-Host ''
@@ -55,21 +53,6 @@ function Add-DataIfExists([System.Collections.Generic.List[string]]$ArgumentList
     if (Test-Path $FullPath) {
         Add-Argument $ArgumentList '--add-data'
         Add-Argument $ArgumentList "$FullPath;$Destination"
-    }
-}
-
-function Remove-DirectoryBestEffort([string]$Path) {
-    if (-not (Test-Path $Path)) {
-        return $true
-    }
-    try {
-        Remove-Item $Path -Recurse -Force -ErrorAction Stop
-        return $true
-    } catch {
-        Write-Warning "Ordner konnte nicht entfernt werden: $Path"
-        Write-Warning "Grund: $($_.Exception.Message)"
-        Write-Warning "Vermutlich laeuft noch eine alte NetzentgeltMVP.exe oder ein Prozess haelt Dateien im Paketordner offen."
-        return $false
     }
 }
 
@@ -119,6 +102,7 @@ NETZENTGELT MVP - STARTANLEITUNG FUER KEY USER
 Write-Section 'Netzentgelt MVP - Windows EXE Paket bauen'
 Write-Host "Projekt: $Root"
 Write-Host "Python:  $Python"
+Write-Host "Release: $ReleaseDir"
 
 if (-not (Test-Path $Launcher)) {
     throw "Launcher nicht gefunden: $Launcher"
@@ -226,43 +210,33 @@ if (Test-Path $EntryConfig) {
 # Runtime-Template explizit in Dist absichern, damit es bei PyInstaller-Layoutaenderungen nicht verloren geht.
 Copy-PortableRuntimeTemplate $DistDir
 
-Write-Section 'Erzeuge gesondertes Key-User-Paket'
-New-Item -ItemType Directory -Path $KeyUserStagingDir -Force | Out-Null
-Copy-Item -Path (Join-Path $DistDir '*') -Destination $KeyUserStagingDir -Recurse -Force
+Write-Section 'Erzeuge Release-Paket'
+if (Test-Path $ReleaseDir) {
+    throw "Release-Ordner existiert bereits und wird nicht ueberschrieben: $ReleaseDir"
+}
+New-Item -ItemType Directory -Path $KeyUserDir -Force | Out-Null
+Copy-Item -Path (Join-Path $DistDir '*') -Destination $KeyUserDir -Recurse -Force
 Write-KeyUserReadme $KeyUserReadme
-Copy-PortableRuntimeTemplate $KeyUserStagingDir
+Copy-PortableRuntimeTemplate $KeyUserDir
+Compress-Archive -Path $KeyUserDir -DestinationPath $KeyUserZipPath -Force
 
-if (Test-Path $KeyUserZipPath) {
-    Remove-Item $KeyUserZipPath -Force
-}
-Compress-Archive -Path $KeyUserStagingDir -DestinationPath $KeyUserZipPath -Force
-
-$PackageDirForCheck = $KeyUserStagingDir
-Write-Section 'Aktualisiere sichtbaren Key-User-Ordner'
-if (Remove-DirectoryBestEffort $KeyUserDir) {
-    Copy-Item -Path $KeyUserStagingDir -Destination $KeyUserRoot -Recurse -Force
-    $PackageDirForCheck = $KeyUserDir
-    Write-Host "Sichtbarer Paketordner aktualisiert: $KeyUserDir"
-} else {
-    Write-Warning "ZIP wurde trotzdem aus frischem Staging erzeugt: $KeyUserZipPath"
-    Write-Warning "Frischer Paketordner fuer diese Build-Ausfuehrung: $KeyUserStagingDir"
-    Write-Warning "Zum Aktualisieren des sichtbaren Ordners bitte laufende NetzentgeltMVP.exe beenden und Build erneut starten."
-}
-
-Write-Section 'Pruefe Key-User-Paket'
+Write-Section 'Pruefe Release-Paket'
 if (-not (Test-Path $PackageCheckScript)) {
     throw "Paketcheck-Skript fehlt: $PackageCheckScript"
 }
-& $Python $PackageCheckScript --package-dir $PackageDirForCheck --zip-path $KeyUserZipPath
+& $Python $PackageCheckScript --package-dir $KeyUserDir --zip-path $KeyUserZipPath
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host ''
 Write-Host 'FERTIG.'
 Write-Host ''
+Write-Host 'RELEASE-ORDNER:'
+Write-Host "Ordner: $ReleaseDir"
+Write-Host ''
 Write-Host 'NUR DIESES ZIP AN KEY USER SENDEN:'
 Write-Host "ZIP:    $KeyUserZipPath"
 Write-Host ''
-Write-Host 'Optionaler Ordner zur lokalen Pruefung:'
-Write-Host "Ordner: $PackageDirForCheck"
+Write-Host 'Optionaler entpackter Pruefordner:'
+Write-Host "Ordner: $KeyUserDir"
 Write-Host ''
 Write-Host 'Key User: ZIP entpacken, START_HIER.txt lesen, NetzentgeltMVP.exe starten.'
