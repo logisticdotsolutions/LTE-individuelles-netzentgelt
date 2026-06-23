@@ -116,10 +116,32 @@ Add-Arguments $PyInstallerArgs ([string[]]@(
     '--contents-directory', '.',
     '--name', 'NetzentgeltMVP',
     '--console',
-    '--copy-metadata', 'streamlit'
+    '--copy-metadata', 'streamlit',
+    '--hidden-import', 'azure',
+    '--hidden-import', 'azure.core',
+    '--hidden-import', 'azure.storage',
+    '--hidden-import', 'azure.storage.blob',
+    '--hidden-import', 'dotenv'
 ))
 
-foreach ($Module in @('streamlit', 'altair', 'duckdb', 'pandas', 'openpyxl', 'pypdf', 'yaml', 'pyarrow')) {
+foreach ($Module in @(
+    'streamlit',
+    'altair',
+    'duckdb',
+    'pandas',
+    'openpyxl',
+    'pypdf',
+    'yaml',
+    'pyarrow',
+    'azure',
+    'azure.core',
+    'azure.storage',
+    'azure.storage.blob',
+    'dotenv',
+    'cryptography',
+    'certifi',
+    'isodate'
+)) {
     if (Test-PythonModule $Module) {
         Add-Argument $PyInstallerArgs '--collect-all'
         Add-Argument $PyInstallerArgs $Module
