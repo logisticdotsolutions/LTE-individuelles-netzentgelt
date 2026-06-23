@@ -4,15 +4,27 @@ from __future__ import annotations
 
 Die EXE startet die gebuendelte Streamlit-App lokal und oeffnet danach den Browser.
 Das eigentliche Fachtool bleibt eine lokale Web-App; die EXE ist nur der stabile Starter.
+
+Wichtig fuer den Paketbetrieb:
+Wenn die gebuendelte EXE mit einem Python-Skript als erstem Argument gestartet
+wird, wird dieses Skript ausgefuehrt und die Streamlit-App wird NICHT gestartet.
+Das verhindert, dass interne Hilfsskript-Aufrufe wie
+``subprocess.run([sys.executable, "scripts/run_all.py"])`` einen neuen Browser-Tab
+mit neuer Login-Session oeffnen.
 """
 
 import os
+from pathlib import Path
+import runpy
 import socket
 import sys
 import threading
 import time
+import traceback
 import webbrowser
-from pathlib import Path
+
+
+LAUNCHER_SCRIPT_EXECUTION_MARKER = "NETZENTGELT_EXE_SCRIPT_EXECUTION_GUARD_PHASE13H_V1_20260623"
 
 
 def _project_root() -> Path:
@@ -117,13 +129,68 @@ def _open_browser_later(port: int) -> None:
     webbrowser.open(f"http://127.0.0.1:{port}")
 
 
+def _resolve_script_argument(root: Path) -> Path | None:
+    """Return a helper script path when the EXE was started as script runner."""
+    if len(sys.argv) < 2:
+        return None
+
+    candidate_text = str(sys.argv[1]).strip().strip('"')
+    if not candidate_text.lower().endswith(".py"):
+        return None
+
+    candidate = Path(candidate_text)
+    if not candidate.is_absolute():
+        candidate = root / candidate
+
+    try:
+        candidate = candidate.resolve()
+    except OSError:
+        return None
+
+    if not candidate.exists() or not candidate.is_file():
+        return None
+
+    return candidate
+
+
+def _run_script_argument(root: Path, script_path: Path) -> int:
+    """Execute helper script and return its exit code without opening Streamlit."""
+    old_argv = sys.argv[:]
+    old_cwd = Path.cwd()
+
+    try:
+        os.chdir(root)
+        sys.argv = [str(script_path), *old_argv[2:]]
+        runpy.run_path(str(script_path), run_name="__main__")
+        return 0
+    except SystemExit as exit_error:
+        if isinstance(exit_error.code, int):
+            return int(exit_error.code)
+        if exit_error.code in (None, ""):
+            return 0
+        print(str(exit_error.code), file=sys.stderr)
+        return 1
+    except BaseException:
+        traceback.print_exc()
+        return 1
+    finally:
+        sys.argv = old_argv
+        os.chdir(old_cwd)
+
+
 def main() -> int:
     root = _project_root()
+    os.chdir(root)
+    os.environ.setdefault("PYTHONUTF8", "1")
+
+    helper_script = _resolve_script_argument(root)
+    if helper_script is not None:
+        print(f"Netzentgelt MVP Hilfsskript wird ausgefuehrt: {helper_script.relative_to(root)}")
+        return _run_script_argument(root, helper_script)
+
     entrypoint = _detect_entrypoint(root)
     port = _find_free_port()
 
-    os.chdir(root)
-    os.environ.setdefault("PYTHONUTF8", "1")
     os.environ.setdefault("STREAMLIT_BROWSER_GATHER_USAGE_STATS", "false")
     os.environ.setdefault("STREAMLIT_SERVER_HEADLESS", "true")
 
@@ -156,7 +223,6 @@ if __name__ == "__main__":
     except SystemExit:
         raise
     except Exception:
-        import traceback
         print("\n" + "=" * 60)
         print("STARTFEHLER — bitte diesen Text fotografieren / kopieren:")
         print("=" * 60)
