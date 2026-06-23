@@ -19,7 +19,7 @@ import pandas as pd
 import streamlit as st
 
 
-PATCH_MARKER = "NETZENTGELT_SUGGESTION_CACHE_PHASE13G_V1_20260622"
+PATCH_MARKER = "NETZENTGELT_SUGGESTION_CACHE_PHASE13I_V1_20260623"
 _PATCHED = False
 
 
@@ -104,6 +104,15 @@ def _install_correction_rebuild_default() -> None:
     async_rebuild_status_ui_module.DEFAULT_REBUILD_MODE = "CORRECTION_REBUILD"
 
 
+def _install_manual_override_async_guard() -> None:
+    try:
+        from manual_override_async_guard_runtime_module import install_manual_override_async_guard
+    except ImportError:
+        return
+
+    install_manual_override_async_guard()
+
+
 def clear_suggestion_cache() -> None:
     st.session_state.pop("manual_override_suggestion_table_cache", None)
 
@@ -113,6 +122,7 @@ def install_suggestion_cache_runtime() -> None:
     global _PATCHED
 
     _install_correction_rebuild_default()
+    _install_manual_override_async_guard()
 
     if _PATCHED:
         return
