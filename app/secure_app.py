@@ -84,6 +84,10 @@ from operational_day_filter_ui_runtime_bridge import (  # noqa: E402
 )
 from operator_gate_detail_runtime_module import install_operator_gate_detail_runtime  # noqa: E402
 from overlap_tolerance_runtime_module import install_overlap_tolerance_runtime  # noqa: E402
+from packaged_subprocess_runtime_bridge import (  # noqa: E402
+    install_packaged_subprocess_runtime,
+    restore_packaged_subprocess_runtime,
+)
 from remove_review_tab_runtime_module import (  # noqa: E402
     install_remove_review_tab_runtime,
     restore_remove_review_tab_runtime,
@@ -138,6 +142,7 @@ PHASE13A_ASYNC_REBUILD_MARKER = "NETZENTGELT_ASYNC_REBUILD_ENTRYPOINT_PHASE13A_V
 PHASE13B_OVERLAP_TOLERANCE_MARKER = "NETZENTGELT_OVERLAP_TOLERANCE_ENTRYPOINT_PHASE13B_V1_20260621"
 PHASE13E_ASYNC_STATUS_UI_MARKER = "NETZENTGELT_ASYNC_REBUILD_STATUS_UI_PHASE13E_V1_20260622"
 PHASE13F_SUGGESTION_CACHE_MARKER = "NETZENTGELT_SUGGESTION_CACHE_PHASE13F_V1_20260622"
+PHASE13G_PACKAGED_SUBPROCESS_MARKER = "NETZENTGELT_PACKAGED_SUBPROCESS_ENTRYPOINT_PHASE13G_V1_20260623"
 
 
 st.set_page_config(
@@ -173,6 +178,7 @@ _original_operational_day_filter = install_operational_day_filter_runtime(
     _operational_day_range
 )
 _original_set_page_config = st.set_page_config
+_packaged_subprocess_runtime = install_packaged_subprocess_runtime()
 _n01_runtime = install_n01_hardened_runtime()
 _ae01_runtime = install_ae01_hardened_runtime()
 _zuordnungen_hardened_runtime = install_zuordnungen_hardened_runtime()
@@ -185,6 +191,7 @@ try:
             with export_exception_runtime(current_user):
                 runpy.run_path(str(LEGACY_APP_PATH), run_name="__main__")
 finally:
+    restore_packaged_subprocess_runtime(_packaged_subprocess_runtime)
     restore_remove_review_tab_runtime(_original_review_tabs)
     restore_zuordnungen_export_tab_extension(_original_tabs)
     restore_zuordnungen_hardened_runtime(_zuordnungen_hardened_runtime)
