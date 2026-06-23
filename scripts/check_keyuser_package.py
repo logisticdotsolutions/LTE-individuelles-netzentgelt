@@ -70,6 +70,18 @@ def _zip_contains(entries: set[str], relative_path: str) -> bool:
     )
 
 
+def _zip_contains_package_root_path(entries: set[str], package_dir: Path, relative_path: str) -> bool:
+    """Check only top-level package paths, not dependency-internal folders named tests."""
+    rel = _norm(relative_path)
+    package_name = _norm(package_dir.name)
+    candidates = {rel, f"{package_name}/{rel}"}
+    return any(
+        entry == candidate or entry.startswith(candidate + "/")
+        for candidate in candidates
+        for entry in entries
+    )
+
+
 def _validate_runtime_template(path: Path) -> list[str]:
     errors: list[str] = []
     try:
@@ -150,7 +162,7 @@ def main() -> int:
             print("- " + rel)
         return 1
 
-    zip_forbidden = [rel for rel in FORBIDDEN if _zip_contains(entries, rel)]
+    zip_forbidden = [rel for rel in FORBIDDEN if _zip_contains_package_root_path(entries, pkg, rel)]
     if zip_forbidden:
         print("FAIL: Entwickler-Artefakte duerfen nicht im Key-User-ZIP liegen")
         for rel in zip_forbidden:
