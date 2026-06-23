@@ -6,8 +6,7 @@ import json
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_PKG = ROOT / "_keyuser_package" / "NetzentgeltMVP_KeyUser"
-DEFAULT_PKG_ZIP = ROOT / "_keyuser_package" / "NetzentgeltMVP_KeyUser.zip"
+RELEASE_ROOT = ROOT / "_release"
 
 NEEDED = [
     "NetzentgeltMVP.exe",
@@ -27,17 +26,30 @@ NEEDED = [
     "data/03_exports",
 ]
 
-FORBIDDEN = [
-    "RUN_TESTS.bat",
-    "tests",
-    "_test_reports",
-]
-
+FORBIDDEN = ["RUN_TESTS.bat", "tests", "_test_reports"]
 EXPECTED_ENTRYPOINT = "app/secure_app_portable.py"
 
 
 def _norm(value: str) -> str:
     return str(value).replace("\\", "/").strip("/")
+
+
+def _latest_release_dir() -> Path | None:
+    if not RELEASE_ROOT.is_dir():
+        return None
+    candidates = sorted(
+        [path for path in RELEASE_ROOT.glob("NetzentgeltMVP_KeyUser_*") if path.is_dir()],
+        reverse=True,
+    )
+    return candidates[0] if candidates else None
+
+
+def _default_package_paths() -> tuple[Path, Path]:
+    latest = _latest_release_dir()
+    if latest is None:
+        fallback = RELEASE_ROOT / "NetzentgeltMVP_KeyUser_TIMESTAMP"
+        return fallback / "NetzentgeltMVP_KeyUser", fallback / "NetzentgeltMVP_KeyUser.zip"
+    return latest / "NetzentgeltMVP_KeyUser", latest / "NetzentgeltMVP_KeyUser.zip"
 
 
 def _zip_entries(zip_path: Path) -> set[str]:
@@ -77,9 +89,10 @@ def _validate_runtime_template(path: Path) -> list[str]:
 
 
 def parse_args() -> argparse.Namespace:
+    default_pkg, default_zip = _default_package_paths()
     parser = argparse.ArgumentParser(description="Prueft das portable Netzentgelt-Key-User-Paket.")
-    parser.add_argument("--package-dir", default=str(DEFAULT_PKG), help="Ordner des zu pruefenden Key-User-Pakets")
-    parser.add_argument("--zip-path", default=str(DEFAULT_PKG_ZIP), help="Pfad zur erzeugten Key-User-ZIP-Datei")
+    parser.add_argument("--package-dir", default=str(default_pkg), help="Ordner des zu pruefenden Key-User-Pakets")
+    parser.add_argument("--zip-path", default=str(default_zip), help="Pfad zur erzeugten Key-User-ZIP-Datei")
     return parser.parse_args()
 
 
