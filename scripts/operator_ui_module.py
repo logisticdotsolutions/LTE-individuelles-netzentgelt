@@ -25,6 +25,7 @@ import streamlit as st
 DAU_UX_MARKER = "NETZENTGELT_DAU_UX_PHASE3_V1_20260607"
 # NETZENTGELT_CONTROLLER_UX_PHASE5E_V1_20260608
 # NETZENTGELT_CONTROLLER_UI_DUMMY_LABEL_V1_20260609
+SINGLE_DAILY_METRIC_SOURCE_MARKER = "NETZENTGELT_SINGLE_DAILY_METRIC_SOURCE_PHASE13I_V1_20260623"
 
 
 RULE_TEXT = {
@@ -564,7 +565,13 @@ def render_status_banner(
     rebuild_state: str = "",
     gate_summary: GateSummary | None = None,
 ) -> None:
-    """Kompakter Systemstatus-Banner: Rebuild-Zustand, Datenalter und schnelle Ampel."""
+    """Kompakter Systemstatus-Banner: Rebuild-Zustand und Datenalter.
+
+    Fachliche Tageszaehler werden bewusst nur in render_operator_dashboard()
+    angezeigt. Dadurch gibt es auf der Startseite keine doppelte Zaehlerliste
+    mit aehnlichen, aber unterschiedlich aggregierten Kennzahlen.
+    """
+    _ = gate_summary
     state = (rebuild_state or "").upper()
 
     if state in {"QUEUED", "RUNNING", "PENDING"}:
@@ -578,7 +585,6 @@ def render_status_banner(
             icon="⛔",
         )
 
-    # Datenalter über volle Breite
     if last_success_at_utc:
         try:
             ts = datetime.fromisoformat(last_success_at_utc.replace("Z", "+00:00"))
@@ -596,16 +602,6 @@ def render_status_banner(
     else:
         st.caption("Noch kein Neuberechnungs-Zeitpunkt verfügbar.")
 
-    # Metriken in drei gleichbreiten Spalten (volle Seitenbreite)
-    if gate_summary is not None:
-        col_blocked, col_warning, col_ready = st.columns(3)
-        with col_blocked:
-            st.metric("Gesperrt", gate_summary.blocked_days)
-        with col_warning:
-            st.metric("Hinweise", gate_summary.warning_days)
-        with col_ready:
-            st.metric("Freigegeben", gate_summary.ready_days)
-
 
 def _render_loco_shortcut(table: pd.DataFrame, key_suffix: str = "blocked") -> None:
     """Lok aus der Arbeitsliste fuer den vorhandenen Timeline-Tab vormerken."""
@@ -614,40 +610,28 @@ def _render_loco_shortcut(table: pd.DataFrame, key_suffix: str = "blocked") -> N
 
     locos = sorted(
         {
-            value
-            for value in _normalized(table["Loknummer"]).tolist()
-            if value
+            str(value).strip()
+            for value in table["Loknummer"].dropna().tolist()
+            if str(value).strip()
         }
     )
 
     if not locos:
         return
 
-    st.markdown("**Lok direkt fuer die Detailpruefung vormerken**")
-    col_select, col_button = st.columns([3, 1])
-
-    with col_select:
-        selected_loco = st.selectbox(
-            "Loknummer",
-            locos,
-            key=f"operator_shortcut_loco_{key_suffix}",
+    st.caption(
+        "Schnellnavigation: Lok auswählen und dann den Tab '4. Lok prüfen' öffnen."
+    )
+    selected = st.selectbox(
+        "Lok für Detailprüfung vormerken",
+        locos,
+        key=f"operator_loco_shortcut_{key_suffix}",
+    )
+    if st.button(
+        "Lok in Detailprüfung vormerken",
+        key=f"operator_loco_shortcut_button_{key_suffix}",
+    ):
+        st.session_state["timeline_detail_loco"] = selected
+        st.success(
+            f"Lok {selected} ist vorgemerkt. Bitte Tab '4. Lok prüfen' öffnen."
         )
-
-    with col_button:
-        st.write("")
-        st.write("")
-        if st.button(
-            "Lok vormerken",
-            key=f"operator_shortcut_button_{key_suffix}",
-            use_container_width=True,
-        ):
-            # NETZENTGELT_LOCO_BOOKMARK_HOTFIX_OPERATOR_V1_20260608
-            # Die verbleibende Detailansicht verwendet den Widget-Key
-            # ``timeline_detail_loco``. Die separate Vormerkung bleibt für einen
-            # sichtbaren Hinweis im Reiter "4. Lok prüfen" erhalten.
-            st.session_state["timeline_detail_loco"] = selected_loco
-            st.session_state["timeline_bookmarked_loco"] = selected_loco
-            st.success(
-                f"Lok {selected_loco} wurde vorgemerkt. Öffne jetzt den Tab '4. Lok prüfen'. "
-                "Die Lok ist dort bereits ausgewählt."
-            )
