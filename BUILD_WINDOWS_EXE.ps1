@@ -1,5 +1,5 @@
 param(
-    [string]$EntryPoint = "app\secure_app.py",
+    [string]$EntryPoint = "app\secure_app_portable.py",
     [switch]$SkipDependencyInstall
 )
 
