@@ -184,6 +184,8 @@ __marimo__/
 *.local
 config.local.*
 settings.local.*
+config/portable_runtime.private.json
+/portable_runtime.private.json
 
 # Additional secret and credential files
 credentials.json
