@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from pathlib import Path
+import argparse
 import json
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-PKG = ROOT / "_keyuser_package" / "NetzentgeltMVP_KeyUser"
-PKG_ZIP = ROOT / "_keyuser_package" / "NetzentgeltMVP_KeyUser.zip"
+DEFAULT_PKG = ROOT / "_keyuser_package" / "NetzentgeltMVP_KeyUser"
+DEFAULT_PKG_ZIP = ROOT / "_keyuser_package" / "NetzentgeltMVP_KeyUser.zip"
 
 NEEDED = [
     "NetzentgeltMVP.exe",
@@ -39,16 +40,22 @@ def _norm(value: str) -> str:
     return str(value).replace("\\", "/").strip("/")
 
 
-def _zip_entries() -> set[str]:
-    if not PKG_ZIP.is_file():
+def _zip_entries(zip_path: Path) -> set[str]:
+    if not zip_path.is_file():
         return set()
-    with zipfile.ZipFile(PKG_ZIP, "r") as archive:
+    with zipfile.ZipFile(zip_path, "r") as archive:
         return {_norm(name) for name in archive.namelist()}
 
 
 def _zip_contains(entries: set[str], relative_path: str) -> bool:
     rel = _norm(relative_path)
-    return any(entry == rel or entry.endswith("/" + rel) or entry.startswith(rel + "/") or ("/" + rel + "/") in entry for entry in entries)
+    return any(
+        entry == rel
+        or entry.endswith("/" + rel)
+        or entry.startswith(rel + "/")
+        or ("/" + rel + "/") in entry
+        for entry in entries
+    )
 
 
 def _validate_runtime_template(path: Path) -> list[str]:
@@ -69,26 +76,40 @@ def _validate_runtime_template(path: Path) -> list[str]:
     return errors
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Prueft das portable Netzentgelt-Key-User-Paket.")
+    parser.add_argument("--package-dir", default=str(DEFAULT_PKG), help="Ordner des zu pruefenden Key-User-Pakets")
+    parser.add_argument("--zip-path", default=str(DEFAULT_PKG_ZIP), help="Pfad zur erzeugten Key-User-ZIP-Datei")
+    return parser.parse_args()
+
+
 def main() -> int:
-    if not PKG.exists():
-        print(f"FAIL: Paketordner fehlt: {PKG}")
+    args = parse_args()
+    pkg = Path(args.package_dir)
+    pkg_zip = Path(args.zip_path)
+
+    print(f"Paketordner: {pkg}")
+    print(f"Paket-ZIP:    {pkg_zip}")
+
+    if not pkg.exists():
+        print(f"FAIL: Paketordner fehlt: {pkg}")
         return 1
 
-    missing = [rel for rel in NEEDED if not (PKG / rel).exists()]
+    missing = [rel for rel in NEEDED if not (pkg / rel).exists()]
     if missing:
         print("FAIL: Paket unvollstaendig")
         for rel in missing:
             print("- " + rel)
         return 1
 
-    forbidden_found = [rel for rel in FORBIDDEN if (PKG / rel).exists()]
+    forbidden_found = [rel for rel in FORBIDDEN if (pkg / rel).exists()]
     if forbidden_found:
         print("FAIL: Entwickler-Artefakte duerfen nicht im Key-User-Paket liegen")
         for rel in forbidden_found:
             print("- " + rel)
         return 1
 
-    entrypoint_config = (PKG / "packaging" / "netzentgelt_entrypoint.txt").read_text(encoding="utf-8-sig").strip()
+    entrypoint_config = (pkg / "packaging" / "netzentgelt_entrypoint.txt").read_text(encoding="utf-8-sig").strip()
     if _norm(entrypoint_config) != EXPECTED_ENTRYPOINT:
         print("FAIL: Paket startet nicht den portablen Entrypoint")
         print(f"- erwartet: {EXPECTED_ENTRYPOINT}")
@@ -96,19 +117,19 @@ def main() -> int:
         return 1
 
     template_errors: list[str] = []
-    template_errors.extend(_validate_runtime_template(PKG / "config" / "portable_runtime.template.json"))
-    template_errors.extend(_validate_runtime_template(PKG / "portable_runtime.template.json"))
+    template_errors.extend(_validate_runtime_template(pkg / "config" / "portable_runtime.template.json"))
+    template_errors.extend(_validate_runtime_template(pkg / "portable_runtime.template.json"))
     if template_errors:
         print("FAIL: portable_runtime.template.json ist nicht gueltig")
         for error in template_errors:
             print("- " + error)
         return 1
 
-    if not PKG_ZIP.is_file():
-        print(f"FAIL: Key-User-ZIP fehlt: {PKG_ZIP}")
+    if not pkg_zip.is_file():
+        print(f"FAIL: Key-User-ZIP fehlt: {pkg_zip}")
         return 1
 
-    entries = _zip_entries()
+    entries = _zip_entries(pkg_zip)
     zip_missing = [rel for rel in ("config/portable_runtime.template.json", "portable_runtime.template.json") if not _zip_contains(entries, rel)]
     if zip_missing:
         print("FAIL: portable_runtime.template.json fehlt im ZIP")
