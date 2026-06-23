@@ -15,6 +15,8 @@ $VenvPython = Join-Path $Root '.venv\Scripts\python.exe'
 $Python = if (Test-Path $VenvPython) { $VenvPython } else { 'python' }
 $Launcher = Join-Path $Root 'packaging\streamlit_exe_launcher.py'
 $EntryConfig = Join-Path $Root 'packaging\netzentgelt_entrypoint.txt'
+$PortableRuntimeTemplate = Join-Path $Root 'config\portable_runtime.template.json'
+$PackageCheckScript = Join-Path $Root 'scripts\check_keyuser_package.py'
 $DistRoot = Join-Path $Root 'dist'
 $DistDir = Join-Path $DistRoot 'NetzentgeltMVP'
 $InternalZipPath = Join-Path $DistRoot 'NetzentgeltMVP_Windows_Portable.zip'
@@ -53,6 +55,25 @@ function Add-DataIfExists([System.Collections.Generic.List[string]]$ArgumentList
     }
 }
 
+function Copy-PortableRuntimeTemplate([string]$PackageRoot) {
+    if (-not (Test-Path $PortableRuntimeTemplate)) {
+        throw "Portable Runtime Template fehlt: $PortableRuntimeTemplate"
+    }
+
+    $PackageRootPath = [System.IO.Path]::GetFullPath($PackageRoot)
+    $PackageConfigDir = Join-Path $PackageRootPath 'config'
+    New-Item -ItemType Directory -Path $PackageConfigDir -Force | Out-Null
+
+    $TargetConfig = Join-Path $PackageConfigDir 'portable_runtime.template.json'
+    $TargetRoot = Join-Path $PackageRootPath 'portable_runtime.template.json'
+
+    Copy-Item -Path $PortableRuntimeTemplate -Destination $TargetConfig -Force
+    Copy-Item -Path $PortableRuntimeTemplate -Destination $TargetRoot -Force
+
+    Write-Host "Portable Runtime Template kopiert: $TargetConfig"
+    Write-Host "Portable Runtime Template kopiert: $TargetRoot"
+}
+
 function Write-KeyUserReadme([string]$Path) {
     $Text = @'
 NETZENTGELT MVP - STARTANLEITUNG FUER KEY USER
@@ -83,6 +104,10 @@ Write-Host "Python:  $Python"
 
 if (-not (Test-Path $Launcher)) {
     throw "Launcher nicht gefunden: $Launcher"
+}
+
+if (-not (Test-Path $PortableRuntimeTemplate)) {
+    throw "Portable Runtime Template fehlt: $PortableRuntimeTemplate"
 }
 
 if ($EntryPoint.Trim().Length -gt 0) {
@@ -180,6 +205,9 @@ if (Test-Path $EntryConfig) {
     Write-Host "Entrypoint-Config kopiert: $EntryConfig -> $DestPackaging"
 }
 
+# Runtime-Template explizit in Dist absichern, damit es bei PyInstaller-Layoutaenderungen nicht verloren geht.
+Copy-PortableRuntimeTemplate $DistDir
+
 Write-Section 'Erzeuge gesondertes Key-User-Paket'
 if (Test-Path $KeyUserRoot) {
     Remove-Item $KeyUserRoot -Recurse -Force
@@ -187,11 +215,19 @@ if (Test-Path $KeyUserRoot) {
 New-Item -ItemType Directory -Path $KeyUserDir -Force | Out-Null
 Copy-Item -Path (Join-Path $DistDir '*') -Destination $KeyUserDir -Recurse -Force
 Write-KeyUserReadme $KeyUserReadme
+Copy-PortableRuntimeTemplate $KeyUserDir
 
 if (Test-Path $KeyUserZipPath) {
     Remove-Item $KeyUserZipPath -Force
 }
 Compress-Archive -Path $KeyUserDir -DestinationPath $KeyUserZipPath -Force
+
+Write-Section 'Pruefe Key-User-Paket'
+if (-not (Test-Path $PackageCheckScript)) {
+    throw "Paketcheck-Skript fehlt: $PackageCheckScript"
+}
+& $Python $PackageCheckScript
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host ''
 Write-Host 'FERTIG.'
