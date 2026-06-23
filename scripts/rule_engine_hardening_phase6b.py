@@ -276,8 +276,18 @@ def _refresh_core_quality_flags(con) -> None:
     )
 
 
-def harden_findings_and_export_policy(con, run_id: str) -> None:
-    """Konsolidiert R011, sichtbare Sperrgruende und die 24h-Toleranz."""
+def harden_findings_and_export_policy(
+    con,
+    run_id: str,
+    loco_filter: "frozenset[str] | None" = None,
+) -> None:
+    """Konsolidiert R011, sichtbare Sperrgruende und die 24h-Toleranz.
+
+    loco_filter: None → Vollneubau. frozenset → nur betroffene Loks.
+    """
+    if loco_filter is not None and len(loco_filter) == 0:
+        return
+
     if not table_exists(con, "dq_findings"):
         raise RuntimeError("dq_findings fehlt. Phase 6B kann nicht ausgefuehrt werden.")
 
@@ -285,17 +295,22 @@ def harden_findings_and_export_policy(con, run_id: str) -> None:
     if cutoff is None:
         raise RuntimeError("dq_run_metadata.error_cutoff_utc fehlt. Phase 6B bricht sicher ab.")
 
+    _is_partial = loco_filter is not None
+    _loco_list = list(loco_filter) if _is_partial else None
+    _lf = "and loco_no = ANY(?)" if _is_partial else ""
+    _lf_params = [_loco_list] if _is_partial else []
+
     # R011: alte LAG-basierte Ergebnisse entfernen und anhand echter
     # Intervallschnittmengen neu aufbauen. Jede spaetere betroffene Bewegung
     # erhaelt genau ein atomisches Finding mit allen Referenztransporten.
     old_r011 = int(
-        con.execute("select count(*) from dq_findings where rule_id = 'R011'").fetchone()[0]
+        con.execute(f"select count(*) from dq_findings where rule_id = 'R011' {_lf}", _lf_params).fetchone()[0]
     )
-    con.execute("delete from dq_findings where rule_id = 'R011'")
+    con.execute(f"delete from dq_findings where rule_id = 'R011' {_lf}", _lf_params)
     _ensure_column(con, "dq_findings", "overlap_with_transport_number", "varchar")
 
     con.execute(
-        """
+        f"""
         insert into dq_findings (
             run_id, severity, rule_id, rule_group, loco_no, transport_number,
             performing_ru, row_type, movement_sequence_no, period_start_utc,
@@ -311,6 +326,7 @@ def harden_findings_and_export_policy(con, run_id: str) -> None:
               and period_end_utc is not null
               and period_end_utc > period_start_utc
               and period_start_utc <= ?
+              {_lf}
         ), actual_overlap as (
             select
                 b.source_table,
@@ -371,7 +387,7 @@ def harden_findings_and_export_policy(con, run_id: str) -> None:
             overlap_with_transport_number
         from actual_overlap
         """,
-        [cutoff, str(run_id)],
+        [cutoff] + _lf_params + [str(run_id)],
     )
 
     new_r011 = int(
@@ -381,7 +397,7 @@ def harden_findings_and_export_policy(con, run_id: str) -> None:
     # R002/R003 sind innerhalb der 24h-Toleranz nur INFO. Nach Ablauf der
     # Toleranz werden fehlende Zeitgrenzen zu bearbeitbaren MANUAL_REVIEW-Faellen.
     con.execute(
-        """
+        f"""
         update dq_findings
         set
             severity = 'MANUAL_REVIEW',
@@ -390,13 +406,14 @@ def harden_findings_and_export_policy(con, run_id: str) -> None:
         where rule_id in ('R002', 'R003')
           and coalesce(period_start_utc, period_end_utc) is not null
           and coalesce(period_start_utc, period_end_utc) <= ?
+          {_lf}
         """,
-        [cutoff],
+        [cutoff] + _lf_params,
     )
 
     # R013: fehlender Halter war bisher eine unsichtbare Exportsperre.
     con.execute(
-        """
+        f"""
         insert into dq_findings (
             run_id, severity, rule_id, rule_group, loco_no, transport_number,
             performing_ru, row_type, movement_sequence_no, period_start_utc,
@@ -427,6 +444,7 @@ def harden_findings_and_export_policy(con, run_id: str) -> None:
           and nullif(trim(c.holder_name), '') is null
           and coalesce(c.period_start_utc, c.period_end_utc) is not null
           and coalesce(c.period_start_utc, c.period_end_utc) <= ?
+          {_lf}
           and not exists (
                 select 1 from dq_findings f
                 where f.rule_id = 'R013'
@@ -434,12 +452,12 @@ def harden_findings_and_export_policy(con, run_id: str) -> None:
                   and f.source_row_id is not distinct from c.source_row_id
           )
         """,
-        [str(run_id), cutoff],
+        [str(run_id), cutoff] + _lf_params,
     )
 
     # R014: technische Dummy-Lok muss auch zeilenbezogen sichtbar sein.
     con.execute(
-        """
+        f"""
         insert into dq_findings (
             run_id, severity, rule_id, rule_group, loco_no, transport_number,
             performing_ru, row_type, movement_sequence_no, period_start_utc,
@@ -470,6 +488,7 @@ def harden_findings_and_export_policy(con, run_id: str) -> None:
           and trim(coalesce(c.loco_no, '')) = '00000000000-0'
           and coalesce(c.period_start_utc, c.period_end_utc) is not null
           and coalesce(c.period_start_utc, c.period_end_utc) <= ?
+          {_lf}
           and not exists (
                 select 1 from dq_findings f
                 where f.rule_id = 'R014'
@@ -477,7 +496,7 @@ def harden_findings_and_export_policy(con, run_id: str) -> None:
                   and f.source_row_id is not distinct from c.source_row_id
           )
         """,
-        [str(run_id), cutoff],
+        [str(run_id), cutoff] + _lf_params,
     )
 
     # Dokumentation der neuen sichtbaren Regeln.
@@ -512,7 +531,7 @@ def harden_findings_and_export_policy(con, run_id: str) -> None:
     # - Halter-MP-ID darf auf Haltername zurueckfallen.
     # - offene ERROR/MANUAL_REVIEW-Faelle verhindern die Exportfaehigkeit.
     con.execute(
-        """
+        f"""
         update core_loco_timeline
         set export_ready = case
             when row_type = 'MOVEMENT'
@@ -530,13 +549,15 @@ def harden_findings_and_export_policy(con, run_id: str) -> None:
                 then true
             else false
         end
-        """
+        {"where loco_no = ANY(?)" if _is_partial else ""}
+        """,
+        _lf_params,
     )
 
     # Nicht exportfaehige frische Bewegungen innerhalb der 24h-Toleranz bleiben
     # sichtbar, sperren aber den Lok-Tag noch nicht voreilig.
     con.execute(
-        """
+        f"""
         update core_loco_timeline
         set export_blocking = case
             when row_type = 'MOVEMENT'
@@ -549,8 +570,9 @@ def harden_findings_and_export_policy(con, run_id: str) -> None:
                 then true
             else false
         end
+        {"where loco_no = ANY(?)" if _is_partial else ""}
         """,
-        [cutoff],
+        [cutoff] + _lf_params,
     )
 
     con.execute(

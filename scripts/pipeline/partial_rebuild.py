@@ -1,8 +1,16 @@
-"""Full-Rebuild aus einer vorhandenen Raw-DuckDB."""
+"""Partieller Rebuild fuer eine Teilmenge von Loknummern (Fast-Correction-Rebuild).
+
+Strategie: Raw-DB kopieren → alle Staging-/Core-Schritte vollstaendig ausfuehren →
+DQ-Tabellen aus Prod-DB uebernehmen → nur fuer betroffene Loknummern DQ neu berechnen.
+
+Dieses Vorgehen ist korrekt, weil:
+- Raw-Daten und Overrides fuer nicht-betroffene Loknummern unveraendert sind.
+- Staging/Core fuer nicht-betroffene Loknummern produziert daher identische Ergebnisse.
+- Die aus der Prod-DB uebernommenen DQ-Zeilen spiegeln daher den richtigen Zustand wider.
+"""
 
 from __future__ import annotations
 
-import json
 import os
 import shutil
 import sys
@@ -12,20 +20,53 @@ from time import perf_counter
 import duckdb
 
 from .context import PipelineContext
-from .csv_outputs import export_all_csv_outputs
-from .quality_gate_incremental import apply_r016_to_quality_gate_tables
 
 
-def _ensure_scripts_dir_on_path() -> None:
+def _ensure_scripts_on_path() -> None:
     scripts_dir = Path(__file__).resolve().parents[1]
     scripts_dir_text = str(scripts_dir)
-
     if scripts_dir_text not in sys.path:
         sys.path.insert(0, scripts_dir_text)
 
 
-_ensure_scripts_dir_on_path()
-from error_rules import table_exists as _table_exists  # noqa: E402
+_ensure_scripts_on_path()
+
+
+_DQ_TABLES_TO_COPY = (
+    # phase6c-Kontexttabellen — muessen vor prepare_timeline_context_phase6c da sein
+    "dq_phase6c_uncertain_gaps",
+    "dq_phase6c_gap_context_review",
+    "dq_phase6c_nested_event_skips",
+    "core_loco_stand_candidates",
+    # DQ-Ergebnistabellen
+    "dq_findings",
+    "core_loco_day_coverage",
+    "dq_export_gate",
+    "export_excluded_rows",
+    "core_usage_assignment_segments",
+    "core_usage_assignment_segment_movements",
+)
+
+
+def _copy_dq_tables_from_prod(con, prod_db_path: Path) -> None:
+    """DQ-Tabellen aus Prod-DB in Build-DB kopieren (Basis fuer loco_filter)."""
+    escaped = str(prod_db_path).replace("'", "''")
+    con.execute(f"attach '{escaped}' as _prod_source (READ_ONLY)")
+    try:
+        for table in _DQ_TABLES_TO_COPY:
+            exists_in_prod = con.execute(
+                "select count(*) from duckdb_tables() "
+                "where database_name = '_prod_source' and lower(table_name) = lower(?)",
+                [table],
+            ).fetchone()[0]
+            if exists_in_prod:
+                con.execute(
+                    f"create or replace table {table} as "
+                    f"select * from _prod_source.main.{table}"
+                )
+                print(f"  DQ-Tabelle von Prod kopiert: {table}")
+    finally:
+        con.execute("detach _prod_source")
 
 
 def _remove_if_exists(path: Path) -> None:
@@ -33,37 +74,17 @@ def _remove_if_exists(path: Path) -> None:
         path.unlink()
 
 
-def _configure_duckdb_runtime(con) -> None:
-    thread_count = max(1, min(os.cpu_count() or 1, 8))
-    con.execute(f"set threads to {thread_count}")
-    print(f"DuckDB Runtime: threads={thread_count}")
-
-
-def _write_timing_log(ctx: PipelineContext, timings: list[dict[str, object]]) -> None:
-    ctx.ensure_directories()
-    timing_path = ctx.log_dir / f"{ctx.run_id}_pipeline_timing.json"
-    timing_path.write_text(
-        json.dumps(
-            {
-                "run_id": ctx.run_id,
-                "timings": timings,
-                "total_seconds": round(sum(float(item["seconds"]) for item in timings), 3),
-            },
-            ensure_ascii=False,
-            indent=2,
-        ),
-        encoding="utf-8",
-    )
-    print(f"Pipeline-Timing-Log: {timing_path}")
-
-
-def run_full_rebuild_from_raw(
+def run_partial_correction_rebuild(
     ctx: PipelineContext,
     *,
-    write_csv_outputs: bool = True,
+    affected_loco_nos: frozenset[str],
 ) -> str:
-    """Fachliche Datenbank aus bestehender Raw-DuckDB neu erzeugen."""
-    ctx.ensure_directories()
+    """Partieller Rebuild nur fuer die angegebenen Loknummern.
+
+    Voraussetzung: affected_loco_nos ist nicht leer und eine Prod-DB existiert.
+    """
+    if not affected_loco_nos:
+        return "Partieller Rebuild: keine betroffenen Loknummern. Nichts zu tun."
 
     if not ctx.raw_db_path.exists():
         raise FileNotFoundError(
@@ -71,14 +92,21 @@ def run_full_rebuild_from_raw(
             "Bitte zuerst RAW_IMPORT_REBUILD ausfuehren."
         )
 
-    _ensure_scripts_dir_on_path()
+    if not ctx.db_path.exists():
+        raise FileNotFoundError(
+            f"Prod-DuckDB nicht gefunden: {ctx.db_path}. "
+            "Partieller Rebuild benoetigt eine bestehende Prod-DB. "
+            "Bitte zuerst FULL_REBUILD_FROM_RAW ausfuehren."
+        )
+
+    _ensure_scripts_on_path()
 
     from dummy_locomotive_module import (
         build_dummy_locomotive_catalog,
         consolidate_dummy_locomotive_findings,
         exclude_dummy_locomotives_from_staging,
     )
-    from error_rules import build_findings
+    from error_rules import build_findings, table_exists
     from export_module import build_export_tables
     from manual_override_module import (
         apply_raw_manual_overrides,
@@ -109,37 +137,42 @@ def run_full_rebuild_from_raw(
         import_market_partner_reference,
         import_vens_tens_exception,
     )
+    from .quality_gate_incremental import apply_r016_to_quality_gate_tables
 
-    timings: list[dict[str, object]] = []
+    timings: list[dict] = []
 
     def timed(label: str, func):
         started = perf_counter()
         result = func()
         seconds = round(perf_counter() - started, 3)
         timings.append({"step": label, "seconds": seconds})
-        print(f"TIMING {label}: {seconds:.3f}s")
+        print(f"TIMING [{label}]: {seconds:.3f}s")
         return result
 
     def timed_if_missing(label: str, table_name: str, func):
-        if _table_exists(con, table_name):
+        if table_exists(con, table_name):
             timings.append({"step": label, "seconds": 0.0, "skipped": True})
-            print(f"TIMING {label}: 0.000s skipped")
+            print(f"TIMING [{label}]: 0.000s skipped")
             return None
         return timed(label, func)
+
+    print(
+        f"Partieller Rebuild gestartet. "
+        f"Betroffene Loknummern: {sorted(affected_loco_nos)}"
+    )
 
     _remove_if_exists(ctx.db_build_path)
     _remove_if_exists(Path(str(ctx.db_build_path) + ".wal"))
 
-    print(f"Kopiere Raw-DuckDB in Build-Datenbank: {ctx.db_build_path}")
     timed("copy_raw_to_build", lambda: shutil.copy2(ctx.raw_db_path, ctx.db_build_path))
 
     con = None
-
     try:
         con = duckdb.connect(str(ctx.db_build_path))
-        _configure_duckdb_runtime(con)
+        thread_count = max(1, min(os.cpu_count() or 1, 8))
+        con.execute(f"set threads to {thread_count}")
 
-        print("Berechne Exclusions, Referenzen und manuelle Overrides...")
+        # Referenz-/Konfig-Schritte: ueberspringen wenn schon im Raw-DB-Copy vorhanden
         timed_if_missing(
             "build_cancelled_transport_exclusions",
             "audit_excluded_cancelled_transports",
@@ -166,15 +199,13 @@ def run_full_rebuild_from_raw(
             "cfg_vens_tens_exception_effective",
             lambda: import_vens_tens_exception(con),
         )
+
+        # Staging- und Core-Schritte vollstaendig (schnell)
         timed("import_manual_overrides", lambda: import_manual_overrides(con))
         timed("apply_raw_manual_overrides", lambda: apply_raw_manual_overrides(con, ctx.run_id))
-
-        print("Berechne Staging, Routen und Core-Timeline...")
         timed("build_loco_events", lambda: build_loco_events(con))
         timed("exclude_dummy_locomotives_from_staging", lambda: exclude_dummy_locomotives_from_staging(con))
         timed("apply_staging_manual_overrides", lambda: apply_staging_manual_overrides(con, ctx.run_id))
-        # core_transport_route hängt nicht von Manual Overrides ab und wird
-        # beim Raw-Import vorberechnet. Im Correction-Rebuild wird es übersprungen.
         timed_if_missing(
             "build_transport_routes",
             "core_transport_route",
@@ -182,44 +213,46 @@ def run_full_rebuild_from_raw(
         )
         timed("build_core", lambda: build_core(con, ctx.run_id))
         timed("apply_core_assignment_fallbacks", lambda: apply_core_assignment_fallbacks(con, ctx.run_id))
-        timed("prepare_timeline_context_phase6c", lambda: prepare_timeline_context_phase6c(con, ctx.run_id))
         timed("build_unresolved_performing_ru_alias", lambda: build_unresolved_performing_ru_market_partner_alias(con))
 
-        print("Berechne Findings, Quality-Gate und Exporttabellen...")
-        timed("build_findings", lambda: build_findings(con, ctx.run_id, home_country_iso=ctx.home_country_iso))
+        # lf muss vor dem ersten Gebrauch in einer Lambda definiert sein
+        lf = affected_loco_nos
+
+        # DQ- und phase6c-Tabellen aus Prod-DB uebernehmen — muss vor
+        # prepare_timeline_context_phase6c liegen, damit der loco_filter-Modus greift.
+        timed("copy_dq_tables_from_prod", lambda: _copy_dq_tables_from_prod(con, ctx.db_path))
+
+        timed("prepare_timeline_context_phase6c", lambda: prepare_timeline_context_phase6c(con, ctx.run_id, loco_filter=lf))
+
+        # DQ-Schritte partiell (nur betroffene Loknummern)
+        timed("build_findings", lambda: build_findings(con, ctx.run_id, home_country_iso=ctx.home_country_iso, loco_filter=lf))
         timed("consolidate_dummy_locomotive_findings", lambda: consolidate_dummy_locomotive_findings(con, ctx.run_id))
-        timed("harden_findings_and_export_policy", lambda: harden_findings_and_export_policy(con, ctx.run_id))
-        timed("harden_findings_and_segments_phase6c", lambda: harden_findings_and_segments_phase6c(con, ctx.run_id))
-        timed("build_quality_gate_tables", lambda: build_quality_gate_tables(con, ctx.run_id))
-        timed("insert_gap_only_day_findings_phase6d", lambda: insert_gap_only_day_findings_phase6d(con, ctx.run_id))
+        timed("harden_findings_and_export_policy", lambda: harden_findings_and_export_policy(con, ctx.run_id, loco_filter=lf))
+        timed("harden_findings_and_segments_phase6c", lambda: harden_findings_and_segments_phase6c(con, ctx.run_id, loco_filter=lf))
+        timed("build_quality_gate_tables", lambda: build_quality_gate_tables(con, ctx.run_id, loco_filter=lf))
+        timed("insert_gap_only_day_findings_phase6d", lambda: insert_gap_only_day_findings_phase6d(con, ctx.run_id, loco_filter=lf))
         timed("apply_r016_to_quality_gate_tables", lambda: apply_r016_to_quality_gate_tables(con))
-        timed("finalize_quality_gate_phase6d", lambda: finalize_quality_gate_phase6d(con, ctx.run_id))
+        timed("finalize_quality_gate_phase6d", lambda: finalize_quality_gate_phase6d(con, ctx.run_id, loco_filter=lf))
         timed("build_export_tables", lambda: build_export_tables(con))
         timed("refresh_reconciliation_table", lambda: refresh_reconciliation_table(con, ctx.run_id))
-
-        written_files = []
-        if write_csv_outputs:
-            print("Schreibe CSV-Ausgaben...")
-            written_files = timed("export_all_csv_outputs", lambda: export_all_csv_outputs(con, ctx.export_dir))
-        else:
-            print("CSV-Ausgaben werden fuer schnellen Korrekturlauf uebersprungen.")
 
         con.close()
         con = None
 
-        timed("replace_build_database", lambda: os.replace(ctx.db_build_path, ctx.db_path))
+        os.replace(ctx.db_build_path, ctx.db_path)
         _remove_if_exists(Path(str(ctx.db_build_path) + ".wal"))
-        _write_timing_log(ctx, timings)
 
-        if write_csv_outputs:
-            return f"FULL_REBUILD_FROM_RAW abgeschlossen. CSV-Dateien geschrieben: {len(written_files)}"
-        return "FULL_REBUILD_FROM_RAW abgeschlossen. CSV-Schreiben uebersprungen."
+        total = round(sum(float(t["seconds"]) for t in timings), 3)
+        print(f"Partieller Rebuild abgeschlossen in {total:.3f}s. "
+              f"Betroffene Loknummern: {len(affected_loco_nos)}")
+        return (
+            f"PARTIAL_CORRECTION_REBUILD abgeschlossen. "
+            f"Loknummern={len(affected_loco_nos)}, Gesamt={total:.3f}s"
+        )
 
     except Exception:
         if con is not None:
             con.close()
         _remove_if_exists(ctx.db_build_path)
         _remove_if_exists(Path(str(ctx.db_build_path) + ".wal"))
-        if timings:
-            _write_timing_log(ctx, timings)
         raise

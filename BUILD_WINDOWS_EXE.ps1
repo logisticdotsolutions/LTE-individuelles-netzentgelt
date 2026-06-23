@@ -1,5 +1,5 @@
 param(
-    [string]$EntryPoint = "",
+    [string]$EntryPoint = "app\app.py",
     [switch]$SkipDependencyInstall
 )
 
@@ -128,6 +128,7 @@ foreach ($Module in @('streamlit', 'altair', 'duckdb', 'pandas', 'openpyxl', 'py
 
 Add-DataIfExists $PyInstallerArgs 'requirements.txt' '.'
 Add-DataIfExists $PyInstallerArgs 'packaging\netzentgelt_entrypoint.txt' 'packaging'
+Add-DataIfExists $PyInstallerArgs 'app' 'app'
 Add-DataIfExists $PyInstallerArgs 'scripts' 'scripts'
 Add-DataIfExists $PyInstallerArgs 'data' 'data'
 Add-DataIfExists $PyInstallerArgs 'config' 'config'
@@ -149,11 +150,13 @@ if (-not (Test-Path $DistDir)) {
     throw "Build-Ordner wurde nicht gefunden: $DistDir"
 }
 
-Write-Section 'Erzeuge internes Build-ZIP'
-if (Test-Path $InternalZipPath) {
-    Remove-Item $InternalZipPath -Force
+# Entrypoint-Config explizit nachkopieren (PyInstaller ignoriert einzelne .txt-Dateien via --add-data)
+if (Test-Path $EntryConfig) {
+    $DestPackaging = Join-Path $DistDir 'packaging'
+    New-Item -ItemType Directory -Path $DestPackaging -Force | Out-Null
+    Copy-Item -Path $EntryConfig -Destination $DestPackaging -Force
+    Write-Host "Entrypoint-Config kopiert: $EntryConfig -> $DestPackaging"
 }
-Compress-Archive -Path (Join-Path $DistDir '*') -DestinationPath $InternalZipPath -Force
 
 Write-Section 'Erzeuge gesondertes Key-User-Paket'
 if (Test-Path $KeyUserRoot) {

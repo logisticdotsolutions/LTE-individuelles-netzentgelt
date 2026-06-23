@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c ' *)",
+      "Bash(pipeline\" 2>/dev/null; grep -rn \"async_rebuild_runtime\\\\|request_background\\\\|read_rebuild_status\\\\|pipeline_status\" \"c:\\\\00_Projects\\\\LTE-individuelles-netzentgelt\\\\app\\\\\" --include=\"*.py\")",
+      "Bash(python -c \"import ast, sys; files = ['scripts/operator_ui_module.py','scripts/manual_override_ui_module.py']; [print\\(f'OK: {f}'\\) or ast.parse\\(open\\(f, encoding='utf-8'\\).read\\(\\)\\) for f in files]\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('app/app.py', encoding='utf-8'\\).read\\(\\)\\); print\\('OK: app/app.py'\\)\")",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('app/app.py', encoding='utf-8-sig'\\).read\\(\\)\\); print\\('OK: app/app.py'\\)\")",
+      "Bash(python -m pytest tests/ -x -q --tb=short)",
+      "Bash(python -c \"import ast; ast.parse\\(open\\('scripts/operator_ui_module.py', encoding='utf-8'\\).read\\(\\)\\); print\\('OK'\\)\")",
+      "PowerShell(Get-ChildItem \"c:\\\\00_Projects\\\\LTE-individuelles-netzentgelt\\\\config\\\\\" | Select-Object Name; Get-ChildItem \"c:\\\\00_Projects\\\\LTE-individuelles-netzentgelt\\\\\" -File | Where-Object { $_.Name -match 'bat|exe|setup|launch|start' } | Select-Object Name)",
+      "PowerShell($zip = \"c:\\\\00_Projects\\\\LTE-individuelles-netzentgelt\\\\_keyuser_package\\\\NetzentgeltMVP_KeyUser.zip\"; $size = \\(Get-Item $zip\\).Length / 1MB; Write-Host \\(\"ZIP: {0:N0} MB\" -f $size\\); Get-ChildItem \"c:\\\\00_Projects\\\\LTE-individuelles-netzentgelt\\\\_keyuser_package\\\\NetzentgeltMVP_KeyUser\\\\\" | Select-Object Name, @{N='MB';E={[math]::Round\\($_.Length/1MB,1\\)}} | Sort-Object Name)",
+      "Read(//c/Users/OrglChri/.streamlit/**)",
+      "PowerShell(Get-PSDrive C | Select-Object Used, Free, @{N='Free_GB';E={[math]::Round\\($_.Free/1GB,1\\)}}, @{N='Used_GB';E={[math]::Round\\($_.Used/1GB,1\\)}})",
+      "PowerShell(Remove-Item \"c:\\\\00_Projects\\\\LTE-individuelles-netzentgelt\\\\build\" -Recurse -Force -ErrorAction SilentlyContinue; Remove-Item \"c:\\\\00_Projects\\\\LTE-individuelles-netzentgelt\\\\dist\" -Recurse -Force -ErrorAction SilentlyContinue; Remove-Item \"c:\\\\00_Projects\\\\LTE-individuelles-netzentgelt\\\\_keyuser_package\" -Recurse -Force -ErrorAction SilentlyContinue; Get-PSDrive C | Select-Object @{N='Free_GB';E={[math]::Round\\($_.Free/1GB,1\\)}})"
+    ]
+  }
+}

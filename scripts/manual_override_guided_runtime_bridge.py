@@ -147,7 +147,7 @@ def guided_correction_widgets(timeline: pd.DataFrame | None = None) -> Iterator[
             selected_time = st.time_input(
                 "Neue Uhrzeit (UTC) *",
                 value=base.time(),
-                step=timedelta(seconds=1),
+                step=timedelta(minutes=1),
                 key=f"guided_override_new_time_{kind}",
             )
         value = combine_utc_picker_value(selected_day, selected_time)

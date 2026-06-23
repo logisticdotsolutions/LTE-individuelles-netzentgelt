@@ -131,10 +131,22 @@ def _context_class_sql(prefix: str = "a") -> str:
     """
 
 
-def prepare_timeline_context_phase6c(con, run_id: str) -> None:
-    """Belastbare GAP-Grenzen, Kontexttabellen und STAND-Kandidaten aufbauen."""
+def prepare_timeline_context_phase6c(
+    con, run_id: str, loco_filter: "frozenset[str] | None" = None
+) -> None:
+    """Belastbare GAP-Grenzen, Kontexttabellen und STAND-Kandidaten aufbauen.
+
+    Mit loco_filter (partieller Modus): nur die angegebenen Loknummern neu berechnen.
+    Voraussetzung: die phase6c-Kontexttabellen existieren bereits (aus Prod-DB kopiert).
+    """
     if not table_exists(con, "core_loco_timeline"):
         raise RuntimeError("core_loco_timeline fehlt. Phase 6C kann nicht ausgefuehrt werden.")
+
+    _is_partial = (
+        loco_filter is not None
+        and table_exists(con, "dq_phase6c_uncertain_gaps")
+    )
+    _loco_list = list(loco_filter) if _is_partial else None
 
     _ensure_column(con, "core_loco_timeline", "gap_time_basis_safe", "boolean")
     _ensure_column(con, "core_loco_timeline", "gap_context_class", "varchar")
@@ -142,8 +154,9 @@ def prepare_timeline_context_phase6c(con, run_id: str) -> None:
     _ensure_column(con, "core_loco_timeline", "de_period_end_utc", "timestamp")
 
     _t = perf_counter()
+    _lf_where = "where loco_no = ANY(?)" if _is_partial else ""
     con.execute(
-        """
+        f"""
         update core_loco_timeline
         set
             de_period_start_utc = case
@@ -156,19 +169,24 @@ def prepare_timeline_context_phase6c(con, run_id: str) -> None:
                 when faulty_dir = 'A' and sequence_ts is not null then sequence_ts
                 else actual_arrival_ts
             end
-        """
+        {_lf_where}
+        """,
+        [_loco_list] if _is_partial else [],
     )
     print(f"  phase6c[1] update de_period: {perf_counter()-_t:.3f}s")
 
     _t = perf_counter()
+    _lf_mov = "and loco_no = ANY(?)" if _is_partial else ""
     con.execute(
-        """
+        f"""
         create or replace temp table tmp_movements_phase6c as
         select *
         from core_loco_timeline
         where row_type = 'MOVEMENT'
+          {_lf_mov}
         order by loco_no, movement_sequence_no
-        """
+        """,
+        [_loco_list] if _is_partial else [],
     )
     # ART-Index auf (loco_no, movement_sequence_no) aktiviert den Index-Range-Scan
     # im nachfolgenden Lateral-Join: statt O(n_total) pro Zeile → O(log n + n_loco_local).
@@ -261,9 +279,7 @@ def prepare_timeline_context_phase6c(con, run_id: str) -> None:
     print(f"  phase6c[3] self-join adjacency: {perf_counter()-_t:.3f}s")
 
     _t = perf_counter()
-    con.execute(
-        """
-        create or replace table dq_phase6c_nested_event_skips as
+    _nested_skips_sql = """
         with ordered as (
             select
                 c.*,
@@ -296,15 +312,23 @@ def prepare_timeline_context_phase6c(con, run_id: str) -> None:
           and skipped_actual_departure_ts is not null
           and skipped_actual_departure_ts < actual_arrival_ts
         order by loco_no, actual_arrival_ts, source_row_id
-        """
-    )
+    """
+    if _is_partial:
+        con.execute(
+            "delete from dq_phase6c_nested_event_skips where loco_no = ANY(?)",
+            [_loco_list],
+        )
+        con.execute(f"insert into dq_phase6c_nested_event_skips {_nested_skips_sql}")
+    else:
+        con.execute(f"create or replace table dq_phase6c_nested_event_skips as {_nested_skips_sql}")
     print(f"  phase6c[4] nested_event_skips: {perf_counter()-_t:.3f}s")
 
     # Bestehende GAP-Zeilen auf belastbare Grenzen umstellen. Unsichere Grenzen
     # bleiben sichtbar, duerfen aber weder Dauer noch harte 15-Minuten-Deckung liefern.
     _t = perf_counter()
+    _lf_gap = "and g.loco_no = ANY(?)" if _is_partial else ""
     con.execute(
-        """
+        f"""
         update core_loco_timeline as g
         set
             gap_time_basis_safe = a.derived_gap_time_basis_safe,
@@ -331,18 +355,17 @@ def prepare_timeline_context_phase6c(con, run_id: str) -> None:
             end
         from tmp_phase6c_adjacency a
         where g.row_type = 'GAP'
+          {_lf_gap}
           and g.loco_no is not distinct from a.loco_no
           and g.movement_sequence_no is not distinct from a.movement_sequence_no
           and g.source_table is not distinct from a.source_table
           and g.source_row_id is not distinct from a.source_row_id
-        """
+        """,
+        [_loco_list] if _is_partial else [],
     )
     print(f"  phase6c[5] update GAP rows: {perf_counter()-_t:.3f}s")
 
-    _t = perf_counter()
-    con.execute(
-        """
-        create or replace table dq_phase6c_uncertain_gaps as
+    _uncertain_gaps_sql = """
         select
             ?::varchar as run_id,
             loco_no,
@@ -364,15 +387,19 @@ def prepare_timeline_context_phase6c(con, run_id: str) -> None:
           and derived_gap_context_class = 'DE_CONTINUITY'
           and coalesce(derived_gap_time_basis_safe, false) = false
         order by loco_no, approximate_gap_start_utc, source_row_id
-        """,
-        [str(run_id)],
-    )
+    """
+    _t = perf_counter()
+    if _is_partial:
+        con.execute(
+            "delete from dq_phase6c_uncertain_gaps where loco_no = ANY(?)",
+            [_loco_list],
+        )
+        con.execute(f"insert into dq_phase6c_uncertain_gaps {_uncertain_gaps_sql}", [str(run_id)])
+    else:
+        con.execute(f"create or replace table dq_phase6c_uncertain_gaps as {_uncertain_gaps_sql}", [str(run_id)])
     print(f"  phase6c[6] uncertain_gaps: {perf_counter()-_t:.3f}s")
 
-    _t = perf_counter()
-    con.execute(
-        """
-        create or replace table dq_phase6c_gap_context_review as
+    _gap_context_sql = """
         select
             ?::varchar as run_id,
             loco_no,
@@ -400,15 +427,19 @@ def prepare_timeline_context_phase6c(con, run_id: str) -> None:
                 'FOREIGN_TO_DE_CONTEXT_REVIEW'
           )
         order by loco_no, actual_arrival_ts, source_row_id
-        """,
-        [str(run_id)],
-    )
+    """
+    _t = perf_counter()
+    if _is_partial:
+        con.execute(
+            "delete from dq_phase6c_gap_context_review where loco_no = ANY(?)",
+            [_loco_list],
+        )
+        con.execute(f"insert into dq_phase6c_gap_context_review {_gap_context_sql}", [str(run_id)])
+    else:
+        con.execute(f"create or replace table dq_phase6c_gap_context_review as {_gap_context_sql}", [str(run_id)])
     print(f"  phase6c[7] gap_context_review: {perf_counter()-_t:.3f}s")
 
-    _t = perf_counter()
-    con.execute(
-        """
-        create or replace table core_loco_stand_candidates as
+    _stand_candidates_sql = """
         select
             ?::varchar as run_id,
             loco_no,
@@ -434,9 +465,16 @@ def prepare_timeline_context_phase6c(con, run_id: str) -> None:
           and report_scope = 'IN_REPORT'
           and next_report_scope = 'IN_REPORT'
         order by stand_duration_minutes desc, loco_no, stand_from_utc
-        """,
-        [str(run_id)],
-    )
+    """
+    _t = perf_counter()
+    if _is_partial:
+        con.execute(
+            "delete from core_loco_stand_candidates where loco_no = ANY(?)",
+            [_loco_list],
+        )
+        con.execute(f"insert into core_loco_stand_candidates {_stand_candidates_sql}", [str(run_id)])
+    else:
+        con.execute(f"create or replace table core_loco_stand_candidates as {_stand_candidates_sql}", [str(run_id)])
     print(f"  phase6c[8] stand_candidates: {perf_counter()-_t:.3f}s")
 
     _audit(
@@ -469,13 +507,18 @@ def prepare_timeline_context_phase6c(con, run_id: str) -> None:
     )
 
 
-def _refresh_export_policy(con) -> None:
+def _refresh_export_policy(
+    con, loco_filter: "frozenset[str] | None" = None
+) -> None:
     cutoff = _cutoff_utc(con)
     if cutoff is None:
         raise RuntimeError("dq_run_metadata.error_cutoff_utc fehlt. Phase 6C bricht sicher ab.")
+    _is_partial = loco_filter is not None
+    _lf_params = [list(loco_filter)] if _is_partial else []
+    _loco_where = "where loco_no = ANY(?)" if _is_partial else ""
     _ensure_column(con, "core_loco_timeline", "export_blocking", "boolean")
     con.execute(
-        """
+        f"""
         update core_loco_timeline
         set export_ready = case
             when row_type = 'MOVEMENT'
@@ -493,10 +536,12 @@ def _refresh_export_policy(con) -> None:
                 then true
             else false
         end
-        """
+        {_loco_where}
+        """,
+        _lf_params,
     )
     con.execute(
-        """
+        f"""
         update core_loco_timeline
         set export_blocking = case
             when row_type = 'MOVEMENT'
@@ -509,21 +554,30 @@ def _refresh_export_policy(con) -> None:
                 then true
             else false
         end
+        {_loco_where}
         """,
-        [cutoff],
+        [cutoff] + _lf_params,
     )
 
 
-def _insert_r015_uncertain_gap_findings(con, run_id: str) -> None:
+def _insert_r015_uncertain_gap_findings(
+    con, run_id: str, loco_filter: "frozenset[str] | None" = None
+) -> None:
     cutoff = _cutoff_utc(con)
     if cutoff is None:
         raise RuntimeError("dq_run_metadata.error_cutoff_utc fehlt. Phase 6C bricht sicher ab.")
 
+    _is_partial = loco_filter is not None
+    _lf = "and f.loco_no = ANY(?)" if _is_partial else ""
+    _lf_noalias = "and loco_no = ANY(?)" if _is_partial else ""
+    _lf_params = [list(loco_filter)] if _is_partial else []
+
     # Alte R010/R010.5-Findings fuer unsichere GAP-Zeilen entfernen.
     con.execute(
-        """
+        f"""
         delete from dq_findings as f
         where f.rule_id in ('R010', 'R010.5')
+          {_lf}
           and exists (
                 select 1
                 from core_loco_timeline g
@@ -533,11 +587,16 @@ def _insert_r015_uncertain_gap_findings(con, run_id: str) -> None:
                   and g.source_table is not distinct from f.source_table
                   and g.source_row_id is not distinct from f.source_row_id
           )
-        """
+        """,
+        _lf_params,
     )
-    con.execute("delete from dq_findings where rule_id = 'R015'")
     con.execute(
-        """
+        f"delete from dq_findings where rule_id = 'R015' {_lf_noalias}",
+        _lf_params,
+    )
+    _r015_loco_where = "where loco_no = ANY(?)" if _is_partial else ""
+    con.execute(
+        f"""
         insert into dq_findings (
             run_id, severity, rule_id, rule_group, loco_no, transport_number,
             performing_ru, row_type, movement_sequence_no, period_start_utc,
@@ -571,8 +630,9 @@ def _insert_r015_uncertain_gap_findings(con, run_id: str) -> None:
             source_row_id,
             null::varchar
         from dq_phase6c_uncertain_gaps
+        {_r015_loco_where}
         """,
-        [str(run_id), cutoff, cutoff],
+        [str(run_id), cutoff, cutoff] + _lf_params,
     )
 
 
@@ -673,14 +733,44 @@ def _refresh_rule_catalog(con) -> None:
     )
 
 
-def build_central_de_usage_segments(con, run_id: str) -> None:
+def build_central_de_usage_segments(
+    con, run_id: str, loco_filter: "frozenset[str] | None" = None
+) -> None:
     """Eine zentrale, auf den meldefaehigen DE-Zeitraum begrenzte Segmenttabelle erzeugen."""
     if not table_exists(con, "core_loco_timeline"):
         raise RuntimeError("core_loco_timeline fehlt. DE-Segmente koennen nicht aufgebaut werden.")
 
+    _is_partial = (
+        loco_filter is not None
+        and table_exists(con, "core_usage_assignment_segment_movements")
+    )
+    _loco_list = list(loco_filter) if _is_partial else None
+
+    if _is_partial:
+        con.execute(
+            "delete from core_usage_assignment_segment_movements where loco_no = ANY(?)",
+            [_loco_list],
+        )
+        # Temp-Tabelle statt ANY(?)-Parameter in CTE-Kontext (UNNEST-Einschraenkung DuckDB)
+        con.execute(
+            "create or replace temp table _lf_locos as "
+            "select unnest(?) as loco_no",
+            [_loco_list],
+        )
+        _lf = "and c.loco_no in (select loco_no from _lf_locos)"
+        _lf_params: list = []
+    else:
+        _lf = ""
+        _lf_params = []
+
+    _seg_mv_preamble = (
+        "insert into core_usage_assignment_segment_movements" if _is_partial
+        else "create or replace table core_usage_assignment_segment_movements as"
+    )
+
     con.execute(
-        """
-        create or replace table core_usage_assignment_segment_movements as
+        f"""
+        {_seg_mv_preamble}
         with movement_base as (
             select
                 c.*,
@@ -696,6 +786,7 @@ def build_central_de_usage_segments(con, run_id: str) -> None:
             where c.row_type = 'MOVEMENT'
               and c.report_scope = 'IN_REPORT'
               and nullif(trim(c.loco_no), '') is not null
+              {_lf}
         ), eligible as (
             select *
             from movement_base
@@ -763,12 +854,25 @@ def build_central_de_usage_segments(con, run_id: str) -> None:
             export_blocking
         from segmented
         """,
-        [str(run_id)],
+        [str(run_id)] + _lf_params,
+    )
+
+    if _is_partial:
+        con.execute(
+            "delete from core_usage_assignment_segments where loco_no = ANY(?)",
+            [_loco_list],
+        )
+    _seg_preamble = (
+        "insert into core_usage_assignment_segments" if _is_partial
+        else "create or replace table core_usage_assignment_segments as"
+    )
+    _seg_source_filter = (
+        "where loco_no in (select loco_no from _lf_locos)" if _is_partial else ""
     )
 
     con.execute(
-        """
-        create or replace table core_usage_assignment_segments as
+        f"""
+        {_seg_preamble}
         select
             run_id,
             loco_no,
@@ -790,23 +894,32 @@ def build_central_de_usage_segments(con, run_id: str) -> None:
             first(nullif(trim(holder_market_partner_id), '') order by de_period_start_utc, source_row_id)
                 filter (where nullif(trim(holder_market_partner_id), '') is not null) as holder_market_partner_id
         from core_usage_assignment_segment_movements
+        {_seg_source_filter}
         group by run_id, loco_no, usage_segment_no, usage_segment_id, performing_ru
         having max(de_period_end_utc) > min(de_period_start_utc)
         order by loco_no, segment_start_utc, usage_segment_no
-        """
+        """,
     )
 
 
-def harden_findings_and_segments_phase6c(con, run_id: str) -> None:
-    """Phase-6C-Findings, Exportpolicy und zentrale Segmente abschliessend aktualisieren."""
+def harden_findings_and_segments_phase6c(
+    con, run_id: str, loco_filter: "frozenset[str] | None" = None
+) -> None:
+    """Phase-6C-Findings, Exportpolicy und zentrale Segmente abschliessend aktualisieren.
+
+    loco_filter: None → Vollneubau. frozenset → nur betroffene Loks.
+    """
+    if loco_filter is not None and len(loco_filter) == 0:
+        return
+
     if not table_exists(con, "dq_findings"):
         raise RuntimeError("dq_findings fehlt. Phase 6C kann nicht ausgefuehrt werden.")
-    _insert_r015_uncertain_gap_findings(con, run_id)
+    _insert_r015_uncertain_gap_findings(con, run_id, loco_filter)
     _insert_r012_transportdetail_dummy_findings(con, run_id)
     _refresh_rule_catalog(con)
     _refresh_core_quality_flags(con)
-    _refresh_export_policy(con)
-    build_central_de_usage_segments(con, run_id)
+    _refresh_export_policy(con, loco_filter)
+    build_central_de_usage_segments(con, run_id, loco_filter)
 
     _audit(
         con,

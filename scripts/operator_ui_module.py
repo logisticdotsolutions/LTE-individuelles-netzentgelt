@@ -15,6 +15,7 @@ Ziele:
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Iterable
 
 import pandas as pd
@@ -555,6 +556,55 @@ def render_open_tasks(
                 mime="text/csv",
                 key="download_operator_tasks_csv",
             )
+
+
+def render_status_banner(
+    *,
+    last_success_at_utc: str = "",
+    rebuild_state: str = "",
+    gate_summary: GateSummary | None = None,
+) -> None:
+    """Kompakter Systemstatus-Banner: Rebuild-Zustand, Datenalter und schnelle Ampel."""
+    state = (rebuild_state or "").upper()
+
+    if state in {"QUEUED", "RUNNING", "PENDING"}:
+        st.info(
+            "Neuberechnung läuft im Hintergrund — die Ergebnisse erscheinen nach Abschluss.",
+            icon="⏳",
+        )
+    elif state == "ERROR":
+        st.error(
+            "Die letzte Neuberechnung ist fehlgeschlagen. Details im Tab '⚙️ Technik'.",
+            icon="⛔",
+        )
+
+    # Datenalter über volle Breite
+    if last_success_at_utc:
+        try:
+            ts = datetime.fromisoformat(last_success_at_utc.replace("Z", "+00:00"))
+            delta = datetime.now(timezone.utc) - ts
+            hours = int(delta.total_seconds() // 3600)
+            minutes = int((delta.total_seconds() % 3600) // 60)
+            local_ts = ts.astimezone()
+            if hours >= 1:
+                age = f"vor {hours}h {minutes:02d}min"
+            else:
+                age = f"vor {minutes} Min."
+            st.caption(f"Datenstand: {local_ts:%d.%m.%Y %H:%M} ({age})")
+        except Exception:
+            st.caption(f"Letzter Neuberechnung: {last_success_at_utc}")
+    else:
+        st.caption("Noch kein Neuberechnungs-Zeitpunkt verfügbar.")
+
+    # Metriken in drei gleichbreiten Spalten (volle Seitenbreite)
+    if gate_summary is not None:
+        col_blocked, col_warning, col_ready = st.columns(3)
+        with col_blocked:
+            st.metric("Gesperrt", gate_summary.blocked_days)
+        with col_warning:
+            st.metric("Hinweise", gate_summary.warning_days)
+        with col_ready:
+            st.metric("Freigegeben", gate_summary.ready_days)
 
 
 def _render_loco_shortcut(table: pd.DataFrame, key_suffix: str = "blocked") -> None:

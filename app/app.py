@@ -35,8 +35,9 @@ from export_module import (
     list_unconfigured_lte_performing_rus,
 )
 from rest_export_module import PRIMARY_EXPORT_GROUPS, list_rest_export_overview
-from operator_ui_module import render_operator_dashboard, render_open_tasks
+from operator_ui_module import render_operator_dashboard, render_open_tasks, render_status_banner, summarize_gate
 from manual_override_ui_module import render_manual_override_cockpit
+from async_rebuild_runtime_module import read_rebuild_status
 from operational_day_filter_module import (
     filter_by_operational_days,
     render_sidebar_operational_day_filter,
@@ -138,6 +139,19 @@ def read_csv_safe(path: Path) -> pd.DataFrame:
         except Exception as e:
             st.error(f"Datei konnte nicht gelesen werden: {path.name} - {e}")
             return pd.DataFrame()
+
+
+@st.cache_data(show_spinner=False)
+def _load_csv_cached(path_str: str, mtime_ns: int) -> pd.DataFrame:
+    """CSV cachen bis zur nächsten Dateiänderung (mtime als Cache-Key)."""
+    _ = mtime_ns
+    return read_csv_safe(Path(path_str))
+
+
+def _load_csv(path: Path) -> pd.DataFrame:
+    """Gecachtes CSV-Laden — kein Disk-IO bei unveränderter Datei."""
+    mtime = path.stat().st_mtime_ns if path.exists() else 0
+    return _load_csv_cached(str(path), mtime)
 
 def hide_non_relevant_gap_rows(source_df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -1087,6 +1101,14 @@ def build_no_loco_diagnostics():
 
     return summary_df, detail_df, warnings
 
+
+@st.cache_data(show_spinner=False)
+def _build_no_loco_diagnostics_cached(td_mtime: int, lm_mtime: int, manifest_mtime: int):
+    """build_no_loco_diagnostics cachen — neu nur bei geänderten Rohdaten."""
+    _ = td_mtime, lm_mtime, manifest_mtime
+    return build_no_loco_diagnostics()
+
+
 def build_border_crossing_view(source_df: pd.DataFrame) -> pd.DataFrame:
     """
     Grenzübertritte aus der Lok-Zeitachse ableiten.
@@ -1545,7 +1567,7 @@ stand_candidates_path = EXPORT_DIR / "core_loco_stand_candidates.csv"
 gap_context_review_path = EXPORT_DIR / "dq_phase6c_gap_context_review.csv"
 uncertain_gaps_path = EXPORT_DIR / "dq_phase6c_uncertain_gaps.csv"
 
-timeline_raw = read_csv_safe(timeline_path)
+timeline_raw = _load_csv(timeline_path)
 timeline_gap_relevance_ready = (
     timeline_raw.empty
     or "gap_relevant_de" in timeline_raw.columns
@@ -1554,31 +1576,31 @@ timeline_gap_relevance_ready = (
 timeline = hide_non_relevant_gap_rows(
     timeline_raw
 )
-findings = read_csv_safe(findings_path)
+findings = _load_csv(findings_path)
 findings = hide_non_relevant_gap_findings(
     findings_df=findings,
     timeline_df=timeline_raw,
 )
-rule_catalog = read_csv_safe(rule_catalog_path)
-unresolved_performing_ru_market_partner_alias = read_csv_safe(
+rule_catalog = _load_csv(rule_catalog_path)
+unresolved_performing_ru_market_partner_alias = _load_csv(
     unresolved_market_partner_path
 )
-vens_tens_exception = read_csv_safe(
+vens_tens_exception = _load_csv(
     vens_tens_exception_path
 )
-zuordnungen = read_csv_safe(zuordnungen_path)
-nutzungsmeldung = read_csv_safe(nutzungsmeldung_path)
-runs = read_csv_safe(run_path)
-coverage = read_csv_safe(coverage_path)
-export_gate = read_csv_safe(export_gate_path)
-export_gate_ru = read_csv_safe(export_gate_ru_path)
-global_export_blockers = read_csv_safe(global_blockers_path)
-reconciliation = read_csv_safe(reconciliation_path)
-operational_kpis = read_csv_safe(operational_kpis_path)
-excluded_export_rows = read_csv_safe(excluded_export_rows_path)
-stand_candidates = read_csv_safe(stand_candidates_path)
-gap_context_review = read_csv_safe(gap_context_review_path)
-uncertain_gaps = read_csv_safe(uncertain_gaps_path)
+zuordnungen = _load_csv(zuordnungen_path)
+nutzungsmeldung = _load_csv(nutzungsmeldung_path)
+runs = _load_csv(run_path)
+coverage = _load_csv(coverage_path)
+export_gate = _load_csv(export_gate_path)
+export_gate_ru = _load_csv(export_gate_ru_path)
+global_export_blockers = _load_csv(global_blockers_path)
+reconciliation = _load_csv(reconciliation_path)
+operational_kpis = _load_csv(operational_kpis_path)
+excluded_export_rows = _load_csv(excluded_export_rows_path)
+stand_candidates = _load_csv(stand_candidates_path)
+gap_context_review = _load_csv(gap_context_review_path)
+uncertain_gaps = _load_csv(uncertain_gaps_path)
 
 # Datenqualitätswerte direkt aus den aktuellen Rohdaten bilden.
 # Dadurch werden sie bereits nach einem Download aktualisiert,
@@ -1588,8 +1610,11 @@ uncertain_gaps = read_csv_safe(uncertain_gaps_path)
 # Die Diagnose wird defensiv gekapselt. Ein unerwarteter Fehler in einer
 # Rohdaten-Datei darf nicht mehr die gesamte Streamlit-Seite abbrechen.
 try:
-    no_loco_summary, no_loco_cases, no_loco_warnings = (
-        build_no_loco_diagnostics()
+    _td_mtime = int((RAW_DIR / "TransportDetail.csv").stat().st_mtime_ns) if (RAW_DIR / "TransportDetail.csv").exists() else 0
+    _lm_mtime = int((RAW_DIR / "LocomotiveMovement.csv").stat().st_mtime_ns) if (RAW_DIR / "LocomotiveMovement.csv").exists() else 0
+    _manifest_mtime = int(RAW_IMPORT_MANIFEST_PATH.stat().st_mtime_ns) if RAW_IMPORT_MANIFEST_PATH.exists() else 0
+    no_loco_summary, no_loco_cases, no_loco_warnings = _build_no_loco_diagnostics_cached(
+        _td_mtime, _lm_mtime, _manifest_mtime
     )
 
 except Exception as diagnostics_error:
@@ -1701,20 +1726,36 @@ uncertain_gaps = filter_by_operational_days(
     timestamp_candidates=["approximate_gap_start_utc", "approximate_gap_end_utc"],
 )
 
-tab_overview, tab_tasks, tab_override, tab_timeline, tab_exports, tab_review, tab_no_loco, tab_findings, tab_run = st.tabs([
+tab_overview, tab_tasks, tab_override, tab_timeline, tab_exports, tab_tech = st.tabs([
     "1. Tagesprüfung",
     "2. Offene Aufgaben",
     "3. Fall bearbeiten",
     "4. Lok prüfen",
     "5. Exporte erstellen",
-    "6. Weitere Prüfungen",
-    "⚙️ Technik: Loknummern",
-    "⚙️ Technik: Regelqueue",
-    "⚙️ Technik: Pipeline"
+    "⚙️ Technik",
 ])
+
+# Technische Unterabschnitte als Expander im zusammengefassten Technik-Tab
+with tab_tech:
+    st.caption("Diagnose und Administration — für den täglichen Betrieb nicht erforderlich.")
+    exp_no_loco = st.expander("Fehlende oder technische Loknummern", expanded=False)
+    exp_findings = st.expander("Vollständige Regelqueue", expanded=False)
+    exp_run = st.expander("Pipeline / Neuberechnung", expanded=False)
+
+tab_no_loco = exp_no_loco
+tab_findings = exp_findings
+tab_run = exp_run
 
 with tab_overview:
     st.subheader("Tagesprüfung")
+
+    _rebuild_status = read_rebuild_status()
+    _gate_summary = summarize_gate(export_gate, global_export_blockers, excluded_export_rows, findings)
+    render_status_banner(
+        last_success_at_utc=str(_rebuild_status.get("last_success_at_utc") or ""),
+        rebuild_state=str(_rebuild_status.get("state") or ""),
+        gate_summary=_gate_summary,
+    )
 
     if not timeline_gap_relevance_ready:
         st.warning(
@@ -2024,14 +2065,6 @@ with tab_override:
         run_all_script=SCRIPT_RUN_ALL,
         findings=findings,
         timeline=timeline_raw,
-    )
-
-
-with tab_review:
-    render_phase6d_review_lists(
-        stand_candidates=stand_candidates,
-        gap_context_review=gap_context_review,
-        uncertain_gaps=uncertain_gaps,
     )
 
 
@@ -2809,7 +2842,7 @@ with tab_timeline:
     dq_path = EXPORT_DIR / "dq_findings.csv"
     route_detail_path = EXPORT_DIR / "stg_transport_details_enriched.csv"
 
-    core_raw = read_csv_safe(core_path)
+    core_raw = _load_csv(core_path)
     core_raw = filter_by_operational_days(
         core_raw,
         date_from=operational_day_from,
@@ -2824,14 +2857,14 @@ with tab_timeline:
     core = hide_non_relevant_gap_rows(
         core_raw
     )
-    dq = read_csv_safe(dq_path)
+    dq = _load_csv(dq_path)
     dq = filter_by_operational_days(
         dq,
         date_from=operational_day_from,
         date_to=operational_day_to,
         timestamp_candidates=["actual_departure_ts", "ActualDeparture", "period_start_utc"],
     )
-    route_details = read_csv_safe(route_detail_path)
+    route_details = _load_csv(route_detail_path)
 
     if core.empty:
         st.warning("Keine core_loco_timeline.csv gefunden. Bitte zuerst die Pipeline ausführen.")

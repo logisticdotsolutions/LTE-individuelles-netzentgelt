@@ -639,13 +639,21 @@ def build_findings(
     con,
     run_id: str,
     home_country_iso: str = "DE",
+    loco_filter: "frozenset[str] | None" = None,
 ) -> None:
     """
     Erzeugt dq_findings und synchronisiert danach die Timeline-Flags.
 
     Die Tabelle enthält atomare Regelverletzungen. Deshalb kann dieselbe
     TransportNumber mehrfach vorkommen, wenn mehrere Regeln greifen.
+
+    loco_filter: None → Vollneubau (bisheriges Verhalten).
+                 frozenset → DELETE+INSERT nur für diese Loknummern.
+                 frozenset() (leer) → keine Änderung.
     """
+    if loco_filter is not None and len(loco_filter) == 0:
+        return
+
     run = sql_lit(run_id)
     source_snapshot_at_utc, error_cutoff_utc = _get_error_cutoff_utc(
         con,
@@ -670,13 +678,31 @@ def build_findings(
     ])
     build_rule_catalog(con)
 
+    _is_partial = loco_filter is not None
+    _loco_list = list(loco_filter) if _is_partial else None
+    _lf = "and loco_no = ANY(?)" if _is_partial else ""
+    _lf_params = [_loco_list] if _is_partial else []
+
+    _FINDINGS_BASE_COLS = (
+        "run_id, severity, rule_id, rule_group, loco_no, transport_number,"
+        " performing_ru, row_type, movement_sequence_no, period_start_utc,"
+        " period_end_utc, message, suggested_action, status, source_table, source_row_id"
+    )
+
+    if _is_partial:
+        con.execute("delete from dq_findings where loco_no = ANY(?)", [_loco_list])
+        _findings_preamble = f"insert into dq_findings ({_FINDINGS_BASE_COLS})"
+    else:
+        _findings_preamble = "create or replace table dq_findings as"
+
     con.execute(f"""
-        create or replace table dq_findings as
+        {_findings_preamble}
         with movement_base as (
             select *
             from core_loco_timeline
             where row_type = 'MOVEMENT'
               and report_scope = 'IN_REPORT'
+              {_lf}
         ),
         movement_error_base as (
             select *
@@ -691,6 +717,7 @@ def build_findings(
               and coalesce(gap_relevant_de, false) = true
               and coalesce(period_end_utc, period_start_utc) is not null
               and coalesce(period_end_utc, period_start_utc) <= try_cast({error_cutoff} as timestamp)
+              {_lf}
         ),
         overlap as (
             select
@@ -909,6 +936,7 @@ def build_findings(
         where row_type = 'GAP'
           and coalesce(gap_relevant_de, false) = true
           and coalesce(gap_duration_minutes, 0) <= 480
+          {_lf}
 
         union all
 
@@ -935,7 +963,7 @@ def build_findings(
         where report_scope = 'IN_REPORT'
           and prev_end is not null
           and period_start_utc < prev_end
-    """)
+    """, _lf_params * 3)
 
     # R012 wird direkt aus den Rohdaten ergänzt, weil fehlende Loknummern
     # keiner Lok-Zeitachse zugeordnet werden können.
@@ -944,20 +972,25 @@ def build_findings(
         run_id=run_id,
         error_cutoff_utc=error_cutoff_utc,
     )
-    con.execute("""
-        insert into dq_findings
-        select *
-        from tmp_r012_findings
-    """)
+    if _is_partial:
+        con.execute(
+            f"insert into dq_findings ({_FINDINGS_BASE_COLS})"
+            " select * from tmp_r012_findings where loco_no = ANY(?)",
+            [_loco_list],
+        )
+    else:
+        con.execute("insert into dq_findings select * from tmp_r012_findings")
 
     # Defensive Nachbereinigung für GAP-Findings:
     # Nur explizit als DE-relevant klassifizierte Lücken dürfen in der
     # Fehlerqueue und in den KPI-Zählern verbleiben. Dadurch bleiben auch
     # ältere oder zukünftig ergänzte GAP-Regeln sicher auf die fachlich
     # freigegebenen Kombinationen begrenzt.
-    con.execute("""
+    _gap_loco_clause = "and f.loco_no = ANY(?)" if _is_partial else ""
+    con.execute(f"""
         delete from dq_findings as f
         where f.row_type = 'GAP'
+          {_gap_loco_clause}
           and not exists (
                 select 1
                 from core_loco_timeline as c
@@ -971,14 +1004,16 @@ def build_findings(
                   and c.source_table is not distinct from f.source_table
                   and c.source_row_id is not distinct from f.source_row_id
           )
-    """)
+    """, _lf_params)
 
     # R011: Referenztransport ergänzen.
-    con.execute("""
-        alter table dq_findings
-        add column overlap_with_transport_number varchar
-    """)
-    con.execute("""
+    # Bei partial rebuild existiert die Spalte bereits — nur hinzufügen wenn nötig.
+    _existing_cols = {r[0].lower() for r in con.execute("describe dq_findings").fetchall()}
+    if "overlap_with_transport_number" not in _existing_cols:
+        con.execute("alter table dq_findings add column overlap_with_transport_number varchar")
+
+    _r011_loco_clause = "and f.loco_no = ANY(?)" if _is_partial else ""
+    con.execute(f"""
         update dq_findings as f
         set overlap_with_transport_number = o.prev_transport_number
         from (
@@ -1010,10 +1045,11 @@ def build_findings(
               and report_scope = 'IN_REPORT'
         ) as o
         where f.rule_id = 'R011'
+          {_r011_loco_clause}
           and f.source_table is not distinct from o.source_table
           and f.source_row_id is not distinct from o.source_row_id
           and o.prev_end is not null
-    """)
+    """, _lf_params)
 
     refresh_core_quality_flags(con)
 

@@ -28,7 +28,7 @@ def _read_configured_entrypoint(root: Path) -> str | None:
 
     config_path = root / "packaging" / "netzentgelt_entrypoint.txt"
     if config_path.exists():
-        value = config_path.read_text(encoding="utf-8").strip()
+        value = config_path.read_text(encoding="utf-8-sig").strip()
         if value:
             return value
     return None
@@ -138,6 +138,7 @@ def main() -> int:
         "streamlit",
         "run",
         str(entrypoint),
+        "--global.developmentMode=false",
         "--server.headless=true",
         "--server.address=127.0.0.1",
         f"--server.port={port}",
@@ -150,4 +151,16 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    try:
+        raise SystemExit(main())
+    except SystemExit:
+        raise
+    except Exception:
+        import traceback
+        print("\n" + "=" * 60)
+        print("STARTFEHLER — bitte diesen Text fotografieren / kopieren:")
+        print("=" * 60)
+        traceback.print_exc()
+        print("=" * 60)
+        input("\nEnter drücken zum Beenden ...")
+        raise SystemExit(1)

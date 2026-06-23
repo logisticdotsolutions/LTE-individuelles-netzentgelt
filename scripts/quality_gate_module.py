@@ -72,7 +72,11 @@ def _require_tables(con, table_names: list[str]) -> None:
         )
 
 
-def build_quality_gate_tables(con, run_id: str) -> None:
+def build_quality_gate_tables(
+    con,
+    run_id: str,
+    loco_filter: "frozenset[str] | None" = None,
+) -> None:
     """
     Auditierbare 15-Minuten-Zeitdeckung und Export-Gates aufbauen.
 
@@ -81,7 +85,18 @@ def build_quality_gate_tables(con, run_id: str) -> None:
                nicht exportfähige Bewegungen oder ausschließlich GAP-Zeit
     - WARNING: kurze relevante GAPs oder reine INFO-/WARNING-Findings
     - READY:   keine der genannten Auffälligkeiten
+
+    loco_filter: None → Vollneubau aller Tabellen.
+                 frozenset → Lok-spezifische Tabellen (core_loco_day_coverage,
+                 dq_export_gate, export_excluded_rows) nur fuer diese Loks
+                 per DELETE+INSERT aktualisieren. Globale Tabellen
+                 (dq_export_gate_ru, dq_global_export_blockers) werden
+                 immer vollstaendig neu aufgebaut.
+                 frozenset() (leer) → keine Aenderung.
     """
+    if loco_filter is not None and len(loco_filter) == 0:
+        return
+
     _require_tables(
         con,
         [
@@ -92,6 +107,12 @@ def build_quality_gate_tables(con, run_id: str) -> None:
     )
 
     run_id_text = str(run_id)
+    # Partial rebuild nur wenn persistente Tabellen bereits existieren.
+    _is_partial = loco_filter is not None and table_exists(con, "core_loco_day_coverage")
+    _loco_list = list(loco_filter) if _is_partial else None
+    _lf = "and loco_no = ANY(?)" if _is_partial else ""
+    _lf_c = "and c.loco_no = ANY(?)" if _is_partial else ""
+    _lf_p = [_loco_list] if _is_partial else []
 
     # ------------------------------------------------------------------
     # 1. Zentrale, auf DE begrenzte Nutzungssegmente aus Phase 6C verwenden.
@@ -99,7 +120,7 @@ def build_quality_gate_tables(con, run_id: str) -> None:
     # ------------------------------------------------------------------
     _require_tables(con, ["core_usage_assignment_segments"])
     con.execute(
-        """
+        f"""
         create or replace temp table tmp_qg_usage_segments as
         select
             loco_no,
@@ -113,7 +134,9 @@ def build_quality_gate_tables(con, run_id: str) -> None:
         where segment_start_utc is not null
           and segment_end_utc is not null
           and segment_end_utc > segment_start_utc
-        """
+          {_lf}
+        """,
+        _lf_p,
     )
 
     # ------------------------------------------------------------------
@@ -143,7 +166,7 @@ def build_quality_gate_tables(con, run_id: str) -> None:
     )
 
     con.execute(
-        """
+        f"""
         create or replace temp table tmp_qg_movement_slots as
         select
             c.loco_no,
@@ -167,11 +190,13 @@ def build_quality_gate_tables(con, run_id: str) -> None:
           and c.period_start_utc is not null
           and c.period_end_utc is not null
           and c.period_end_utc > c.period_start_utc
-        """
+          {_lf_c}
+        """,
+        _lf_p,
     )
 
     con.execute(
-        """
+        f"""
         create or replace temp table tmp_qg_gap_slots as
         select
             c.loco_no,
@@ -196,7 +221,9 @@ def build_quality_gate_tables(con, run_id: str) -> None:
           and c.period_start_utc is not null
           and c.period_end_utc is not null
           and c.period_end_utc > c.period_start_utc
-        """
+          {_lf_c}
+        """,
+        _lf_p,
     )
 
     # ------------------------------------------------------------------
@@ -250,7 +277,7 @@ def build_quality_gate_tables(con, run_id: str) -> None:
     # Intervalle sind fachlich zulässig. Deshalb werden zuerst echte zeitliche
     # Schnittmengen gebildet und erst danach auf 15-Minuten-Slots verdichtet.
     con.execute(
-        """
+        f"""
         create or replace temp table tmp_qg_day_overlap as
         with movement_intervals as (
             select
@@ -264,6 +291,7 @@ def build_quality_gate_tables(con, run_id: str) -> None:
               and de_period_end_utc is not null
               and de_period_end_utc > de_period_start_utc
               and de_period_start_utc <= (select max(error_cutoff_utc) from dq_run_metadata)
+              {_lf}
         ),
         actual_overlap_intervals as (
             select
@@ -300,11 +328,12 @@ def build_quality_gate_tables(con, run_id: str) -> None:
             count(*) as overlap_slot_count
         from duplicate_slots
         group by loco_no, coverage_date
-        """
+        """,
+        _lf_p,
     )
 
     con.execute(
-        """
+        f"""
         create or replace temp table tmp_qg_day_findings as
         select
             loco_no,
@@ -317,14 +346,16 @@ def build_quality_gate_tables(con, run_id: str) -> None:
         from dq_findings
         where nullif(trim(loco_no), '') is not null
           and coalesce(period_start_utc, period_end_utc) is not null
+          {_lf}
         group by
             loco_no,
             cast(coalesce(period_start_utc, period_end_utc) as date)
-        """
+        """,
+        _lf_p,
     )
 
     con.execute(
-        """
+        f"""
         create or replace temp table tmp_qg_day_movement as
         select
             loco_no,
@@ -353,6 +384,7 @@ def build_quality_gate_tables(con, run_id: str) -> None:
                 actual_arrival_ts,
                 period_end_utc
               ) is not null
+          {_lf}
         group by
             loco_no,
             cast(
@@ -364,7 +396,8 @@ def build_quality_gate_tables(con, run_id: str) -> None:
                     period_end_utc
                 ) as date
             )
-        """
+        """,
+        _lf_p,
     )
 
     con.execute(
@@ -382,9 +415,30 @@ def build_quality_gate_tables(con, run_id: str) -> None:
         """
     )
 
+    if _is_partial:
+        con.execute(
+            "delete from core_loco_day_coverage where loco_no = ANY(?)",
+            [_loco_list],
+        )
+    _coverage_preamble = (
+        "insert into core_loco_day_coverage ("
+        "run_id, loco_no, coverage_date, performing_rus, performing_ru_count,"
+        " in_report_movement_rows, assignment_slot_count, assigned_minutes,"
+        " relevant_gap_slot_count, unresolved_gap_minutes, overlap_slot_count,"
+        " overlap_minutes, expected_scope_slot_count, coverage_pct,"
+        " relevant_gap_rows, long_gap_rows, max_gap_minutes,"
+        " error_findings, manual_review_findings, warning_findings, info_findings,"
+        " finding_rule_ids, export_ready_movement_rows, not_export_ready_movement_rows,"
+        " gate_status, gate_reason)"
+        if _is_partial
+        else "create or replace table core_loco_day_coverage as"
+    )
+    _coverage_loco_where = "where d.loco_no = ANY(?)" if _is_partial else ""
+    _coverage_params = [run_id_text] + ([_loco_list] if _is_partial else [])
+
     con.execute(
-        """
-        create or replace table core_loco_day_coverage as
+        f"""
+        {_coverage_preamble}
         select
             ?::varchar as run_id,
             d.loco_no,
@@ -474,17 +528,36 @@ def build_quality_gate_tables(con, run_id: str) -> None:
         left join tmp_qg_day_movement m
           on m.loco_no = d.loco_no
          and m.coverage_date = d.coverage_date
+        {_coverage_loco_where}
         order by d.coverage_date desc, d.loco_no asc
         """,
-        [run_id_text],
+        _coverage_params,
     )
 
     # ------------------------------------------------------------------
     # 4. Export-Gates je Lok/Tag sowie je Lok/Tag/RU.
     # ------------------------------------------------------------------
+    if _is_partial:
+        con.execute(
+            "delete from dq_export_gate where loco_no = ANY(?)",
+            [_loco_list],
+        )
+    _gate_preamble = (
+        "insert into dq_export_gate ("
+        "run_id, loco_no, coverage_date, performing_rus, performing_ru_count,"
+        " coverage_pct, assigned_minutes, unresolved_gap_minutes, overlap_minutes,"
+        " relevant_gap_rows, long_gap_rows, error_findings, manual_review_findings,"
+        " warning_findings, info_findings, export_ready_movement_rows,"
+        " not_export_ready_movement_rows, gate_status, gate_reason)"
+        if _is_partial
+        else "create or replace table dq_export_gate as"
+    )
+    _gate_loco_where = "where loco_no = ANY(?)" if _is_partial else ""
+    _gate_params = [_loco_list] if _is_partial else []
+
     con.execute(
-        """
-        create or replace table dq_export_gate as
+        f"""
+        {_gate_preamble}
         select
             run_id,
             loco_no,
@@ -506,8 +579,10 @@ def build_quality_gate_tables(con, run_id: str) -> None:
             gate_status,
             gate_reason
         from core_loco_day_coverage
+        {_gate_loco_where}
         order by coverage_date desc, loco_no asc
-        """
+        """,
+        _gate_params,
     )
 
     con.execute(
@@ -571,9 +646,21 @@ def build_quality_gate_tables(con, run_id: str) -> None:
     # ------------------------------------------------------------------
     # 5. Aus Exporten ausgeschlossene Movement-Zeilen auditierbar speichern.
     # ------------------------------------------------------------------
+    if _is_partial:
+        con.execute(
+            "delete from export_excluded_rows where loco_no = ANY(?)",
+            [_loco_list],
+        )
+    _excl_preamble = (
+        "insert into export_excluded_rows" if _is_partial
+        else "create or replace table export_excluded_rows as"
+    )
+    _excl_loco_clause = "and c.loco_no = ANY(?)" if _is_partial else ""
+    _excl_params = [_loco_list] if _is_partial else []
+
     con.execute(
-        """
-        create or replace table export_excluded_rows as
+        f"""
+        {_excl_preamble}
         with movement_base as (
             select
                 c.*,
@@ -589,6 +676,7 @@ def build_quality_gate_tables(con, run_id: str) -> None:
             from core_loco_timeline c
             where c.row_type = 'MOVEMENT'
               and c.report_scope = 'IN_REPORT'
+              {_excl_loco_clause}
         )
         select
             m.run_id,
@@ -629,7 +717,8 @@ def build_quality_gate_tables(con, run_id: str) -> None:
                   and b.gate_status = 'BLOCKED'
            )
         order by m.coverage_date desc, m.loco_no asc, m.period_start_utc asc
-        """
+        """,
+        _excl_params,
     )
 
     refresh_reconciliation_table(con, run_id_text)

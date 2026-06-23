@@ -77,8 +77,16 @@ def _audit(con, run_id: str, metric: str, value: int, comment: str) -> None:
     )
 
 
-def insert_gap_only_day_findings_phase6d(con, run_id: str) -> None:
-    """R016 fuer bisher unsichtbar blockierte GAP-only-Lok-Tage einfuegen."""
+def insert_gap_only_day_findings_phase6d(
+    con, run_id: str, loco_filter: "frozenset[str] | None" = None
+) -> None:
+    """R016 fuer bisher unsichtbar blockierte GAP-only-Lok-Tage einfuegen.
+
+    loco_filter: None → Vollneubau. frozenset → nur betroffene Loks.
+    """
+    if loco_filter is not None and len(loco_filter) == 0:
+        return
+
     required = ["dq_export_gate", "dq_findings", "cfg_dq_rule_catalog"]
     missing = [name for name in required if not table_exists(con, name)]
     if missing:
@@ -86,9 +94,14 @@ def insert_gap_only_day_findings_phase6d(con, run_id: str) -> None:
             "Phase 6D kann R016 nicht erzeugen. Fehlende Tabellen: " + ", ".join(missing)
         )
 
-    con.execute("delete from dq_findings where rule_id = 'R016'")
+    _is_partial = loco_filter is not None
+    _loco_list = list(loco_filter) if _is_partial else None
+    _lf = "and loco_no = ANY(?)" if _is_partial else ""
+    _lf_params = [_loco_list] if _is_partial else []
+
+    con.execute(f"delete from dq_findings where rule_id = 'R016' {_lf}", _lf_params)
     con.execute(
-        """
+        f"""
         insert into dq_findings (
             run_id, severity, rule_id, rule_group, loco_no, transport_number,
             performing_ru, row_type, movement_sequence_no, period_start_utc,
@@ -121,8 +134,9 @@ def insert_gap_only_day_findings_phase6d(con, run_id: str) -> None:
           and coalesce(manual_review_findings, 0) = 0
           and coalesce(overlap_minutes, 0) = 0
           and coalesce(long_gap_rows, 0) = 0
+          {_lf}
         """,
-        [str(run_id)],
+        [str(run_id)] + _lf_params,
     )
 
     con.execute("delete from cfg_dq_rule_catalog where rule_id = 'R016'")
@@ -278,8 +292,15 @@ def _append_exact_overlap_reason(con, table_name: str) -> None:
     )
 
 
-def finalize_quality_gate_phase6d(con, run_id: str) -> None:
-    """Exakte Overlap-Dauer in Audit- und Gate-Tabellen ergänzen."""
+def finalize_quality_gate_phase6d(
+    con, run_id: str, loco_filter: "frozenset[str] | None" = None
+) -> None:
+    """Exakte Overlap-Dauer in Audit- und Gate-Tabellen ergänzen.
+
+    loco_filter: Parameter vorhanden fuer API-Konsistenz. Overlap-Korrekturen
+    werden immer vollstaendig berechnet, da dq_phase6d_exact_overlap_days
+    eine globale Aggregation ist.
+    """
     _build_exact_overlap_day_table(con, run_id)
     for table_name in ["core_loco_day_coverage", "dq_export_gate", "dq_export_gate_ru"]:
         _add_exact_overlap_columns(con, table_name)

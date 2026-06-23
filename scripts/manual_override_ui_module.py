@@ -12,7 +12,6 @@ import csv
 import getpass
 import os
 import shutil
-import subprocess
 import sys
 import uuid
 from datetime import datetime, timezone
@@ -45,6 +44,11 @@ from dummy_locomotive_module import (
     DUMMY_CHANGE_LOG_PATH,
     upsert_dummy_locomotive_mapping,
 )
+from async_rebuild_runtime_module import (
+    PIPELINE_ENTRYPOINT,
+    request_background_rebuild,
+)
+from async_rebuild_status_ui_module import render_async_rebuild_status
 
 
 PHASE5B_UI_MARKER = "NETZENTGELT_MANUAL_OVERRIDE_PHASE5B_UI_V1_20260607"
@@ -361,14 +365,6 @@ def _build_case_table(findings: pd.DataFrame, timeline: pd.DataFrame) -> pd.Data
     }
     return pd.DataFrame([free_row, *rows], columns=columns)
 
-
-def _run_pipeline(run_all_script: Path) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        [sys.executable, str(run_all_script)],
-        cwd=str(ROOT),
-        capture_output=True,
-        text=True,
-    )
 
 
 def _render_active_overrides() -> None:
@@ -700,21 +696,14 @@ def _render_suggestions(
             st.warning(f"{skipped_item.suggestion_id}: {skipped_item.reason}")
 
         if save_selected_and_rebuild and created:
-            with st.status("Werte werden mit den neuen lokalen Korrekturen sicher neu berechnet ...", expanded=True) as status:
-                result = _run_pipeline(Path(ROOT / "scripts" / "run_all.py"))
-                if result.returncode == 0:
-                    status.update(label="Neuberechnung erfolgreich abgeschlossen.", state="complete", expanded=False)
-                    st.session_state["overview_refresh_completed"] = True
-                    st.session_state["overview_refresh_completed_at"] = datetime.now().strftime("%d.%m.%Y um %H:%M")
-                    st.session_state["override_save_success_message"] = (
-                        f"{len(created)} lokale Korrektur(en) wurden gespeichert und neu berechnet."
-                    )
-                    st.session_state["navigate_to_fall_bearbeiten"] = True
-                    st.rerun()
-                status.update(label="Neuberechnung fehlgeschlagen.", state="error", expanded=True)
-                st.error("Der letzte produktive Stand bleibt erhalten.")
-                st.text_area("Fehler der Berechnung", result.stderr, height=220)
-                st.text_area("Output der Berechnung", result.stdout, height=220)
+            request_background_rebuild(
+                run_all_script=PIPELINE_ENTRYPOINT,
+                requested_by=bulk_created_by or getpass.getuser(),
+                reason="bulk_override_save",
+            )
+            st.session_state["navigate_to_fall_bearbeiten"] = True
+            render_async_rebuild_status()
+            st.rerun()
         elif created:
             st.info("Bitte anschließend neu prüfen, damit Timeline, automatische Prüfung und Exporte aktualisiert werden.")
 
@@ -850,17 +839,13 @@ def _render_new_override(
         )
         st.success(f"Dummy-/Planungslok {target_loco_no.strip()} wurde gespeichert. Aktion: {action}.")
         if save_and_rebuild:
-            with st.status("Dummy-Katalog wird gespeichert und sicher neu berechnet ...", expanded=True) as status:
-                result = _run_pipeline(Path(run_all_script))
-                if result.returncode == 0:
-                    status.update(label="Neuberechnung erfolgreich abgeschlossen.", state="complete", expanded=False)
-                    st.session_state["overview_refresh_completed"] = True
-                    st.session_state["overview_refresh_completed_at"] = datetime.now().strftime("%d.%m.%Y um %H:%M")
-                    st.rerun()
-                status.update(label="Neuberechnung fehlgeschlagen.", state="error", expanded=True)
-                st.error("Der letzte produktive DuckDB-Stand bleibt erhalten.")
-                st.text_area("Fehler der Berechnung", result.stderr, height=220)
-                st.text_area("Output der Berechnung", result.stdout, height=220)
+            request_background_rebuild(
+                run_all_script=PIPELINE_ENTRYPOINT,
+                requested_by=created_by or getpass.getuser(),
+                reason="dummy_loco_save",
+            )
+            render_async_rebuild_status()
+            st.rerun()
         return
 
     now = utc_now_text()
@@ -903,21 +888,14 @@ def _render_new_override(
         st.session_state.pop("manual_override_suggestion_prefill", None)
     st.success(f"Lokale Korrektur {override_id} wurde gespeichert.")
     if save_and_rebuild:
-        with st.status("Werte werden mit der lokalen Korrektur sicher neu berechnet ...", expanded=True) as status:
-            result = _run_pipeline(Path(run_all_script))
-            if result.returncode == 0:
-                status.update(label="Neuberechnung erfolgreich abgeschlossen.", state="complete", expanded=False)
-                st.session_state["overview_refresh_completed"] = True
-                st.session_state["overview_refresh_completed_at"] = datetime.now().strftime("%d.%m.%Y um %H:%M")
-                st.session_state["override_save_success_message"] = (
-                    f"Lokale Korrektur **{override_id}** wurde gespeichert und neu berechnet."
-                )
-                st.session_state["navigate_to_fall_bearbeiten"] = True
-                st.rerun()
-            status.update(label="Neuberechnung fehlgeschlagen.", state="error", expanded=True)
-            st.error("Der letzte produktive DuckDB-Stand bleibt erhalten.")
-            st.text_area("Fehler der Berechnung", result.stderr, height=220)
-            st.text_area("Output der Berechnung", result.stdout, height=220)
+        request_background_rebuild(
+            run_all_script=PIPELINE_ENTRYPOINT,
+            requested_by=new_row["created_by"],
+            reason="override_save",
+        )
+        st.session_state["navigate_to_fall_bearbeiten"] = True
+        render_async_rebuild_status()
+        st.rerun()
     else:
         st.info("Bitte anschließend neu prüfen, damit Timeline, Quality Gate und Exporte aktualisiert werden.")
 
