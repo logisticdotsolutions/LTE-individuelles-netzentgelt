@@ -85,6 +85,7 @@ def run_full_rebuild_from_raw(
         apply_staging_manual_overrides,
         import_manual_overrides,
     )
+    from process_decision_module import build_process_decision_layer
     from quality_gate_module import build_quality_gate_tables, refresh_reconciliation_table
     from rule_engine_hardening_phase6b import (
         apply_core_assignment_fallbacks,
@@ -185,7 +186,7 @@ def run_full_rebuild_from_raw(
         timed("prepare_timeline_context_phase6c", lambda: prepare_timeline_context_phase6c(con, ctx.run_id))
         timed("build_unresolved_performing_ru_alias", lambda: build_unresolved_performing_ru_market_partner_alias(con))
 
-        print("Berechne Findings, Quality-Gate und Exporttabellen...")
+        print("Berechne Findings, Quality-Gate, Prozessentscheidung und Exporttabellen...")
         timed("build_findings", lambda: build_findings(con, ctx.run_id, home_country_iso=ctx.home_country_iso))
         timed("consolidate_dummy_locomotive_findings", lambda: consolidate_dummy_locomotive_findings(con, ctx.run_id))
         timed("harden_findings_and_export_policy", lambda: harden_findings_and_export_policy(con, ctx.run_id))
@@ -195,6 +196,7 @@ def run_full_rebuild_from_raw(
         timed("apply_r016_to_quality_gate_tables", lambda: apply_r016_to_quality_gate_tables(con))
         timed("finalize_quality_gate_phase6d", lambda: finalize_quality_gate_phase6d(con, ctx.run_id))
         timed("build_export_tables", lambda: build_export_tables(con))
+        timed("build_process_decision_layer", lambda: build_process_decision_layer(con, ctx.run_id))
         timed("refresh_reconciliation_table", lambda: refresh_reconciliation_table(con, ctx.run_id))
 
         written_files = []
