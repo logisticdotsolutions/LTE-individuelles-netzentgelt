@@ -38,6 +38,7 @@ def run_export_rebuild(ctx: PipelineContext) -> str:
     _ensure_scripts_dir_on_path()
 
     from export_module import build_export_tables
+    from process_decision_module import build_process_decision_layer
     from quality_gate_module import refresh_reconciliation_table
 
     con = None
@@ -48,6 +49,7 @@ def run_export_rebuild(ctx: PipelineContext) -> str:
 
         print("Erzeuge Exporttabellen neu...")
         build_export_tables(con)
+        build_process_decision_layer(con, ctx.run_id)
 
         print("Aktualisiere Reconciliation-Tabelle...")
         refresh_reconciliation_table(con, ctx.run_id)
