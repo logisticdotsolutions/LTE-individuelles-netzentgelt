@@ -113,6 +113,7 @@ def run_partial_correction_rebuild(
         apply_staging_manual_overrides,
         import_manual_overrides,
     )
+    from process_decision_module import build_process_decision_layer
     from quality_gate_module import build_quality_gate_tables, refresh_reconciliation_table
     from rule_engine_hardening_phase6b import (
         apply_core_assignment_fallbacks,
@@ -234,6 +235,7 @@ def run_partial_correction_rebuild(
         timed("apply_r016_to_quality_gate_tables", lambda: apply_r016_to_quality_gate_tables(con))
         timed("finalize_quality_gate_phase6d", lambda: finalize_quality_gate_phase6d(con, ctx.run_id, loco_filter=lf))
         timed("build_export_tables", lambda: build_export_tables(con))
+        timed("build_process_decision_layer", lambda: build_process_decision_layer(con, ctx.run_id))
         timed("refresh_reconciliation_table", lambda: refresh_reconciliation_table(con, ctx.run_id))
 
         con.close()
