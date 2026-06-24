@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import date
 from pathlib import Path
 from typing import Sequence
 
@@ -11,28 +10,27 @@ from compact_export_grid_runtime_module import (
     install_compact_export_grid_runtime,
     restore_compact_export_grid_runtime,
 )
-from zuordnungen_export_module import (
-    LTE_HOLDING_MARKET_PARTNER_IDS,
-    LTE_HOLDING_MARKET_PARTNER_NAME,
-    build_zuordnungen_holding_xlsx,
-)
-from zuordnungen_preview_module import (
-    build_zuordnungen_holding_preview,
-    preview_to_xlsx_bytes,
-)
+from rest_export_module import PRIMARY_EXPORT_GROUPS
 
 
 ROOT = Path(__file__).resolve().parents[1]
 DB_PATH = ROOT / "data" / "02_duckdb" / "netzentgelt.duckdb"
 EXPORT_DIR = ROOT / "data" / "03_exports"
 EXPORT_TAB_LABEL = "5. Exporte erstellen"
-GUIDED_EXPORT_OVERVIEW_MARKER = "NETZENTGELT_EXPORT_COCKPIT_SOFT_COPY_PHASE14D_V1_20260624"
+GUIDED_EXPORT_OVERVIEW_MARKER = "NETZENTGELT_EXPORT_COCKPIT_GROUPED_OVERVIEW_PHASE14G_V1_20260624"
 _COMPACT_EXPORT_GRID_RUN_PATH = None
 
 
-def _as_date(value: object, fallback: date) -> date:
-    """Streamlit-Session-Wert defensiv als Datum übernehmen."""
-    return value if isinstance(value, date) else fallback
+PERFORMING_RU_COLUMNS = [
+    "performing_ru",
+    "PerformingRU",
+    "performing_ru_value",
+    "current_contractant",
+    "CurrentContractant",
+    "RailwayUndertaking",
+]
+STATUS_COLUMNS = ["gate_status", "GateStatus", "status", "Status"]
+SEVERITY_COLUMNS = ["severity", "Severity"]
 
 
 def _read_export_csv(path: Path) -> pd.DataFrame:
@@ -49,39 +47,166 @@ def _read_export_csv(path: Path) -> pd.DataFrame:
             return pd.DataFrame()
 
 
-def _count_blocked_rows(source_df: pd.DataFrame) -> int:
+def _first_existing_column(source_df: pd.DataFrame, candidates: Sequence[str]) -> str | None:
+    if source_df.empty:
+        return None
+
+    by_lower = {str(column).lower(): column for column in source_df.columns}
+    for candidate in candidates:
+        if candidate.lower() in by_lower:
+            return by_lower[candidate.lower()]
+    return None
+
+
+def _normalized_series(source_df: pd.DataFrame, column: str | None) -> pd.Series:
+    if not column or column not in source_df.columns:
+        return pd.Series("", index=source_df.index, dtype="object")
+
+    return (
+        source_df[column]
+        .fillna("")
+        .astype(str)
+        .str.strip()
+        .str.casefold()
+    )
+
+
+def _primary_ru_sets() -> dict[str, set[str]]:
+    return {
+        group_key: {
+            str(value).strip().casefold()
+            for value in group_config.get("performing_ru_values", ())
+            if str(value).strip()
+        }
+        for group_key, group_config in PRIMARY_EXPORT_GROUPS.items()
+    }
+
+
+def _technical_blocked_count(source_df: pd.DataFrame) -> int:
     if source_df.empty:
         return 0
 
-    for column in ["gate_status", "GateStatus", "status", "Status"]:
-        if column in source_df.columns:
-            return int(
-                source_df[column]
-                .fillna("")
-                .astype(str)
-                .str.strip()
-                .str.upper()
-                .eq("BLOCKED")
-                .sum()
-            )
+    status_col = _first_existing_column(source_df, STATUS_COLUMNS)
+    if status_col:
+        return int(
+            source_df[status_col]
+            .fillna("")
+            .astype(str)
+            .str.strip()
+            .str.upper()
+            .eq("BLOCKED")
+            .sum()
+        )
 
     return 0
 
 
-def _count_relevant_findings(findings_df: pd.DataFrame) -> int:
-    if findings_df.empty or "severity" not in findings_df.columns:
+def _technical_finding_count(findings_df: pd.DataFrame) -> int:
+    if findings_df.empty:
+        return 0
+
+    severity_col = _first_existing_column(findings_df, SEVERITY_COLUMNS)
+    if not severity_col:
         return int(len(findings_df))
 
-    relevant_levels = {"ERROR", "MANUAL_REVIEW"}
     return int(
-        findings_df["severity"]
+        findings_df[severity_col]
         .fillna("")
         .astype(str)
         .str.strip()
         .str.upper()
-        .isin(relevant_levels)
+        .isin(["ERROR", "MANUAL_REVIEW"])
         .sum()
     )
+
+
+def _filter_open_rows(source_df: pd.DataFrame) -> pd.DataFrame:
+    if source_df.empty:
+        return source_df
+
+    status_col = _first_existing_column(source_df, STATUS_COLUMNS)
+    severity_col = _first_existing_column(source_df, SEVERITY_COLUMNS)
+
+    masks: list[pd.Series] = []
+    if status_col:
+        masks.append(
+            source_df[status_col]
+            .fillna("")
+            .astype(str)
+            .str.strip()
+            .str.upper()
+            .isin(["BLOCKED", "ERROR", "MANUAL_REVIEW"])
+        )
+
+    if severity_col:
+        masks.append(
+            source_df[severity_col]
+            .fillna("")
+            .astype(str)
+            .str.strip()
+            .str.upper()
+            .isin(["ERROR", "MANUAL_REVIEW"])
+        )
+
+    if not masks:
+        return source_df.copy()
+
+    combined = masks[0]
+    for mask in masks[1:]:
+        combined = combined | mask
+    return source_df.loc[combined].copy()
+
+
+def _count_open_by_ru_group(source_df: pd.DataFrame) -> dict[str, int]:
+    counts = {"LTE_DE": 0, "LTE_NL": 0, "REST": 0, "UNGROUPED": 0}
+    open_rows = _filter_open_rows(source_df)
+    if open_rows.empty:
+        return counts
+
+    performing_col = _first_existing_column(open_rows, PERFORMING_RU_COLUMNS)
+    if not performing_col:
+        counts["UNGROUPED"] = int(len(open_rows))
+        return counts
+
+    ru_values = _normalized_series(open_rows, performing_col)
+    primary_sets = _primary_ru_sets()
+    assigned_mask = pd.Series(False, index=open_rows.index, dtype=bool)
+
+    for group_key in ["LTE_DE", "LTE_NL"]:
+        group_mask = ru_values.isin(primary_sets.get(group_key, set()))
+        counts[group_key] += int(group_mask.sum())
+        assigned_mask = assigned_mask | group_mask
+
+    has_ru = ru_values.ne("")
+    counts["REST"] += int((has_ru & ~assigned_mask).sum())
+    counts["UNGROUPED"] += int((~has_ru).sum())
+    return counts
+
+
+def _build_export_overview_counts(
+    *,
+    export_gate_ru_df: pd.DataFrame,
+    global_blockers_df: pd.DataFrame,
+    findings_df: pd.DataFrame,
+) -> dict[str, int]:
+    gate_counts = _count_open_by_ru_group(export_gate_ru_df)
+    finding_counts = _count_open_by_ru_group(findings_df)
+
+    holding_open = (
+        _technical_blocked_count(global_blockers_df)
+        + gate_counts["UNGROUPED"]
+        + finding_counts["UNGROUPED"]
+    )
+
+    return {
+        "lte_de_open": gate_counts["LTE_DE"] + finding_counts["LTE_DE"],
+        "lte_nl_open": gate_counts["LTE_NL"] + finding_counts["LTE_NL"],
+        "rest_open": gate_counts["REST"] + finding_counts["REST"],
+        "holding_open": holding_open,
+        "technical_blocked": _technical_blocked_count(export_gate_ru_df)
+        + _technical_blocked_count(global_blockers_df),
+        "technical_findings": _technical_finding_count(findings_df),
+    }
 
 
 def _render_export_guidance_card(title: str, body: str) -> None:
@@ -90,40 +215,56 @@ def _render_export_guidance_card(title: str, body: str) -> None:
 
 
 def render_guided_export_overview() -> None:
-    """Fachlich geführten Einstieg in den Exportreiter anzeigen."""
+    """Fachlich gruppierten Einstieg in den Exportreiter anzeigen."""
     st.subheader("Export-Cockpit")
-    st.caption("Oben stehen die Arbeitsdateien. Details und Technik bleiben eingeklappt.")
+    st.caption(
+        "Oben stehen nur fachliche Arbeitsbereiche. Technische Gesamtsummen sind eingeklappt."
+    )
 
     if not DB_PATH.exists():
         st.info("Noch keine berechneten Daten gefunden. Bitte zuerst die Tagesprüfung ausführen.")
         return
 
-    zuordnungen_df = _read_export_csv(EXPORT_DIR / "export_zuordnungen.csv")
-    nutzungsmeldung_df = _read_export_csv(EXPORT_DIR / "export_nutzungsmeldung.csv")
     export_gate_ru_df = _read_export_csv(EXPORT_DIR / "dq_export_gate_ru.csv")
     global_blockers_df = _read_export_csv(EXPORT_DIR / "dq_global_export_blockers.csv")
     findings_df = _read_export_csv(EXPORT_DIR / "dq_findings.csv")
 
-    blocked_count = _count_blocked_rows(export_gate_ru_df) + _count_blocked_rows(global_blockers_df)
-    finding_count = _count_relevant_findings(findings_df)
+    counts = _build_export_overview_counts(
+        export_gate_ru_df=export_gate_ru_df,
+        global_blockers_df=global_blockers_df,
+        findings_df=findings_df,
+    )
 
     metric_1, metric_2, metric_3, metric_4 = st.columns(4)
     with metric_1:
-        st.metric("Nutzungszeilen", int(len(nutzungsmeldung_df)))
+        st.metric("LTE DE offen", counts["lte_de_open"])
     with metric_2:
-        st.metric("Zuordnungszeilen", int(len(zuordnungen_df)))
+        st.metric("LTE NL offen", counts["lte_nl_open"])
     with metric_3:
-        st.metric("Noch offen", blocked_count)
+        st.metric("Restliche EVUs offen", counts["rest_open"])
     with metric_4:
-        st.metric("Prüffälle", finding_count)
+        st.metric("Holding-Zuordnung offen", counts["holding_open"])
 
-    if blocked_count > 0 or finding_count > 0:
+    if any(
+        counts[key] > 0
+        for key in ["lte_de_open", "lte_nl_open", "rest_open", "holding_open"]
+    ):
         st.info(
-            "Hier ist noch etwas offen. Bitte die Fälle im Reiter '2. Offene Aufgaben' prüfen. "
-            "Exportfähige Dateien können weiterhin heruntergeladen werden."
+            "Hier ist noch etwas offen. Bitte die betroffenen Fälle im jeweiligen Abschnitt "
+            "oder im Reiter '2. Offene Aufgaben' prüfen."
         )
     else:
         st.success("Alles bereit für die fachlichen Exporte.")
+
+    with st.expander("Technische Gesamtsummen anzeigen", expanded=False):
+        st.caption(
+            "Diese Werte dienen nur zur Kontrolle und Fehleranalyse. Sie sind keine fachliche Export-Ampel."
+        )
+        tech_1, tech_2 = st.columns(2)
+        with tech_1:
+            st.metric("Blockierte Prüfzeilen", counts["technical_blocked"])
+        with tech_2:
+            st.metric("Prüffall-Zeilen", counts["technical_findings"])
 
     st.info(
         "Empfohlene Reihenfolge: zuerst Nutzungs- und Aufenthaltsdateien laden, "
@@ -139,7 +280,7 @@ def render_guided_export_overview() -> None:
     with card_2:
         _render_export_guidance_card(
             "2. Zuordnungen",
-            "Holding-Zuordnungen für die interne Prüfung.",
+            "Holding-Zuordnungen für LTE-Gesellschaften mit DE-Bezug.",
         )
     with card_3:
         _render_export_guidance_card(
@@ -150,196 +291,13 @@ def render_guided_export_overview() -> None:
     st.divider()
 
 
-@st.cache_data(show_spinner=False)
-def build_zuordnungen_holding_download_cached(
-    db_path_text: str,
-    db_mtime_ns: int,
-    holding_market_partner_id: str,
-    date_from_iso: str,
-    date_to_iso: str,
-):
-    """Holding-Zuordnung bis zur nächsten DuckDB-Änderung cachen."""
-    _ = db_mtime_ns
-
-    return build_zuordnungen_holding_xlsx(
-        db_path=Path(db_path_text),
-        holding_market_partner_id=holding_market_partner_id,
-        date_from=date.fromisoformat(date_from_iso),
-        date_to=date.fromisoformat(date_to_iso),
-    )
-
-
-@st.cache_data(show_spinner=False)
-def build_zuordnungen_holding_preview_cached(
-    db_path_text: str,
-    db_mtime_ns: int,
-    date_from_iso: str,
-    date_to_iso: str,
-):
-    """Holding-Vorschau inklusive offener Zeilen bis zur DB-Änderung cachen."""
-    _ = db_mtime_ns
-
-    return build_zuordnungen_holding_preview(
-        db_path=Path(db_path_text),
-        date_from=date.fromisoformat(date_from_iso),
-        date_to=date.fromisoformat(date_to_iso),
-    )
-
-
-def _render_preview(
-    *,
-    date_from_value: date,
-    date_to_value: date,
-) -> None:
-    """Embedded-XLSX-nahe Vorschau unabhängig vom Download-Gate anzeigen."""
-    with st.expander("Vorschau anzeigen", expanded=False):
-        try:
-            preview_df = build_zuordnungen_holding_preview_cached(
-                db_path_text=str(DB_PATH),
-                db_mtime_ns=DB_PATH.stat().st_mtime_ns,
-                date_from_iso=date_from_value.isoformat(),
-                date_to_iso=date_to_value.isoformat(),
-            )
-        except Exception as error:
-            st.info("Vorschau konnte noch nicht vorbereitet werden. Bitte Fall prüfen.")
-            with st.expander("Technische Ursache anzeigen", expanded=False):
-                st.code(str(error))
-            return
-
-        if preview_df.empty:
-            st.info("Für den gewählten Zeitraum wurden keine DE-relevanten Zuordnungssegmente gefunden.")
-            return
-
-        blocked_count = int(
-            preview_df["Exportstatus"]
-            .fillna("")
-            .astype(str)
-            .str.upper()
-            .eq("BLOCKIERT")
-            .sum()
-        )
-        exportable_count = int(
-            preview_df["Exportstatus"]
-            .fillna("")
-            .astype(str)
-            .str.upper()
-            .eq("EXPORTFÄHIG")
-            .sum()
-        )
-
-        metric_all, metric_ready, metric_open = st.columns(3)
-        with metric_all:
-            st.metric("Vorschauzeilen", len(preview_df))
-        with metric_ready:
-            st.metric("Exportfähig", exportable_count)
-        with metric_open:
-            st.metric("Noch offen", blocked_count)
-
-        if blocked_count > 0:
-            st.info(f"Hier ist noch etwas offen: {blocked_count} Zeilen bitte prüfen.")
-
-        st.dataframe(
-            preview_df,
-            use_container_width=True,
-            hide_index=True,
-            height=360,
-        )
-
-        st.download_button(
-            label="Vorschau XLSX",
-            data=preview_to_xlsx_bytes(preview_df),
-            file_name=(
-                "Vorschau_Zuordnungen_LTE_Holding_"
-                f"{date_from_value.isoformat()}_bis_{date_to_value.isoformat()}.xlsx"
-            ),
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            key="download_zuordnungen_holding_preview",
-            use_container_width=True,
-        )
-
-
-def _render_holding_download(
-    *,
-    holding_market_partner_id: str,
-    date_from_value: date,
-    date_to_value: date,
-) -> None:
-    """Einen der beiden Holding-Z01-Downloads anzeigen."""
-    st.markdown(f"**{holding_market_partner_id}**")
-
-    try:
-        result = build_zuordnungen_holding_download_cached(
-            db_path_text=str(DB_PATH),
-            db_mtime_ns=DB_PATH.stat().st_mtime_ns,
-            holding_market_partner_id=holding_market_partner_id,
-            date_from_iso=date_from_value.isoformat(),
-            date_to_iso=date_to_value.isoformat(),
-        )
-    except Exception as error:
-        st.info("Zuordnungen konnten noch nicht vorbereitet werden. Bitte Fall prüfen.")
-        with st.expander("Technische Ursache anzeigen", expanded=False):
-            st.code(str(error))
-        return
-
-    st.metric("Zeilen", result.row_count)
-
-    if result.missing_required_field_count > 0:
-        st.info(
-            f"Hier ist noch etwas offen: {result.missing_required_field_count} Zeilen "
-            "haben noch fehlende Pflichtfelder. Bitte Fall prüfen."
-        )
-
-    st.download_button(
-        label="Zuordnungen XLSX",
-        data=result.content,
-        file_name=result.file_name,
-        mime=(
-            "application/vnd.openxmlformats-officedocument."
-            "spreadsheetml.sheet"
-        ),
-        key=f"download_zuordnungen_holding_{holding_market_partner_id}",
-        use_container_width=True,
-    )
-
-
 def render_zuordnungen_export_extension() -> None:
-    with st.expander("Zuordnungen LTE Holding", expanded=False):
-        st.caption(
-            f"Halter: {LTE_HOLDING_MARKET_PARTNER_NAME}. Die beiden Downloads enthalten "
-            "denselben Datenumfang und unterscheiden sich nur durch die Marktpartner-ID im Kopf."
-        )
+    """Legacy-Hook bleibt aus Kompatibilitätsgründen erhalten.
 
-        if not DB_PATH.exists():
-            st.info("Noch keine berechneten Daten gefunden. Bitte zuerst die Tagesprüfung ausführen.")
-            return
-
-        today = date.today()
-        date_from_value = _as_date(
-            st.session_state.get("nutzungsmeldung_export_date_from"),
-            today,
-        )
-        date_to_value = _as_date(
-            st.session_state.get("nutzungsmeldung_export_date_to"),
-            today,
-        )
-
-        _render_preview(
-            date_from_value=date_from_value,
-            date_to_value=date_to_value,
-        )
-
-        st.markdown("#### Downloads")
-        holding_columns = st.columns(len(LTE_HOLDING_MARKET_PARTNER_IDS), gap="large")
-        for holding_column, holding_market_partner_id in zip(
-            holding_columns,
-            LTE_HOLDING_MARKET_PARTNER_IDS,
-        ):
-            with holding_column:
-                _render_holding_download(
-                    holding_market_partner_id=holding_market_partner_id,
-                    date_from_value=date_from_value,
-                    date_to_value=date_to_value,
-                )
+    Die Holding-Zuordnungen werden inzwischen als eigener Hauptabschnitt im
+    dedizierten Export-Cockpit gerendert.
+    """
+    return None
 
 
 class _InjectedExportTab:
@@ -361,7 +319,7 @@ class _InjectedExportTab:
 
 
 def install_zuordnungen_export_tab_extension():
-    """Streamlit-Tabs so erweitern, dass Reiter 5 den Holding-Z01-Bereich erhält."""
+    """Streamlit-Tabs so erweitern, dass Reiter 5 den Export-Cockpit-Bereich erhält."""
     global _COMPACT_EXPORT_GRID_RUN_PATH
 
     if _COMPACT_EXPORT_GRID_RUN_PATH is None:
