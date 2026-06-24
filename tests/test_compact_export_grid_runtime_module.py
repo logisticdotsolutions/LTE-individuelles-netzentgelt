@@ -34,6 +34,10 @@ after'''
     assert "LTE Arbeitsdateien" in patched
     assert "Nutzung XLSX" in patched
     assert "Aufenthalt XLSX" in patched
+    assert "Betroffene Loks" in patched
+    assert "Betroffene Transporte" in patched
+    assert "Betroffene Fälle anzeigen" in patched
+    assert "Technischer Hinweis anzeigen" in patched
     assert "Kontrolllisten und technische Dateien" in patched
     assert "alter langer Exportbereich" not in patched
     assert "with tab_run:" in patched
