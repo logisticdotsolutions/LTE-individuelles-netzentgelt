@@ -15,39 +15,28 @@ from compact_export_grid_runtime_module import (  # noqa: E402
 )
 
 
-def test_patch_export_grid_source_replaces_verbose_primary_loop() -> None:
+def test_patch_export_grid_source_replaces_full_export_tab() -> None:
     source = '''before
-            for group_key, group_config in PRIMARY_EXPORT_GROUPS.items():
-                st.divider()
-                st.markdown(f"### {group_config['title']}")
-
-                render_nutzungsmeldung_export_section(
-                    title="Nutzungsmeldung",
-                    export_label=group_config["file_label"],
-                    performing_ru_values=tuple(group_config["performing_ru_values"]),
-                    date_from_value=export_date_from,
-                    date_to_value=export_date_to,
-                    key_suffix=f"primary_nutzung_{group_key.lower()}",
-                )
-
-                render_aufenthaltsereignis_export_section(
-                    title="Aufenthaltsereignisse",
-                    export_label=group_config["file_label"],
-                    performing_ru_values=tuple(group_config["performing_ru_values"]),
-                    date_from_value=export_date_from,
-                    date_to_value=export_date_to,
-                    key_suffix=f"primary_aufenthalt_{group_key.lower()}",
-                )
+with tab_exports:
+    st.subheader("XLSX-Nutzungsmeldungen je nutzendem EVU")
+    st.caption("alter langer Exportbereich")
+    for group_key, group_config in PRIMARY_EXPORT_GROUPS.items():
+        st.divider()
+        st.markdown(f"### {group_config['title']}")
+with tab_run:
+    render_pipeline_test_controller()
 after'''
 
     patched = patch_export_grid_source(source)
 
     assert COMPACT_EXPORT_GRID_MARKER in patched
-    assert "primary_columns = st.columns" in patched
-    assert "Nutzung herunterladen" in patched
-    assert "Aufenthalt herunterladen" in patched
-    assert "render_nutzungsmeldung_export_section" not in patched
-    assert "render_aufenthaltsereignis_export_section" not in patched
+    assert "st.subheader(\"Exporte\")" in patched
+    assert "LTE Arbeitsdateien" in patched
+    assert "Nutzung XLSX" in patched
+    assert "Aufenthalt XLSX" in patched
+    assert "Kontrolllisten und technische Dateien" in patched
+    assert "alter langer Exportbereich" not in patched
+    assert "with tab_run:" in patched
 
 
 def test_patch_export_grid_source_is_idempotent() -> None:
