@@ -75,6 +75,19 @@ function Copy-PortableRuntimeTemplate([string]$PackageRoot) {
     Write-Host "Portable Runtime Template kopiert: $TargetRoot"
 }
 
+function Ensure-PortableDataFolders([string]$PackageRoot) {
+    foreach ($RelativePath in @(
+        'data\00_raw',
+        'data\01_mapping',
+        'data\02_duckdb',
+        'data\03_exports'
+    )) {
+        $TargetPath = Join-Path $PackageRoot $RelativePath
+        New-Item -ItemType Directory -Path $TargetPath -Force | Out-Null
+        Write-Host "Portabler Datenordner vorhanden: $TargetPath"
+    }
+}
+
 function Write-KeyUserReadme([string]$Path) {
     $Text = @'
 NETZENTGELT MVP - STARTANLEITUNG FUER KEY USER
@@ -207,8 +220,9 @@ if (Test-Path $EntryConfig) {
     Write-Host "Entrypoint-Config kopiert: $EntryConfig -> $DestPackaging"
 }
 
-# Runtime-Template explizit in Dist absichern, damit es bei PyInstaller-Layoutaenderungen nicht verloren geht.
+# Runtime-Template und Datenordner explizit in Dist absichern, damit es bei PyInstaller-Layoutaenderungen nicht verloren geht.
 Copy-PortableRuntimeTemplate $DistDir
+Ensure-PortableDataFolders $DistDir
 
 Write-Section 'Erzeuge Release-Paket'
 if (Test-Path $ReleaseDir) {
@@ -218,6 +232,7 @@ New-Item -ItemType Directory -Path $KeyUserDir -Force | Out-Null
 Copy-Item -Path (Join-Path $DistDir '*') -Destination $KeyUserDir -Recurse -Force
 Write-KeyUserReadme $KeyUserReadme
 Copy-PortableRuntimeTemplate $KeyUserDir
+Ensure-PortableDataFolders $KeyUserDir
 Compress-Archive -Path $KeyUserDir -DestinationPath $KeyUserZipPath -Force
 
 Write-Section 'Pruefe Release-Paket'
