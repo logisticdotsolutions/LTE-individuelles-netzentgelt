@@ -30,7 +30,7 @@ _PRIMARY_EXPORT_LOOP_BLOCK = '''            for group_key, group_config in PRIMA
                 )
 '''
 
-_COMPACT_EXPORT_GRID_BLOCK = '''            # {marker}
+_COMPACT_EXPORT_GRID_BLOCK = '''            # __COMPACT_EXPORT_GRID_MARKER__
             primary_export_groups = list(PRIMARY_EXPORT_GROUPS.items())
 
             def _render_compact_primary_nutzungsmeldung(
@@ -131,7 +131,7 @@ _COMPACT_EXPORT_GRID_BLOCK = '''            # {marker}
                         )
             else:
                 st.info("Keine primären Exportgruppen konfiguriert.")
-'''.format(marker=COMPACT_EXPORT_GRID_MARKER)
+'''.replace("__COMPACT_EXPORT_GRID_MARKER__", COMPACT_EXPORT_GRID_MARKER)
 
 
 def patch_export_grid_source(source: str) -> str:
