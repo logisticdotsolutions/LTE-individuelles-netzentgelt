@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import date
 from pathlib import Path
 from typing import Sequence
 
@@ -11,13 +12,24 @@ from compact_export_grid_runtime_module import (
     restore_compact_export_grid_runtime,
 )
 from rest_export_module import PRIMARY_EXPORT_GROUPS
+from zuordnungen_export_module import (
+    LTE_HOLDING_MARKET_PARTNER_IDS,
+    LTE_HOLDING_MARKET_PARTNER_NAME,
+    build_zuordnungen_holding_xlsx,
+)
+from zuordnungen_preview_module import (
+    build_zuordnungen_holding_preview,
+    preview_to_xlsx_bytes,
+)
 
 
 ROOT = Path(__file__).resolve().parents[1]
 DB_PATH = ROOT / "data" / "02_duckdb" / "netzentgelt.duckdb"
 EXPORT_DIR = ROOT / "data" / "03_exports"
 EXPORT_TAB_LABEL = "5. Exporte erstellen"
-GUIDED_EXPORT_OVERVIEW_MARKER = "NETZENTGELT_EXPORT_COCKPIT_GROUPED_OVERVIEW_PHASE14G_V1_20260624"
+GUIDED_EXPORT_OVERVIEW_MARKER = "NETZENTGELT_GUIDED_EXPORT_OVERVIEW_PHASE14B_V1_20260624"
+GUIDED_EXPORT_OVERVIEW_COPY = "Fachliche Downloads"
+HOLDING_PREVIEW_LABEL = "Vorschau der Holding-Zuordnungen anzeigen"
 _COMPACT_EXPORT_GRID_RUN_PATH = None
 
 
@@ -31,6 +43,10 @@ PERFORMING_RU_COLUMNS = [
 ]
 STATUS_COLUMNS = ["gate_status", "GateStatus", "status", "Status"]
 SEVERITY_COLUMNS = ["severity", "Severity"]
+
+
+def _as_date(value: object, fallback: date) -> date:
+    return value if isinstance(value, date) else fallback
 
 
 def _read_export_csv(path: Path) -> pd.DataFrame:
@@ -291,13 +307,101 @@ def render_guided_export_overview() -> None:
     st.divider()
 
 
-def render_zuordnungen_export_extension() -> None:
-    """Legacy-Hook bleibt aus Kompatibilitätsgründen erhalten.
+def _render_preview(
+    *,
+    date_from_value: date,
+    date_to_value: date,
+) -> None:
+    """Kompatibler Z01-Vorschau-Hook für Tests und Hardened-Runtime."""
+    try:
+        preview_df = build_zuordnungen_holding_preview(
+            db_path=DB_PATH,
+            date_from=date_from_value,
+            date_to=date_to_value,
+        )
+    except Exception as error:
+        st.info("Vorschau konnte noch nicht vorbereitet werden. Bitte Fall prüfen.")
+        with st.expander("Technischer Hinweis anzeigen", expanded=False):
+            st.code(str(error))
+        return
 
-    Die Holding-Zuordnungen werden inzwischen als eigener Hauptabschnitt im
-    dedizierten Export-Cockpit gerendert.
+    if preview_df.empty:
+        st.info("Für den gewählten Zeitraum wurden keine DE-relevanten Zuordnungssegmente gefunden.")
+        return
+
+    st.dataframe(preview_df, use_container_width=True, hide_index=True, height=360)
+    st.download_button(
+        label="Vorschau XLSX",
+        data=preview_to_xlsx_bytes(preview_df),
+        file_name=(
+            "Vorschau_Zuordnungen_LTE_Holding_"
+            f"{date_from_value.isoformat()}_bis_{date_to_value.isoformat()}.xlsx"
+        ),
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        key="download_zuordnungen_holding_preview_legacy_bridge",
+        use_container_width=True,
+    )
+
+
+def _render_holding_download(
+    *,
+    holding_market_partner_id: str,
+    date_from_value: date,
+    date_to_value: date,
+) -> None:
+    """Kompatibler Z01-Download-Hook für Tests und Hardened-Runtime."""
+    st.markdown(f"**{holding_market_partner_id}**")
+    try:
+        result = build_zuordnungen_holding_xlsx(
+            db_path=DB_PATH,
+            holding_market_partner_id=holding_market_partner_id,
+            date_from=date_from_value,
+            date_to=date_to_value,
+        )
+    except Exception as error:
+        st.info("Zuordnungen konnten noch nicht vorbereitet werden. Bitte Fall prüfen.")
+        with st.expander("Technischer Hinweis anzeigen", expanded=False):
+            st.code(str(error))
+        return
+
+    st.metric("Zeilen", result.row_count)
+    st.download_button(
+        label="Zuordnungen XLSX",
+        data=result.content,
+        file_name=result.file_name,
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        key=f"download_zuordnungen_holding_legacy_bridge_{holding_market_partner_id}",
+        use_container_width=True,
+    )
+
+
+def render_zuordnungen_export_extension() -> None:
+    """Legacy-Hook bleibt für Tests und Hardened-Runtime kompatibel.
+
+    Die sichtbaren Holding-Zuordnungen werden im dedizierten Export-Cockpit gerendert;
+    dieser Hook wird dort zur Laufzeit deaktiviert, damit nichts doppelt erscheint.
     """
-    return None
+    if not DB_PATH.exists():
+        st.info("Noch keine berechneten Daten gefunden. Bitte zuerst die Tagesprüfung ausführen.")
+        return
+
+    today = date.today()
+    date_from_value = _as_date(st.session_state.get("nutzungsmeldung_export_date_from"), today)
+    date_to_value = _as_date(st.session_state.get("nutzungsmeldung_export_date_to"), today)
+
+    st.subheader("Zuordnungen LTE Holding")
+    st.caption(
+        f"Halter: {LTE_HOLDING_MARKET_PARTNER_NAME}. Die beiden Downloads enthalten "
+        "denselben Datenumfang und unterscheiden sich nur durch die Marktpartner-ID im Kopf."
+    )
+    _render_preview(date_from_value=date_from_value, date_to_value=date_to_value)
+    st.markdown("#### Downloads")
+    for holding_market_partner_id in LTE_HOLDING_MARKET_PARTNER_IDS:
+        _render_holding_download(
+            holding_market_partner_id=holding_market_partner_id,
+            date_from_value=date_from_value,
+            date_to_value=date_to_value,
+        )
 
 
 class _InjectedExportTab:
