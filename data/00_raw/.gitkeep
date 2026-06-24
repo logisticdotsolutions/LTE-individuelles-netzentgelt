@@ -1,0 +1,2 @@
+# Keeps the raw-data folder present in portable build environments.
+# Do not store productive raw data in Git.
