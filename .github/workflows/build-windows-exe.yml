@@ -34,14 +34,9 @@ jobs:
         shell: pwsh
         run: .\BUILD_WINDOWS_EXE.bat -SkipDependencyInstall
 
-      - name: Validate package exists
+      - name: Stage release artifact
         shell: pwsh
-        run: |
-          $Zip = "_keyuser_package\NetzentgeltMVP_KeyUser.zip"
-          if (-not (Test-Path $Zip)) {
-            throw "Windows-EXE-Paket wurde nicht erzeugt: $Zip"
-          }
-          Get-Item $Zip | Select-Object FullName, Length
+        run: .\scripts\stage_latest_release_artifact.ps1
 
       - name: Upload key-user package
         uses: actions/upload-artifact@v4
