@@ -26,7 +26,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DB_PATH = ROOT / "data" / "02_duckdb" / "netzentgelt.duckdb"
 EXPORT_DIR = ROOT / "data" / "03_exports"
 EXPORT_TAB_LABEL = "5. Exporte erstellen"
-GUIDED_EXPORT_OVERVIEW_MARKER = "NETZENTGELT_GUIDED_EXPORT_OVERVIEW_PHASE14B_V1_20260624"
+GUIDED_EXPORT_OVERVIEW_MARKER = "NETZENTGELT_EXPORT_COCKPIT_SOFT_COPY_PHASE14D_V1_20260624"
 _COMPACT_EXPORT_GRID_RUN_PATH = None
 
 
@@ -92,14 +92,10 @@ def _render_export_guidance_card(title: str, body: str) -> None:
 def render_guided_export_overview() -> None:
     """Fachlich geführten Einstieg in den Exportreiter anzeigen."""
     st.subheader("Export-Cockpit")
-    st.caption(
-        "Dieser Bereich führt durch die wichtigsten Downloads. "
-        "Die fachlichen Exportdateien stehen oben; interne Prüf- und Technikdateien "
-        "bleiben bewusst nachrangig eingeordnet."
-    )
+    st.caption("Oben stehen die Arbeitsdateien. Details und Technik bleiben eingeklappt.")
 
     if not DB_PATH.exists():
-        st.warning("Keine produktive DuckDB gefunden. Bitte zuerst die Pipeline ausführen.")
+        st.info("Noch keine berechneten Daten gefunden. Bitte zuerst die Tagesprüfung ausführen.")
         return
 
     zuordnungen_df = _read_export_csv(EXPORT_DIR / "export_zuordnungen.csv")
@@ -117,49 +113,41 @@ def render_guided_export_overview() -> None:
     with metric_2:
         st.metric("Zuordnungszeilen", int(len(zuordnungen_df)))
     with metric_3:
-        st.metric("Blockiert", blocked_count)
+        st.metric("Noch offen", blocked_count)
     with metric_4:
         st.metric("Prüffälle", finding_count)
 
-    if blocked_count > 0:
-        st.warning(
-            "Es gibt blockierte Fälle. Exportfähige Zeilen können weiterhin heruntergeladen "
-            "werden; blockierte Zeilen bleiben in den Prüflisten nachvollziehbar."
+    if blocked_count > 0 or finding_count > 0:
+        st.info(
+            "Hier ist noch etwas offen. Bitte die Fälle im Reiter '2. Offene Aufgaben' prüfen. "
+            "Exportfähige Dateien können weiterhin heruntergeladen werden."
         )
     else:
-        st.success("Keine blockierenden Export-Gates im aktuellen Datenstand gefunden.")
+        st.success("Alles bereit für die fachlichen Exporte.")
 
     st.info(
         "Empfohlene Reihenfolge: zuerst Nutzungs- und Aufenthaltsdateien laden, "
-        "danach Zuordnungen prüfen, anschließend bei Bedarf interne Kontrolllisten öffnen."
+        "danach Zuordnungen prüfen, anschließend bei Bedarf Kontrolllisten öffnen."
     )
 
     card_1, card_2, card_3 = st.columns(3)
     with card_1:
         _render_export_guidance_card(
             "1. Fachliche Exporte",
-            "Nutzungsmeldungen und Aufenthaltsereignisse je nutzendem EVU. "
-            "Das sind die primären Arbeitsdateien für die operative Weitergabe.",
+            "Nutzung und Aufenthalt je nutzendem EVU.",
         )
     with card_2:
         _render_export_guidance_card(
             "2. Zuordnungen",
-            "Halter-/Nutzer-Zuordnung inklusive Zeitraum und Prozessentscheidung. "
-            "Die Holding-Downloads folgen im unteren Fachbereich.",
+            "Holding-Zuordnungen für die interne Prüfung.",
         )
     with card_3:
         _render_export_guidance_card(
             "3. Kontrolllisten",
-            "Technische CSVs, Prüffälle und Vorschauen sind nur für Kontrolle, Audit "
-            "und Fehleranalyse gedacht."
+            "Nur für Audit, Kontrolle und Fehleranalyse.",
         )
 
     st.divider()
-    st.markdown("### Fachliche Downloads")
-    st.caption(
-        "Die bestehenden Downloadbereiche folgen darunter. Technische Details sind "
-        "weiter unten eingeklappt."
-    )
 
 
 @st.cache_data(show_spinner=False)
@@ -188,7 +176,7 @@ def build_zuordnungen_holding_preview_cached(
     date_from_iso: str,
     date_to_iso: str,
 ):
-    """Holding-Vorschau inklusive blockierter Zeilen bis zur DB-Änderung cachen."""
+    """Holding-Vorschau inklusive offener Zeilen bis zur DB-Änderung cachen."""
     _ = db_mtime_ns
 
     return build_zuordnungen_holding_preview(
@@ -204,12 +192,7 @@ def _render_preview(
     date_to_value: date,
 ) -> None:
     """Embedded-XLSX-nahe Vorschau unabhängig vom Download-Gate anzeigen."""
-    with st.expander("Vorschau der Holding-Zuordnungen anzeigen", expanded=False):
-        st.caption(
-            "Die Vorschau bleibt auch bei blockierenden Fehlern sichtbar. "
-            "Blockierte Zeilen werden nicht still entfernt, sondern mit Status und Hinweis angezeigt."
-        )
-
+    with st.expander("Vorschau anzeigen", expanded=False):
         try:
             preview_df = build_zuordnungen_holding_preview_cached(
                 db_path_text=str(DB_PATH),
@@ -218,7 +201,9 @@ def _render_preview(
                 date_to_iso=date_to_value.isoformat(),
             )
         except Exception as error:
-            st.error(f"Vorschau konnte nicht erzeugt werden: {error}")
+            st.info("Vorschau konnte noch nicht vorbereitet werden. Bitte Fall prüfen.")
+            with st.expander("Technische Ursache anzeigen", expanded=False):
+                st.code(str(error))
             return
 
         if preview_df.empty:
@@ -242,29 +227,26 @@ def _render_preview(
             .sum()
         )
 
-        metric_all, metric_ready, metric_blocked = st.columns(3)
+        metric_all, metric_ready, metric_open = st.columns(3)
         with metric_all:
             st.metric("Vorschauzeilen", len(preview_df))
         with metric_ready:
             st.metric("Exportfähig", exportable_count)
-        with metric_blocked:
-            st.metric("Blockiert", blocked_count)
+        with metric_open:
+            st.metric("Noch offen", blocked_count)
 
         if blocked_count > 0:
-            st.warning(
-                "Die Vorschau enthält blockierte Zeilen. Die Daten bleiben sichtbar, "
-                "der produktive Download bleibt jedoch gesperrt, bis die Prüffälle geklärt sind."
-            )
+            st.info(f"Hier ist noch etwas offen: {blocked_count} Zeilen bitte prüfen.")
 
         st.dataframe(
             preview_df,
             use_container_width=True,
             hide_index=True,
-            height=420,
+            height=360,
         )
 
         st.download_button(
-            label="Vorschau als XLSX herunterladen",
+            label="Vorschau XLSX",
             data=preview_to_xlsx_bytes(preview_df),
             file_name=(
                 "Vorschau_Zuordnungen_LTE_Holding_"
@@ -283,7 +265,7 @@ def _render_holding_download(
     date_to_value: date,
 ) -> None:
     """Einen der beiden Holding-Z01-Downloads anzeigen."""
-    st.markdown(f"#### Holding-Mandant {holding_market_partner_id}")
+    st.markdown(f"**{holding_market_partner_id}**")
 
     try:
         result = build_zuordnungen_holding_download_cached(
@@ -294,23 +276,21 @@ def _render_holding_download(
             date_to_iso=date_to_value.isoformat(),
         )
     except Exception as error:
-        st.error(f"XLSX-Zuordnungen konnten nicht erzeugt werden: {error}")
+        st.info("Zuordnungen konnten noch nicht vorbereitet werden. Bitte Fall prüfen.")
+        with st.expander("Technische Ursache anzeigen", expanded=False):
+            st.code(str(error))
         return
 
-    st.caption(
-        f"Exportzeilen: {result.row_count}. "
-        "UKL-Version: Z01. Inhalt: alle exportfähigen DE-relevanten Lok-Segmente. "
-        "Sortierung: LocomotiveNo, danach Beginn der Zuordnung."
-    )
+    st.metric("Zeilen", result.row_count)
 
     if result.missing_required_field_count > 0:
-        st.warning(
-            f"{result.missing_required_field_count} Exportzeilen enthalten "
-            "mindestens ein leeres Pflichtfeld."
+        st.info(
+            f"Hier ist noch etwas offen: {result.missing_required_field_count} Zeilen "
+            "haben noch fehlende Pflichtfelder. Bitte Fall prüfen."
         )
 
     st.download_button(
-        label=f"XLSX-Zuordnungen {holding_market_partner_id} herunterladen",
+        label="Zuordnungen XLSX",
         data=result.content,
         file_name=result.file_name,
         mime=(
@@ -323,45 +303,43 @@ def _render_holding_download(
 
 
 def render_zuordnungen_export_extension() -> None:
-    st.divider()
-    st.subheader("Zuordnungen LTE Holding")
-    st.caption(
-        f"Halter: {LTE_HOLDING_MARKET_PARTNER_NAME}. "
-        "Die beiden Dateien enthalten denselben DE-relevanten Datenumfang. "
-        "Sie unterscheiden sich ausschließlich durch die Marktpartner-ID im Dateikopf."
-    )
+    with st.expander("Zuordnungen LTE Holding", expanded=False):
+        st.caption(
+            f"Halter: {LTE_HOLDING_MARKET_PARTNER_NAME}. Die beiden Downloads enthalten "
+            "denselben Datenumfang und unterscheiden sich nur durch die Marktpartner-ID im Kopf."
+        )
 
-    if not DB_PATH.exists():
-        st.warning("Keine produktive DuckDB gefunden. Bitte zuerst die Pipeline ausführen.")
-        return
+        if not DB_PATH.exists():
+            st.info("Noch keine berechneten Daten gefunden. Bitte zuerst die Tagesprüfung ausführen.")
+            return
 
-    today = date.today()
-    date_from_value = _as_date(
-        st.session_state.get("nutzungsmeldung_export_date_from"),
-        today,
-    )
-    date_to_value = _as_date(
-        st.session_state.get("nutzungsmeldung_export_date_to"),
-        today,
-    )
+        today = date.today()
+        date_from_value = _as_date(
+            st.session_state.get("nutzungsmeldung_export_date_from"),
+            today,
+        )
+        date_to_value = _as_date(
+            st.session_state.get("nutzungsmeldung_export_date_to"),
+            today,
+        )
 
-    _render_preview(
-        date_from_value=date_from_value,
-        date_to_value=date_to_value,
-    )
-
-    st.markdown("### Produktive Zuordnungs-Downloads")
-    st.caption(
-        "Die Download-Buttons respektieren weiterhin die Export-Gates. "
-        "Bei blockierenden Fehlern bleibt die Vorschau sichtbar, der Download jedoch gesperrt."
-    )
-
-    for holding_market_partner_id in LTE_HOLDING_MARKET_PARTNER_IDS:
-        _render_holding_download(
-            holding_market_partner_id=holding_market_partner_id,
+        _render_preview(
             date_from_value=date_from_value,
             date_to_value=date_to_value,
         )
+
+        st.markdown("#### Downloads")
+        holding_columns = st.columns(len(LTE_HOLDING_MARKET_PARTNER_IDS), gap="large")
+        for holding_column, holding_market_partner_id in zip(
+            holding_columns,
+            LTE_HOLDING_MARKET_PARTNER_IDS,
+        ):
+            with holding_column:
+                _render_holding_download(
+                    holding_market_partner_id=holding_market_partner_id,
+                    date_from_value=date_from_value,
+                    date_to_value=date_to_value,
+                )
 
 
 class _InjectedExportTab:
