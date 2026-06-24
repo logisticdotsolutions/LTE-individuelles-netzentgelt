@@ -15,16 +15,10 @@ UKL-/LTE-Prozessarten zu:
 
 Die bestehende Segmenttabelle wird bewusst nicht strukturell veraendert. Das ist
 wichtig, weil der partielle Rebuild vorhandene Tabellen aus der Produktiv-DuckDB
-kopiert und anschliessend per INSERT aktualisiert. Zusätzliche Spalten in
-core_usage_assignment_segments wuerden diesen schnellen Pfad unnoetig riskieren.
+kopiert und anschliessend per INSERT aktualisiert.
 """
 
 PROCESS_DECISION_MARKER = "NETZENTGELT_PROCESS_DECISION_LAYER_PHASE14A_V1_20260624"
-
-
-def qident(name: str) -> str:
-    """DuckDB-Identifier sicher quoten."""
-    return '"' + str(name).replace('"', '""') + '"'
 
 
 def table_exists(con, table_name: str) -> bool:
@@ -121,11 +115,16 @@ def build_process_decision_layer(con, run_id: str | None = None) -> None:
     _build_event_process_decisions(con, run_id)
     _rebuild_process_enriched_exports(con)
 
-    segment_count = con.execute("select count(*) from core_process_decisions").fetchone()[0]
-    event_count = con.execute("select count(*) from core_event_process_decisions").fetchone()[0]
+    segment_count = con.execute(
+        "select count(*) from core_process_decisions"
+    ).fetchone()[0]
+    event_count = con.execute(
+        "select count(*) from core_event_process_decisions"
+    ).fetchone()[0]
     print(
         "Prozessentscheidung aktiv: "
-        f"Segmente={segment_count}, Ereignisse={event_count}, Marker={PROCESS_DECISION_MARKER}"
+        f"Segmente={segment_count}, Ereignisse={event_count}, "
+        f"Marker={PROCESS_DECISION_MARKER}"
     )
 
 
@@ -190,27 +189,35 @@ def _build_segment_process_decisions(con, run_id: str | None) -> None:
                 c.*,
                 case
                     when requires_manual_review then 'MANUELLE_PRUEFUNG'
-                    when holder_process_bucket = 'LTE_NL' and user_process_bucket = 'LTE_NL'
+                    when holder_process_bucket = 'LTE_NL'
+                     and user_process_bucket = 'LTE_NL'
                         then 'UEBERGABE_2_LTE_NL_SELF'
-                    when holder_process_bucket = 'LTE_NL' and user_process_bucket = 'LTE_GE'
+                    when holder_process_bucket = 'LTE_NL'
+                     and user_process_bucket = 'LTE_GE'
                         then 'UEBERGABE_2_LTE_NL_AN_LTE_GE'
                     when holder_process_bucket = 'LTE_NL'
                         then 'UEBERGABE_2_LTE_NL_AN_DRITTE'
-                    when holder_process_bucket = 'LTE_GE' and user_process_bucket = 'LTE_GE'
+                    when holder_process_bucket = 'LTE_GE'
+                     and user_process_bucket = 'LTE_GE'
                         then 'UEBERGABE_3_LTE_GE_SELF'
-                    when holder_process_bucket = 'LTE_GE' and user_process_bucket = 'LTE_NL'
+                    when holder_process_bucket = 'LTE_GE'
+                     and user_process_bucket = 'LTE_NL'
                         then 'UEBERGABE_3_LTE_GE_AN_LTE_NL'
                     when holder_process_bucket = 'LTE_GE'
                         then 'UEBERGABE_3_LTE_GE_AN_DRITTE'
-                    when holder_process_bucket = 'LTE_HOLDING' and user_process_bucket = 'LTE_NL'
+                    when holder_process_bucket = 'LTE_HOLDING'
+                     and user_process_bucket = 'LTE_NL'
                         then 'UEBERGABE_4_LTE_HOLDING_AN_LTE_NL'
-                    when holder_process_bucket = 'LTE_HOLDING' and user_process_bucket = 'LTE_GE'
+                    when holder_process_bucket = 'LTE_HOLDING'
+                     and user_process_bucket = 'LTE_GE'
                         then 'UEBERGABE_4_LTE_HOLDING_AN_LTE_GE'
                     when holder_process_bucket = 'LTE_HOLDING'
                         then 'UEBERGABE_4_LTE_HOLDING_VERBLEIB'
-                    when holder_process_bucket = 'ANDERE_EVU' and user_process_bucket = 'LTE_NL'
+                    when holder_process_bucket = 'ANDERE_EVU'
+                     and user_process_bucket = 'LTE_NL'
                         then 'UEBERGABE_Z_ANDERE_EVU_AN_LTE_NL'
-                    when holder_process_bucket = 'ANDERE_EVU' and user_process_bucket = 'LTE_GE'
+                    when holder_process_bucket = 'ANDERE_EVU'
+                     and user_process_bucket = 'LTE_GE'
                         then 'UEBERGABE_Z_ANDERE_EVU_AN_LTE_GE'
                     when holder_process_bucket = 'ANDERE_EVU'
                         then 'ZUORDNUNG_Y_DRITTE_KEINE_LTE_AKTION'
@@ -255,9 +262,11 @@ def _build_segment_process_decisions(con, run_id: str | None) -> None:
                         then 'LTE Germany'
                     when holder_process_bucket = 'LTE_HOLDING'
                         then 'LTE Holding'
-                    when holder_process_bucket = 'ANDERE_EVU' and user_process_bucket = 'LTE_NL'
+                    when holder_process_bucket = 'ANDERE_EVU'
+                     and user_process_bucket = 'LTE_NL'
                         then 'LTE Netherlands'
-                    when holder_process_bucket = 'ANDERE_EVU' and user_process_bucket = 'LTE_GE'
+                    when holder_process_bucket = 'ANDERE_EVU'
+                     and user_process_bucket = 'LTE_GE'
                         then 'LTE Germany'
                     when holder_process_bucket = 'ANDERE_EVU'
                         then 'Andere EVU'
@@ -321,11 +330,11 @@ def _build_segment_process_decisions(con, run_id: str | None) -> None:
                 end
             ) as process_decision_reason,
             current_timestamp as calculated_at_utc,
-            '""" || PROCESS_DECISION_MARKER || """'::varchar as phase_marker
+            ?::varchar as phase_marker
         from decision_flags
         order by loco_no, segment_start_utc, usage_segment_no
         """,
-        [str(run_id) if run_id is not None else None],
+        [str(run_id) if run_id is not None else None, PROCESS_DECISION_MARKER],
     )
 
 
@@ -405,14 +414,15 @@ def _build_event_process_decisions(con, run_id: str | None) -> None:
                 when event_owner_bucket = 'LTE_GE' then 'LTE Germany'
                 else 'LTE Holding'
             end as event_process_owner,
-            'Ereignisprozess aus PerformingRU und Netzstatus abgeleitet: ' || event_type as event_decision_reason,
+            'Ereignisprozess aus PerformingRU und Netzstatus abgeleitet: '
+                || event_type as event_decision_reason,
             current_timestamp as calculated_at_utc,
-            '""" || PROCESS_DECISION_MARKER || """'::varchar as phase_marker
+            ?::varchar as phase_marker
         from classified
         where event_ts is not null
         order by loco_no, event_ts
         """,
-        [str(run_id) if run_id is not None else None],
+        [str(run_id) if run_id is not None else None, PROCESS_DECISION_MARKER],
     )
 
 
@@ -427,7 +437,8 @@ def _rebuild_process_enriched_exports(con) -> None:
             s.segment_start_utc as "Beginn der Zuordnung*",
             s.segment_end_utc as "Ende der Zuordnung",
             coalesce(nullif(s.user_vens, ''), s.performing_ru) as "Nutzer-vEns*",
-            coalesce(nullif(s.holder_market_partner_id, ''), s.holder_name) as "Marktpartner ID für Nutzungsüberlassung",
+            coalesce(nullif(s.holder_market_partner_id, ''), s.holder_name)
+                as "Marktpartner ID für Nutzungsüberlassung",
             d.process_category as "Prozesskategorie",
             d.process_case as "Prozessfall",
             d.process_action as "Prozessaktion",
@@ -451,8 +462,10 @@ def _rebuild_process_enriched_exports(con) -> None:
             s.segment_start_utc as "Beginn der Nutzung*",
             s.segment_end_utc as "Ende der Nutzung",
             coalesce(nullif(s.user_vens, ''), s.performing_ru) as "Nutzer-vEns*",
-            coalesce(nullif(s.holder_market_partner_id, ''), s.holder_name) as "Marktpartner ID für Nutzungsüberlassung*",
-            coalesce(d.process_message_type, 'Manuelle Prüfung') as "Übernahmeanfrage oder Übergabemeldung?",
+            coalesce(nullif(s.holder_market_partner_id, ''), s.holder_name)
+                as "Marktpartner ID für Nutzungsüberlassung*",
+            coalesce(d.process_message_type, 'Manuelle Prüfung')
+                as "Übernahmeanfrage oder Übergabemeldung?",
             d.process_category as "Prozesskategorie",
             d.process_case as "Prozessfall",
             d.process_action as "Prozessaktion",
