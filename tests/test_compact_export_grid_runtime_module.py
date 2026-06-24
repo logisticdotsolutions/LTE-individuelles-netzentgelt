@@ -13,6 +13,7 @@ from compact_export_grid_runtime_module import (  # noqa: E402
     COMPACT_EXPORT_GRID_MARKER,
     patch_export_grid_source,
 )
+from export_cockpit_ui_module import _friendly_category  # noqa: E402
 
 
 def test_patch_export_grid_source_replaces_full_export_tab() -> None:
@@ -30,15 +31,8 @@ after'''
     patched = patch_export_grid_source(source)
 
     assert COMPACT_EXPORT_GRID_MARKER in patched
-    assert "st.subheader(\"Exporte\")" in patched
-    assert "LTE Arbeitsdateien" in patched
-    assert "Nutzung XLSX" in patched
-    assert "Aufenthalt XLSX" in patched
-    assert "Betroffene Loks" in patched
-    assert "Betroffene Transporte" in patched
-    assert "Betroffene Fälle anzeigen" in patched
-    assert "Technischer Hinweis anzeigen" in patched
-    assert "Kontrolllisten und technische Dateien" in patched
+    assert "render_export_cockpit" in patched
+    assert "export_cockpit_ui_module" in patched
     assert "alter langer Exportbereich" not in patched
     assert "with tab_run:" in patched
 
@@ -47,3 +41,10 @@ def test_patch_export_grid_source_is_idempotent() -> None:
     source = f"before\n# {COMPACT_EXPORT_GRID_MARKER}\nafter"
 
     assert patch_export_grid_source(source) == source
+
+
+def test_export_cockpit_rule_codes_are_friendly_labels() -> None:
+    assert _friendly_category("R003") == "Ankunft fehlt"
+    assert _friendly_category("R010") == "Zeitliche Lücke"
+    assert _friendly_category("R011") == "Überschneidung"
+    assert _friendly_category("R012") == "Pflichtfeld offen"
