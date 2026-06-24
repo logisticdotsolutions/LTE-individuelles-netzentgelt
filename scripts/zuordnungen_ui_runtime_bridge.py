@@ -7,6 +7,10 @@ from typing import Sequence
 import pandas as pd
 import streamlit as st
 
+from compact_export_grid_runtime_module import (
+    install_compact_export_grid_runtime,
+    restore_compact_export_grid_runtime,
+)
 from zuordnungen_export_module import (
     LTE_HOLDING_MARKET_PARTNER_IDS,
     LTE_HOLDING_MARKET_PARTNER_NAME,
@@ -23,6 +27,7 @@ DB_PATH = ROOT / "data" / "02_duckdb" / "netzentgelt.duckdb"
 EXPORT_DIR = ROOT / "data" / "03_exports"
 EXPORT_TAB_LABEL = "5. Exporte erstellen"
 GUIDED_EXPORT_OVERVIEW_MARKER = "NETZENTGELT_GUIDED_EXPORT_OVERVIEW_PHASE14B_V1_20260624"
+_COMPACT_EXPORT_GRID_RUN_PATH = None
 
 
 def _as_date(value: object, fallback: date) -> date:
@@ -318,7 +323,6 @@ def _render_holding_download(
 
 
 def render_zuordnungen_export_extension() -> None:
-    """Zwei feste LTE-Holding-Z01-Downloads im bestehenden Exportreiter rendern."""
     st.divider()
     st.subheader("Zuordnungen LTE Holding")
     st.caption(
@@ -380,6 +384,13 @@ class _InjectedExportTab:
 
 def install_zuordnungen_export_tab_extension():
     """Streamlit-Tabs so erweitern, dass Reiter 5 den Holding-Z01-Bereich erhält."""
+    global _COMPACT_EXPORT_GRID_RUN_PATH
+
+    if _COMPACT_EXPORT_GRID_RUN_PATH is None:
+        _COMPACT_EXPORT_GRID_RUN_PATH = install_compact_export_grid_runtime(
+            ROOT / "app" / "app.py"
+        )
+
     original_tabs = st.tabs
 
     if getattr(original_tabs, "_zuordnungen_extension_installed", False):
@@ -406,4 +417,10 @@ def install_zuordnungen_export_tab_extension():
 
 def restore_zuordnungen_export_tab_extension(original_tabs) -> None:
     """Originale Streamlit-Tabs nach Ende der Legacy-App wiederherstellen."""
+    global _COMPACT_EXPORT_GRID_RUN_PATH
+
+    if _COMPACT_EXPORT_GRID_RUN_PATH is not None:
+        restore_compact_export_grid_runtime(_COMPACT_EXPORT_GRID_RUN_PATH)
+        _COMPACT_EXPORT_GRID_RUN_PATH = None
+
     st.tabs = original_tabs
