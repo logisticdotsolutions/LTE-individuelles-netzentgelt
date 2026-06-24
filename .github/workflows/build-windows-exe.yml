@@ -2,20 +2,6 @@ name: Build Windows EXE
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - "app/**"
-      - "scripts/**"
-      - "packaging/**"
-      - "tests/**"
-      - "BUILD_WINDOWS_EXE.bat"
-      - "BUILD_WINDOWS_EXE.ps1"
-      - "RUN_TESTS.bat"
-      - "RUN_TESTS.ps1"
-      - "requirements*.txt"
-      - ".github/workflows/build-windows-exe.yml"
 
 jobs:
   test-and-build:
