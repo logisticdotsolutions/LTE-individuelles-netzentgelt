@@ -5,7 +5,7 @@ import runpy
 from typing import Any
 
 
-COMPACT_EXPORT_GRID_MARKER = "NETZENTGELT_EXPORT_COCKPIT_REDESIGN_PHASE14D_V1_20260624"
+COMPACT_EXPORT_GRID_MARKER = "NETZENTGELT_EXPORT_COCKPIT_REDESIGN_PHASE14E_V1_20260624"
 _LEGACY_EXPORT_MARKER = "\nwith tab_exports:\n"
 _NEXT_TAB_MARKER = "\nwith tab_run:\n"
 
@@ -67,10 +67,299 @@ with tab_exports:
             def _soft_open_case_message(detail: str) -> None:
                 st.info(f"Hier ist noch etwas offen: {detail} Bitte Fall prüfen.")
 
-            def _technical_error_hint(label: str, error: Exception) -> None:
-                st.info(f"{label}: Hier ist noch etwas offen. Bitte Fall prüfen.")
-                with st.expander("Technische Ursache anzeigen", expanded=False):
-                    st.code(str(error))
+            def _first_existing_column(source_df: pd.DataFrame, candidates: list[str]) -> str | None:
+                if source_df.empty:
+                    return None
+
+                lower_columns = {
+                    str(column).lower(): column
+                    for column in source_df.columns
+                }
+
+                for candidate in candidates:
+                    if candidate.lower() in lower_columns:
+                        return lower_columns[candidate.lower()]
+
+                return None
+
+            def _as_clean_text(source_df: pd.DataFrame, column: str | None, default: str = "") -> pd.Series:
+                if column and column in source_df.columns:
+                    return (
+                        source_df[column]
+                        .fillna("")
+                        .astype(str)
+                        .str.strip()
+                    )
+
+                return pd.Series(default, index=source_df.index, dtype="object")
+
+            def _normalize_values(values: tuple[str, ...] | list[str]) -> set[str]:
+                return {
+                    str(value).strip().casefold()
+                    for value in values
+                    if str(value).strip()
+                }
+
+            def _filter_by_export_group(
+                source_df: pd.DataFrame,
+                group_config: dict,
+            ) -> pd.DataFrame:
+                if source_df.empty:
+                    return source_df
+
+                group_values = _normalize_values(
+                    tuple(group_config.get("performing_ru_values", ()))
+                )
+                if not group_values:
+                    return source_df
+
+                performing_col = _first_existing_column(
+                    source_df,
+                    [
+                        "performing_ru",
+                        "PerformingRU",
+                        "performing_ru_value",
+                        "current_contractant",
+                        "CurrentContractant",
+                        "RailwayUndertaking",
+                    ],
+                )
+
+                if not performing_col:
+                    return source_df
+
+                return source_df[
+                    source_df[performing_col]
+                    .fillna("")
+                    .astype(str)
+                    .str.strip()
+                    .str.casefold()
+                    .isin(group_values)
+                ].copy()
+
+            def _friendly_category(rule_value: str, hint_value: str = "") -> str:
+                rule = str(rule_value or "").strip().upper()
+                hint = str(hint_value or "").strip()
+                hint_upper = hint.upper()
+
+                if rule.startswith("R011") or "ÜBERSCHNEID" in hint_upper or "OVERLAP" in hint_upper:
+                    return "Überschneidung"
+                if rule.startswith("R010") or "GAP" in hint_upper or "LÜCK" in hint_upper:
+                    return "Zeitliche Lücke"
+                if rule.startswith("R012") or "PFLICHT" in hint_upper or "REQUIRED" in hint_upper:
+                    return "Pflichtfeld offen"
+                if rule.startswith("R001") or "LOK" in hint_upper or "LOCO" in hint_upper:
+                    return "Lokdaten prüfen"
+                if "MARKTPARTNER" in hint_upper or "VENS" in hint_upper or "TENS" in hint_upper:
+                    return "Zuordnung offen"
+                if rule:
+                    return f"Regel {rule}"
+                if hint:
+                    return hint[:80]
+                return "Offener Punkt"
+
+            def _build_open_case_details(group_config: dict) -> pd.DataFrame:
+                detail_frames: list[pd.DataFrame] = []
+
+                sources = [
+                    (findings, "Prüfregel"),
+                    (export_gate_ru, "Exportprüfung"),
+                    (global_export_blockers, "Exportprüfung"),
+                ]
+
+                for source_df, source_name in sources:
+                    if source_df.empty:
+                        continue
+
+                    work = _filter_by_export_group(source_df.copy(), group_config)
+                    if work.empty:
+                        continue
+
+                    severity_col = _first_existing_column(work, ["severity", "Severity"])
+                    if severity_col:
+                        severity_values = (
+                            work[severity_col]
+                            .fillna("")
+                            .astype(str)
+                            .str.strip()
+                            .str.upper()
+                        )
+                        relevant_mask = severity_values.isin(["ERROR", "MANUAL_REVIEW"])
+                        if bool(relevant_mask.any()):
+                            work = work.loc[relevant_mask].copy()
+
+                    status_col = _first_existing_column(work, ["gate_status", "GateStatus", "status", "Status"])
+                    if status_col:
+                        status_values = (
+                            work[status_col]
+                            .fillna("")
+                            .astype(str)
+                            .str.strip()
+                            .str.upper()
+                        )
+                        blocked_mask = status_values.isin(["BLOCKED", "ERROR", "MANUAL_REVIEW"])
+                        if bool(blocked_mask.any()):
+                            work = work.loc[blocked_mask].copy()
+
+                    if work.empty:
+                        continue
+
+                    rule_col = _first_existing_column(work, ["rule_id", "rule", "Rule", "dq_rule_ids"])
+                    loco_col = _first_existing_column(work, ["loco_no", "LocomotiveNo", "locomotive_no", "Lok"])
+                    transport_col = _first_existing_column(
+                        work,
+                        ["transport_number", "TransportNumber", "transport_no", "TransportNo"],
+                    )
+                    start_col = _first_existing_column(
+                        work,
+                        ["period_start_utc", "actual_departure_ts", "ActualDeparture", "coverage_date", "blocker_date"],
+                    )
+                    end_col = _first_existing_column(
+                        work,
+                        ["period_end_utc", "actual_arrival_ts", "ActualArrival"],
+                    )
+                    hint_col = _first_existing_column(
+                        work,
+                        [
+                            "dq_messages",
+                            "message",
+                            "error_message",
+                            "gate_message",
+                            "blocked_reason",
+                            "reason",
+                            "decision_reason",
+                            "Prüfung",
+                        ],
+                    )
+
+                    detail_df = pd.DataFrame(index=work.index)
+                    detail_df["Quelle"] = source_name
+                    detail_df["Regel"] = _as_clean_text(work, rule_col, "")
+                    detail_df["Hinweis"] = _as_clean_text(work, hint_col, "")
+                    detail_df["Kategorie"] = [
+                        _friendly_category(rule_value, hint_value)
+                        for rule_value, hint_value in zip(detail_df["Regel"], detail_df["Hinweis"])
+                    ]
+                    detail_df["Lok"] = _as_clean_text(work, loco_col, "")
+                    detail_df["TransportNumber"] = _as_clean_text(work, transport_col, "")
+
+                    start_values = _as_clean_text(work, start_col, "")
+                    end_values = _as_clean_text(work, end_col, "")
+                    detail_df["Zeitraum"] = [
+                        f"{start} bis {end}" if start and end else start or end
+                        for start, end in zip(start_values, end_values)
+                    ]
+
+                    detail_frames.append(
+                        detail_df[
+                            [
+                                "Kategorie",
+                                "Lok",
+                                "TransportNumber",
+                                "Regel",
+                                "Zeitraum",
+                                "Hinweis",
+                                "Quelle",
+                            ]
+                        ]
+                    )
+
+                if not detail_frames:
+                    return pd.DataFrame(
+                        columns=[
+                            "Kategorie",
+                            "Lok",
+                            "TransportNumber",
+                            "Regel",
+                            "Zeitraum",
+                            "Hinweis",
+                            "Quelle",
+                        ]
+                    )
+
+                details = pd.concat(detail_frames, ignore_index=True)
+                details = details.drop_duplicates().reset_index(drop=True)
+                return details
+
+            def _build_open_case_summary(details: pd.DataFrame) -> pd.DataFrame:
+                if details.empty:
+                    return pd.DataFrame(
+                        columns=[
+                            "Kategorie",
+                            "Anzahl",
+                            "Betroffene Loks",
+                            "Betroffene Transporte",
+                            "Aktion",
+                        ]
+                    )
+
+                work = details.copy()
+                for column in ["Lok", "TransportNumber", "Kategorie"]:
+                    work[column] = (
+                        work[column]
+                        .fillna("")
+                        .astype(str)
+                        .str.strip()
+                    )
+
+                summary = (
+                    work.groupby("Kategorie", as_index=False, dropna=False)
+                    .agg(
+                        Anzahl=("Kategorie", "size"),
+                        **{
+                            "Betroffene Loks": (
+                                "Lok",
+                                lambda values: len({
+                                    value
+                                    for value in values
+                                    if str(value).strip()
+                                }),
+                            ),
+                            "Betroffene Transporte": (
+                                "TransportNumber",
+                                lambda values: len({
+                                    value
+                                    for value in values
+                                    if str(value).strip()
+                                }),
+                            ),
+                        },
+                    )
+                    .sort_values(by=["Anzahl", "Kategorie"], ascending=[False, True])
+                )
+                summary["Aktion"] = "Fall prüfen"
+                return summary
+
+            def _render_open_case_overview(
+                *,
+                group_config: dict,
+                context_label: str,
+                technical_error: Exception | None = None,
+            ) -> None:
+                details = _build_open_case_details(group_config)
+                summary = _build_open_case_summary(details)
+
+                st.info(f"{context_label}: Hier ist noch etwas offen. Bitte die Fälle prüfen.")
+
+                if summary.empty:
+                    st.caption(
+                        "Für diese Kachel konnte keine eigene Detailtabelle ermittelt werden. "
+                        "Bitte den Reiter '2. Offene Aufgaben' öffnen."
+                    )
+                else:
+                    st.dataframe(summary, use_container_width=True, hide_index=True)
+
+                    with st.expander("Betroffene Fälle anzeigen", expanded=False):
+                        st.dataframe(
+                            details.head(150),
+                            use_container_width=True,
+                            hide_index=True,
+                            height=320,
+                        )
+
+                if technical_error is not None:
+                    with st.expander("Technischer Hinweis anzeigen", expanded=False):
+                        st.code(str(technical_error))
 
             def _render_primary_download_card(
                 *,
@@ -89,7 +378,11 @@ with tab_exports:
                             date_to_iso=export_date_to.isoformat(),
                         )
                     except Exception as error:
-                        _technical_error_hint("Nutzung konnte nicht vorbereitet werden", error)
+                        _render_open_case_overview(
+                            group_config=group_config,
+                            context_label="Nutzung konnte noch nicht vorbereitet werden",
+                            technical_error=error,
+                        )
                         return
 
                     st.metric("Zeilen", result.row_count)
@@ -121,7 +414,11 @@ with tab_exports:
                         date_to_iso=export_date_to.isoformat(),
                     )
                 except Exception as error:
-                    _technical_error_hint("Aufenthalt konnte nicht vorbereitet werden", error)
+                    _render_open_case_overview(
+                        group_config=group_config,
+                        context_label="Aufenthalt konnte noch nicht vorbereitet werden",
+                        technical_error=error,
+                    )
                     return
 
                 st.metric("Zeilen", result.row_count)
