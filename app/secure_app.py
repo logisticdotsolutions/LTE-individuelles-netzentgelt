@@ -93,6 +93,10 @@ from remove_review_tab_runtime_module import (  # noqa: E402
     restore_remove_review_tab_runtime,
 )
 from remove_vens_runtime_module import install_remove_vens_runtime  # noqa: E402
+from waterfall_overview_runtime_module import (  # noqa: E402
+    install_waterfall_overview_runtime,
+    restore_waterfall_overview_runtime,
+)
 
 install_compact_copy_runtime()
 install_compact_login_views()
@@ -143,6 +147,7 @@ PHASE13B_OVERLAP_TOLERANCE_MARKER = "NETZENTGELT_OVERLAP_TOLERANCE_ENTRYPOINT_PH
 PHASE13E_ASYNC_STATUS_UI_MARKER = "NETZENTGELT_ASYNC_REBUILD_STATUS_UI_PHASE13E_V1_20260622"
 PHASE13F_SUGGESTION_CACHE_MARKER = "NETZENTGELT_SUGGESTION_CACHE_PHASE13F_V1_20260622"
 PHASE13G_PACKAGED_SUBPROCESS_MARKER = "NETZENTGELT_PACKAGED_SUBPROCESS_ENTRYPOINT_PHASE13G_V1_20260623"
+PHASE14C_WATERFALL_OVERVIEW_MARKER = "NETZENTGELT_WATERFALL_OVERVIEW_ENTRYPOINT_PHASE14C_V1_20260629"
 
 
 st.set_page_config(
@@ -182,6 +187,7 @@ _packaged_subprocess_runtime = install_packaged_subprocess_runtime()
 _n01_runtime = install_n01_hardened_runtime()
 _ae01_runtime = install_ae01_hardened_runtime()
 _zuordnungen_hardened_runtime = install_zuordnungen_hardened_runtime()
+_waterfall_overview_runtime = install_waterfall_overview_runtime()
 _original_tabs = install_zuordnungen_export_tab_extension()
 _original_review_tabs = install_remove_review_tab_runtime()
 st.set_page_config = lambda *args, **kwargs: None
@@ -194,6 +200,7 @@ finally:
     restore_packaged_subprocess_runtime(_packaged_subprocess_runtime)
     restore_remove_review_tab_runtime(_original_review_tabs)
     restore_zuordnungen_export_tab_extension(_original_tabs)
+    restore_waterfall_overview_runtime(_waterfall_overview_runtime)
     restore_zuordnungen_hardened_runtime(_zuordnungen_hardened_runtime)
     restore_ae01_hardened_runtime(_ae01_runtime)
     restore_n01_hardened_runtime(_n01_runtime)
