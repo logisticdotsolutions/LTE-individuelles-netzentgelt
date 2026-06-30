@@ -7,6 +7,20 @@ _ORIGINAL_IMPORT = builtins.__import__
 _PATCHED = False
 
 
+GATE_FINDING_COLUMNS = {
+    "error_findings": "bigint",
+    "manual_review_findings": "bigint",
+    "warning_findings": "bigint",
+    "info_findings": "bigint",
+    "long_gap_rows": "bigint",
+    "not_export_ready_movement_rows": "bigint",
+}
+
+
+def _qident(value: str) -> str:
+    return '"' + str(value).replace('"', '""') + '"'
+
+
 def _table_exists(con, table_name: str) -> bool:
     return (
         con.execute(
@@ -15,6 +29,30 @@ def _table_exists(con, table_name: str) -> bool:
         ).fetchone()[0]
         > 0
     )
+
+
+def _columns(con, table_name: str) -> set[str]:
+    if not _table_exists(con, table_name):
+        return set()
+    return {str(row[0]).lower() for row in con.execute(f"describe {_qident(table_name)}").fetchall()}
+
+
+def _ensure_column(con, table_name: str, column_name: str, data_type: str) -> None:
+    if column_name.lower() not in _columns(con, table_name):
+        con.execute(f"alter table {_qident(table_name)} add column {_qident(column_name)} {data_type}")
+
+
+def _ensure_gate_finding_columns(con) -> None:
+    """Keep phase 11I feedback SQL compatible with older/newer gate schemas."""
+    for table_name in ["core_loco_day_coverage", "dq_export_gate", "dq_export_gate_ru"]:
+        if not _table_exists(con, table_name):
+            continue
+        for column_name, data_type in GATE_FINDING_COLUMNS.items():
+            _ensure_column(con, table_name, column_name, data_type)
+        for column_name in GATE_FINDING_COLUMNS:
+            con.execute(
+                f"update {_qident(table_name)} set {_qident(column_name)} = 0 where {_qident(column_name)} is null"
+            )
 
 
 def _rebuild_exact_overlap_diff_ru(con, run_id: str) -> None:
@@ -89,6 +127,7 @@ def _patch_phase6d(module) -> None:
     def patched_finalize_quality_gate_phase6d(con, run_id: str) -> None:
         original_finalize(con, run_id)
         _rebuild_exact_overlap_diff_ru(con, run_id)
+        _ensure_gate_finding_columns(con)
         from feedback_rule_adjustments_module import apply_feedback_rule_adjustments_phase11i
         from confirmed_gap_resolution_module import apply_confirmed_gap_resolution
         from overlap_policy_runtime_module import apply_overlap_policy_diff_evu_only
