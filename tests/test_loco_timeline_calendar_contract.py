@@ -18,6 +18,10 @@ from loco_timeline_calendar_runtime_module import (  # noqa: E402
     classify_timeline_status,
     filter_loco_timeline_segments,
 )
+from loco_timeline_de_scope_runtime_module import (  # noqa: E402
+    build_strict_de_relevance_mask,
+    filter_loco_timeline_source_for_de_scope,
+)
 from loco_timeline_review_queue_module import build_loco_timeline_review_queue  # noqa: E402
 
 
@@ -207,3 +211,41 @@ def test_review_queue_orders_problem_loco_days_by_priority():
     assert queue.iloc[0]["Status"] == "Prüfen"
     assert queue.iloc[0]["Erste Uhrzeit"] == "10:00"
     assert queue.iloc[1]["Status"] == "GAP"
+
+
+def test_de_scope_keeps_context_only_for_loks_with_de_relevance_in_filter_period():
+    source = pd.DataFrame(
+        [
+            {
+                "loco_no": "193 001",
+                "cal_route_type_home": "Außerhalb DE",
+                "de_event_label": "Außerhalb DE",
+                "period_start_utc": "2026-06-10T08:00:00Z",
+                "period_end_utc": "2026-06-10T09:00:00Z",
+            },
+            {
+                "loco_no": "193 001",
+                "cal_route_type_home": "Inland",
+                "de_event_label": "In DE",
+                "period_start_utc": "2026-06-11T08:00:00Z",
+                "period_end_utc": "2026-06-11T09:00:00Z",
+            },
+            {
+                "loco_no": "193 002",
+                "cal_route_type_home": "Außerhalb DE",
+                "de_event_label": "Außerhalb DE",
+                "period_start_utc": "2026-06-11T08:00:00Z",
+                "period_end_utc": "2026-06-11T09:00:00Z",
+            },
+        ]
+    )
+
+    strict_mask = build_strict_de_relevance_mask(source)
+    scoped = filter_loco_timeline_source_for_de_scope(
+        source,
+        date_from=date(2026, 6, 11),
+        date_to=date(2026, 6, 11),
+    )
+
+    assert strict_mask.tolist() == [False, True, False]
+    assert scoped["loco_no"].tolist() == ["193 001", "193 001"]
