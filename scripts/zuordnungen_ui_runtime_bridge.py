@@ -30,6 +30,7 @@ EXPORT_TAB_LABEL = "5. Exporte erstellen"
 GUIDED_EXPORT_OVERVIEW_MARKER = "NETZENTGELT_GUIDED_EXPORT_OVERVIEW_PHASE14B_V1_20260624"
 GUIDED_EXPORT_OVERVIEW_COPY = "Fachliche Downloads"
 HOLDING_PREVIEW_LABEL = "Vorschau der Holding-Zuordnungen anzeigen"
+LEGACY_EXPORT_TAB_PATCH_DISABLED_MARKER = "NETZENTGELT_LEGACY_EXPORT_TAB_PATCH_DISABLED_PHASE14M_V1_20260630"
 _COMPACT_EXPORT_GRID_RUN_PATH = None
 
 
@@ -376,11 +377,7 @@ def _render_holding_download(
 
 
 def render_zuordnungen_export_extension() -> None:
-    """Legacy-Hook bleibt für Tests und Hardened-Runtime kompatibel.
-
-    Die sichtbaren Holding-Zuordnungen werden im dedizierten Export-Cockpit gerendert;
-    dieser Hook wird dort zur Laufzeit deaktiviert, damit nichts doppelt erscheint.
-    """
+    """Legacy-Hook bleibt für Tests und Hardened-Runtime kompatibel."""
     if not DB_PATH.exists():
         st.info("Noch keine berechneten Daten gefunden. Bitte zuerst die Tagesprüfung ausführen.")
         return
@@ -405,7 +402,7 @@ def render_zuordnungen_export_extension() -> None:
 
 
 class _InjectedExportTab:
-    """Proxy, der den bestehenden Exportreiter fachlich führt und erweitert."""
+    """Legacy proxy kept for backwards compatibility; not installed in the product-tabs runtime."""
 
     def __init__(self, wrapped_tab) -> None:
         self._wrapped_tab = wrapped_tab
@@ -418,12 +415,16 @@ class _InjectedExportTab:
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_type is None:
             render_zuordnungen_export_extension()
-
         return self._wrapped_tab.__exit__(exc_type, exc_value, traceback)
 
 
 def install_zuordnungen_export_tab_extension():
-    """Streamlit-Tabs so erweitern, dass Reiter 5 den Export-Cockpit-Bereich erhält."""
+    """Install only the compact export-grid runtime; do not patch st.tabs anymore.
+
+    The visible product tabs are now owned by product_tabs_runtime_module. Keeping
+    a second tab patch here caused duplicate Export/Technik tabs and tab jumps on
+    every Streamlit rerun.
+    """
     global _COMPACT_EXPORT_GRID_RUN_PATH
 
     if _COMPACT_EXPORT_GRID_RUN_PATH is None:
@@ -431,36 +432,13 @@ def install_zuordnungen_export_tab_extension():
             ROOT / "app" / "app.py"
         )
 
-    original_tabs = st.tabs
-
-    if getattr(original_tabs, "_zuordnungen_extension_installed", False):
-        return original_tabs
-
-    def patched_tabs(labels: Sequence[object]):
-        rendered_tabs = original_tabs(labels)
-        normalized_labels = [str(label) for label in labels]
-
-        if EXPORT_TAB_LABEL not in normalized_labels:
-            return rendered_tabs
-
-        export_tab_index = normalized_labels.index(EXPORT_TAB_LABEL)
-        rendered_tabs = list(rendered_tabs)
-        existing = rendered_tabs[export_tab_index]
-        if not isinstance(existing, _InjectedExportTab):
-            rendered_tabs[export_tab_index] = _InjectedExportTab(existing)
-        return rendered_tabs
-
-    patched_tabs._zuordnungen_extension_installed = True
-    st.tabs = patched_tabs
-    return original_tabs
+    return None
 
 
 def restore_zuordnungen_export_tab_extension(original_tabs) -> None:
-    """Originale Streamlit-Tabs nach Ende der Legacy-App wiederherstellen."""
+    """Restore only compact export-grid runtime; st.tabs is restored by the owning runtime."""
     global _COMPACT_EXPORT_GRID_RUN_PATH
 
     if _COMPACT_EXPORT_GRID_RUN_PATH is not None:
         restore_compact_export_grid_runtime(_COMPACT_EXPORT_GRID_RUN_PATH)
         _COMPACT_EXPORT_GRID_RUN_PATH = None
-
-    st.tabs = original_tabs
