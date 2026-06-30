@@ -57,13 +57,12 @@ from operational_day_filter_ui_runtime_bridge import install_operational_day_fil
 from operator_gate_detail_runtime_module import install_operator_gate_detail_runtime  # noqa: E402
 from overlap_tolerance_runtime_module import install_overlap_tolerance_runtime  # noqa: E402
 from packaged_subprocess_runtime_bridge import install_packaged_subprocess_runtime, restore_packaged_subprocess_runtime  # noqa: E402
+from product_tabs_runtime_module import install_product_tabs_runtime, restore_product_tabs_runtime  # noqa: E402
 from remove_review_tab_runtime_module import install_remove_review_tab_runtime, restore_remove_review_tab_runtime  # noqa: E402
 from remove_vens_runtime_module import install_remove_vens_runtime  # noqa: E402
 from loco_timeline_context_scope_runtime_module import install_loco_timeline_context_scope_runtime, restore_loco_timeline_context_scope_runtime  # noqa: E402
 from loco_timeline_multiday_axis_runtime_module import install_loco_timeline_multiday_axis_runtime, restore_loco_timeline_multiday_axis_runtime  # noqa: E402
 from loco_timeline_visual_band_runtime_module import install_loco_timeline_visual_band_runtime, restore_loco_timeline_visual_band_runtime  # noqa: E402
-from loco_timeline_calendar_runtime_module import install_loco_timeline_calendar_runtime, restore_loco_timeline_calendar_runtime  # noqa: E402
-from waterfall_overview_runtime_module import install_waterfall_overview_runtime, restore_waterfall_overview_runtime  # noqa: E402
 from local_auth_ui_module import render_admin_area, render_authenticated_sidebar, require_local_login  # noqa: E402
 from role_scope_runtime_bridge import role_scoped_runtime  # noqa: E402
 from zuordnungen_hardened_runtime_bridge import install_zuordnungen_hardened_runtime, restore_zuordnungen_hardened_runtime  # noqa: E402
@@ -92,11 +91,7 @@ PHASE13B_OVERLAP_TOLERANCE_MARKER = "NETZENTGELT_OVERLAP_TOLERANCE_ENTRYPOINT_PH
 PHASE13E_ASYNC_STATUS_UI_MARKER = "NETZENTGELT_ASYNC_REBUILD_STATUS_UI_PHASE13E_V1_20260622"
 PHASE13F_SUGGESTION_CACHE_MARKER = "NETZENTGELT_SUGGESTION_CACHE_PHASE13F_V1_20260622"
 PHASE13G_PACKAGED_SUBPROCESS_MARKER = "NETZENTGELT_PACKAGED_SUBPROCESS_ENTRYPOINT_PHASE13G_V1_20260623"
-PHASE14C_WATERFALL_OVERVIEW_MARKER = "NETZENTGELT_WATERFALL_OVERVIEW_ENTRYPOINT_PHASE14C_V1_20260629"
-PHASE14D_HOLDER_GROUPED_EXPORT_MARKER = "NETZENTGELT_HOLDER_GROUPED_EXPORT_ENTRYPOINT_PHASE14D_V1_20260630"
-PHASE14E_LOCO_TIMELINE_CALENDAR_MARKER = "NETZENTGELT_LOCO_TIMELINE_CALENDAR_ENTRYPOINT_PHASE14E_V1_20260630"
-PHASE14G_LOCO_TIMELINE_DE_WINDOW_MARKER = "NETZENTGELT_LOCO_TIMELINE_DE_WINDOW_PHASE14G_V1_20260630"
-PHASE14H_LOCO_TIMELINE_MULTIDAY_AXIS_MARKER = "NETZENTGELT_LOCO_TIMELINE_MULTIDAY_AXIS_PHASE14H_V1_20260630"
+PHASE14K_PRODUCT_TABS_MARKER = "NETZENTGELT_PRODUCT_TABS_SINGLE_PATCH_PHASE14K_V1_20260630"
 PHASE14I_LOCO_TIMELINE_CONTEXT_SCOPE_MARKER = "NETZENTGELT_LOCO_TIMELINE_CONTEXT_SCOPE_PHASE14I_V1_20260630"
 PHASE14J_LOCO_TIMELINE_VISUAL_BANDS_MARKER = "NETZENTGELT_LOCO_TIMELINE_VISUAL_BANDS_PHASE14J_V1_20260630"
 
@@ -143,8 +138,7 @@ _zuordnungen_hardened_runtime = install_zuordnungen_hardened_runtime()
 _loco_timeline_context_scope_runtime = install_loco_timeline_context_scope_runtime()
 _loco_timeline_multiday_axis_runtime = install_loco_timeline_multiday_axis_runtime()
 _loco_timeline_visual_band_runtime = install_loco_timeline_visual_band_runtime()
-_loco_timeline_calendar_runtime = install_loco_timeline_calendar_runtime()
-_waterfall_overview_runtime = install_waterfall_overview_runtime()
+_product_tabs_runtime = install_product_tabs_runtime()
 _original_tabs = install_zuordnungen_export_tab_extension()
 _original_review_tabs = install_remove_review_tab_runtime()
 st.set_page_config = lambda *args, **kwargs: None
@@ -157,8 +151,7 @@ finally:
     restore_packaged_subprocess_runtime(_packaged_subprocess_runtime)
     restore_remove_review_tab_runtime(_original_review_tabs)
     restore_zuordnungen_export_tab_extension(_original_tabs)
-    restore_waterfall_overview_runtime(_waterfall_overview_runtime)
-    restore_loco_timeline_calendar_runtime(_loco_timeline_calendar_runtime)
+    restore_product_tabs_runtime(_product_tabs_runtime)
     restore_loco_timeline_visual_band_runtime(_loco_timeline_visual_band_runtime)
     restore_loco_timeline_multiday_axis_runtime(_loco_timeline_multiday_axis_runtime)
     restore_loco_timeline_context_scope_runtime(_loco_timeline_context_scope_runtime)
