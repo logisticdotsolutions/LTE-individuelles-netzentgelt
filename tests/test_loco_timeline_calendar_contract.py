@@ -18,6 +18,7 @@ from loco_timeline_calendar_runtime_module import (  # noqa: E402
     classify_timeline_status,
     filter_loco_timeline_segments,
 )
+from loco_timeline_review_queue_module import build_loco_timeline_review_queue  # noqa: E402
 
 
 def test_status_priority_prefers_manual_check_before_gap_or_overlap():
@@ -153,3 +154,56 @@ def test_loco_timeline_xlsx_contains_review_sheets():
     assert workbook["Tagesstatus"].max_row == 2
     assert workbook["Segmente"].max_row == 2
     assert workbook["Legende"].max_row >= 7
+
+
+def test_review_queue_orders_problem_loco_days_by_priority():
+    segments = pd.DataFrame(
+        [
+            {
+                "Meldetag": "2026-06-11",
+                "Loknummer": "193 002",
+                "Halter": "LTE Holding",
+                "Nutzer / PerformingRU": "LTE NL",
+                "Status": "GAP",
+                "StatusPriorität": 30,
+                "StartMinute": 480,
+                "EndMinute": 540,
+                "Regeln": "",
+                "Meldung": "",
+                "Begründung": "",
+            },
+            {
+                "Meldetag": "2026-06-11",
+                "Loknummer": "193 001",
+                "Halter": "LTE Holding",
+                "Nutzer / PerformingRU": "LTE DE",
+                "Status": "Prüfen",
+                "StatusPriorität": 50,
+                "StartMinute": 600,
+                "EndMinute": 660,
+                "Regeln": "R010",
+                "Meldung": "Prüfen",
+                "Begründung": "Manuelle Entscheidung erforderlich",
+            },
+            {
+                "Meldetag": "2026-06-11",
+                "Loknummer": "193 003",
+                "Halter": "LTE Holding",
+                "Nutzer / PerformingRU": "LTE DE",
+                "Status": "Zugewiesen",
+                "StatusPriorität": 20,
+                "StartMinute": 700,
+                "EndMinute": 760,
+                "Regeln": "",
+                "Meldung": "",
+                "Begründung": "",
+            },
+        ]
+    )
+
+    queue = build_loco_timeline_review_queue(segments)
+
+    assert queue["Loknummer"].tolist() == ["193 001", "193 002"]
+    assert queue.iloc[0]["Status"] == "Prüfen"
+    assert queue.iloc[0]["Erste Uhrzeit"] == "10:00"
+    assert queue.iloc[1]["Status"] == "GAP"
