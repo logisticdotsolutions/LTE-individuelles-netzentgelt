@@ -12,6 +12,7 @@ import operational_day_filter_module as operational_day_filter
 
 PHASE11G_EARLY_DAY_FILTER_MARKER = "NETZENTGELT_EARLY_OPERATIONAL_DAY_FILTER_PHASE11G_V1_20260612"
 OperationalDayFilterRenderer = Callable[[], tuple[date, date]]
+EARLY_RENDER_FLAG = "_operational_day_filter_rendered_early"
 
 
 def render_early_sidebar_operational_day_filter() -> tuple[date, date]:
@@ -33,6 +34,7 @@ def render_early_sidebar_operational_day_filter() -> tuple[date, date]:
         value=default_day,
         key="operational_day_filter_to",
     )
+    st.session_state[EARLY_RENDER_FLAG] = True
     normalized_from, normalized_to = operational_day_filter.normalize_day_range(
         date_from,
         date_to,
