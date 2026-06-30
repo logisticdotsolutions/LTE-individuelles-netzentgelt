@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from datetime import date
+from io import BytesIO
 from pathlib import Path
 import sys
 
 import pandas as pd
+from openpyxl import load_workbook
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
@@ -12,6 +14,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from loco_timeline_calendar_runtime_module import (  # noqa: E402
     build_loco_timeline_day_summary,
     build_loco_timeline_segments,
+    build_loco_timeline_xlsx,
     classify_timeline_status,
     filter_loco_timeline_segments,
 )
@@ -119,3 +122,34 @@ def test_filter_and_summary_keep_highest_status_per_loco_day():
     assert filtered.iloc[0]["Status"] == "GAP"
     assert summary.iloc[0]["Status"] == "GAP"
     assert int(summary.iloc[0]["Problemsegmente"]) == 1
+
+
+def test_loco_timeline_xlsx_contains_review_sheets():
+    source = pd.DataFrame(
+        [
+            {
+                "loco_no": "193 001",
+                "holder_name": "LTE Holding",
+                "performing_ru": "LTE DE",
+                "row_type": "MOVEMENT",
+                "report_scope": "IN_REPORT",
+                "period_start_utc": "2026-06-11T08:00:00Z",
+                "period_end_utc": "2026-06-11T09:00:00Z",
+            }
+        ]
+    )
+    segments = build_loco_timeline_segments(
+        source,
+        date_from=date(2026, 6, 11),
+        date_to=date(2026, 6, 11),
+        context_days=0,
+    )
+    summary = build_loco_timeline_day_summary(segments)
+
+    payload = build_loco_timeline_xlsx(segments, summary)
+    workbook = load_workbook(BytesIO(payload), read_only=True)
+
+    assert workbook.sheetnames == ["Tagesstatus", "Segmente", "Legende"]
+    assert workbook["Tagesstatus"].max_row == 2
+    assert workbook["Segmente"].max_row == 2
+    assert workbook["Legende"].max_row >= 7
