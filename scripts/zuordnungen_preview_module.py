@@ -8,6 +8,7 @@ import duckdb
 import pandas as pd
 
 from export_module import _to_day_bounds, table_exists
+from zuordnungen_export_module import _holding_holder_filter_sql
 
 
 PREVIEW_COLUMNS = (
@@ -29,11 +30,12 @@ def build_zuordnungen_holding_preview(
     date_to: date,
 ) -> pd.DataFrame:
     """
-    Z01-Vorschau inklusive blockierter Zeilen erzeugen.
+    Z01-Vorschau inklusive blockierter Zeilen nur für Halter = LTE Holding erzeugen.
 
     Die Vorschau ist bewusst unabhängig vom Download-Gate. So kann ein
-    Fachanwender bereits vor der Fehlerbehebung sehen, welche Daten nach
-    Klärung der Prüffälle in die beiden Holding-Dateien einfließen würden.
+    Fachanwender bereits vor der Fehlerbehebung sehen, welche LTE-Holding-
+    Haltersegmente nach Klärung der Prüffälle in die beiden Holding-Dateien
+    einfließen würden.
     """
     db_path = Path(db_path)
 
@@ -132,7 +134,8 @@ def build_zuordnungen_holding_preview(
                 {status_sql} as "Exportstatus",
                 {hint_sql} as "Hinweis"
             from core_usage_assignment_segments s
-            where exists (
+            where {_holding_holder_filter_sql('s')}
+              and exists (
                 select 1
                 from core_usage_assignment_segment_movements m
                 where m.usage_segment_id = s.usage_segment_id
