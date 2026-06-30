@@ -4,6 +4,7 @@ from typing import Sequence
 
 import loco_timeline_calendar_runtime_module as timeline
 import waterfall_overview_runtime_module as waterfall
+from no_lte_assignment_policy_runtime_module import install_no_lte_assignment_policy_runtime
 
 LOCO_TAB_LABEL = "4. Lok prüfen"
 WATERFALL_TAB_LABEL = "5. Wasserfall"
@@ -39,6 +40,7 @@ def install_product_tabs_runtime():
     """Add product tabs in one st.tabs patch to avoid nested tab label mutations on rerun."""
     import streamlit as st
 
+    install_no_lte_assignment_policy_runtime()
     original_tabs = st.tabs
     if getattr(original_tabs, "_product_tabs_runtime_installed", False):
         return original_tabs
