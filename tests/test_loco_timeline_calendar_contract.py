@@ -249,3 +249,46 @@ def test_de_scope_keeps_context_only_for_loks_with_de_relevance_in_filter_period
 
     assert strict_mask.tolist() == [False, True, False]
     assert scoped["loco_no"].tolist() == ["193 001", "193 001"]
+
+
+def test_timeline_clips_long_gap_to_visible_de_window_and_drops_outside_de_rows():
+    source = pd.DataFrame(
+        [
+            {
+                "loco_no": "91806186944-5",
+                "holder_name": "LTE Holding",
+                "performing_ru": "LTE DE",
+                "row_type": "GAP",
+                "report_scope": "IN_REPORT",
+                "cal_route_type_home": "Inland",
+                "de_event_label": "In DE",
+                "period_start_utc": "2026-06-05T00:00:00Z",
+                "period_end_utc": "2026-06-30T00:00:00Z",
+            },
+            {
+                "loco_no": "91806186944-5",
+                "holder_name": "LTE Holding",
+                "performing_ru": "LTE DE",
+                "row_type": "MOVEMENT",
+                "report_scope": "IN_REPORT",
+                "cal_route_type_home": "Außerhalb DE",
+                "de_event_label": "Außerhalb DE",
+                "period_start_utc": "2026-06-28T08:00:00Z",
+                "period_end_utc": "2026-06-28T09:00:00Z",
+            },
+        ]
+    )
+
+    segments = build_loco_timeline_segments(
+        source,
+        date_from=date(2026, 6, 28),
+        date_to=date(2026, 6, 28),
+        context_days=1,
+    )
+    summary = build_loco_timeline_day_summary(segments)
+
+    assert set(segments["Meldetag"]) == {"2026-06-27", "2026-06-28", "2026-06-29"}
+    assert "2026-06-05" not in set(segments["Meldetag"])
+    assert segments["Route Type"].eq("Inland").all()
+    assert set(summary["Meldetag"]) == {"2026-06-27", "2026-06-28", "2026-06-29"}
+    assert int(summary["Problemsegmente"].sum()) == 3
