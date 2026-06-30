@@ -67,6 +67,7 @@ from export_exception_ui_module import (  # noqa: E402
 from friendly_ui_copy_runtime_module import install_compact_copy_runtime  # noqa: E402
 from friendly_ui_density_module import apply_density_cleanup  # noqa: E402
 from friendly_ui_theme_module import apply_theme, render_theme_toggle  # noqa: E402
+from holder_grouped_export_runtime_module import install_holder_grouped_export_runtime  # noqa: E402
 from local_auth_runtime_bridge import authenticated_runtime  # noqa: E402
 from manual_override_gap_policy_runtime_module import install_gap_policy_labels  # noqa: E402
 from manual_override_overlap_runtime_module import install_overlap_correction_workflow  # noqa: E402
@@ -107,6 +108,7 @@ install_remove_vens_runtime()
 install_operator_gate_detail_runtime()
 install_overlap_correction_workflow()
 install_overlap_tolerance_runtime()
+install_holder_grouped_export_runtime()
 
 from local_auth_ui_module import (  # noqa: E402
     render_admin_area,
@@ -148,6 +150,7 @@ PHASE13E_ASYNC_STATUS_UI_MARKER = "NETZENTGELT_ASYNC_REBUILD_STATUS_UI_PHASE13E_
 PHASE13F_SUGGESTION_CACHE_MARKER = "NETZENTGELT_SUGGESTION_CACHE_PHASE13F_V1_20260622"
 PHASE13G_PACKAGED_SUBPROCESS_MARKER = "NETZENTGELT_PACKAGED_SUBPROCESS_ENTRYPOINT_PHASE13G_V1_20260623"
 PHASE14C_WATERFALL_OVERVIEW_MARKER = "NETZENTGELT_WATERFALL_OVERVIEW_ENTRYPOINT_PHASE14C_V1_20260629"
+PHASE14D_HOLDER_GROUPED_EXPORT_MARKER = "NETZENTGELT_HOLDER_GROUPED_EXPORT_ENTRYPOINT_PHASE14D_V1_20260630"
 
 
 st.set_page_config(
