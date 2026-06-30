@@ -7,6 +7,7 @@ from typing import Callable
 import pandas as pd
 
 import loco_timeline_calendar_runtime_module as timeline
+import loco_timeline_detail_dropdown_runtime_module as detail_dropdown
 import loco_timeline_multiday_axis_runtime_module as multiday_axis
 
 PROBLEM_STATUSES = {"Prüfen", "Overlap", "GAP"}
@@ -151,6 +152,7 @@ def build_loco_multiday_axis_html_with_visual_bands(
         '<span class="loco-timeline-chip"><b style="color:#ff7f0e">■</b> GAP</span>'
         '<span class="loco-timeline-chip"><b style="color:#2ca02c">■</b> Zugewiesen</span>'
         '<span class="loco-timeline-chip"><b style="color:#1f77b4">■</b> In DE</span>'
+        '<span class="loco-timeline-chip"><b style="color:#9aa0a6">■</b> Außerhalb DE</span>'
         '<span class="loco-timeline-chip">Satt = Arbeitszeitraum</span>'
         '<span class="loco-timeline-chip">Transparent = Kontexttag</span>'
         '</div>'
@@ -205,16 +207,23 @@ def build_loco_multiday_axis_html_with_visual_bands(
     return "".join(rows_html)
 
 
-def install_loco_timeline_visual_band_runtime() -> Callable | None:
+def install_loco_timeline_visual_band_runtime() -> tuple[Callable | None, Callable | None] | Callable | None:
     original_renderer = multiday_axis.build_loco_multiday_axis_html
     if getattr(original_renderer, "_loco_timeline_visual_band_installed", False):
         return original_renderer
+    original_detail_renderer = detail_dropdown.install_loco_timeline_detail_dropdown_runtime()
     build_loco_multiday_axis_html_with_visual_bands._loco_timeline_visual_band_installed = True
     multiday_axis.build_loco_multiday_axis_html = build_loco_multiday_axis_html_with_visual_bands
-    return original_renderer
+    return original_renderer, original_detail_renderer
 
 
-def restore_loco_timeline_visual_band_runtime(original_renderer: Callable | None) -> None:
+def restore_loco_timeline_visual_band_runtime(original_renderer) -> None:
     if original_renderer is None:
         return
-    multiday_axis.build_loco_multiday_axis_html = original_renderer
+    original_axis_renderer = original_renderer
+    original_detail_renderer = None
+    if isinstance(original_renderer, tuple):
+        original_axis_renderer, original_detail_renderer = original_renderer
+    detail_dropdown.restore_loco_timeline_detail_dropdown_runtime(original_detail_renderer)
+    if original_axis_renderer is not None:
+        multiday_axis.build_loco_multiday_axis_html = original_axis_renderer
