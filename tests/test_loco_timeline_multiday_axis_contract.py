@@ -55,4 +55,4 @@ def test_multiday_axis_uses_date_labels_instead_of_single_day_hours():
     assert "29.06." in html
     assert "Arbeitszeitraum 23.06.2026 bis 28.06.2026" in html
     assert "00:00</span><span>06:00" not in html
-    assert html.count("loco-row") == 1
+    assert html.count('<div class="loco-row">') == 1
