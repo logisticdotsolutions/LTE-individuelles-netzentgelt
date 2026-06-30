@@ -5,13 +5,12 @@ from typing import Sequence
 import pandas as pd
 
 from loco_timeline_calendar_runtime_module import (
-    PROBLEM_STATUSES,
     TIMELINE_PATH,
     _get_selected_day_range,
     _read_csv_safe,
     build_loco_timeline_segments,
 )
-from loco_timeline_review_queue_module import build_loco_timeline_review_queue
+from loco_timeline_review_queue_module import PROBLEM_STATUSES, build_loco_timeline_review_queue
 
 TIMELINE_TAB_LABEL = "6. Lok-Zeitachse"
 REVIEW_QUEUE_TAB_LABEL = "7. Pruefqueue"
