@@ -1,0 +1,121 @@
+from __future__ import annotations
+
+from datetime import date
+from pathlib import Path
+import sys
+
+import pandas as pd
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+
+from loco_timeline_calendar_runtime_module import (  # noqa: E402
+    build_loco_timeline_day_summary,
+    build_loco_timeline_segments,
+    classify_timeline_status,
+    filter_loco_timeline_segments,
+)
+
+
+def test_status_priority_prefers_manual_check_before_gap_or_overlap():
+    assert (
+        classify_timeline_status(
+            row_type="GAP",
+            is_de_relevant=True,
+            holder="LTE Holding",
+            performing_ru="LTE DE",
+            rules="R010",
+            message="Relevante Lücke muss geprüft werden",
+            decision_reason="",
+        )
+        == "Prüfen"
+    )
+    assert (
+        classify_timeline_status(
+            row_type="MOVEMENT",
+            is_de_relevant=True,
+            holder="LTE Holding",
+            performing_ru="LTE DE",
+            rules="",
+            message="",
+            decision_reason="Overlap bis 5 Minuten ignorieren",
+        )
+        == "Overlap"
+    )
+
+
+def test_segments_are_split_by_day_and_include_context_days():
+    source = pd.DataFrame(
+        [
+            {
+                "loco_no": "193 001",
+                "holder_name": "LTE Holding",
+                "performing_ru": "LTE DE",
+                "row_type": "MOVEMENT",
+                "report_scope": "IN_REPORT",
+                "period_start_utc": "2026-06-10T23:30:00Z",
+                "period_end_utc": "2026-06-11T00:30:00Z",
+                "cal_route_type_home": "Inland",
+            },
+            {
+                "loco_no": "193 002",
+                "holder_name": "LTE Holding",
+                "performing_ru": "LTE NL",
+                "row_type": "MOVEMENT",
+                "report_scope": "IN_REPORT",
+                "period_start_utc": "2026-06-12T08:00:00Z",
+                "period_end_utc": "2026-06-12T09:00:00Z",
+                "cal_route_type_home": "Inland",
+            },
+        ]
+    )
+
+    segments = build_loco_timeline_segments(
+        source,
+        date_from=date(2026, 6, 11),
+        date_to=date(2026, 6, 11),
+        context_days=1,
+    )
+
+    assert set(segments["Meldetag"]) == {"2026-06-10", "2026-06-11", "2026-06-12"}
+    assert segments.loc[segments["Meldetag"].eq("2026-06-10"), "Im Filterzeitraum"].eq(False).all()
+    assert segments.loc[segments["Meldetag"].eq("2026-06-11"), "Im Filterzeitraum"].eq(True).all()
+
+
+def test_filter_and_summary_keep_highest_status_per_loco_day():
+    source = pd.DataFrame(
+        [
+            {
+                "loco_no": "193 001",
+                "holder_name": "LTE Holding",
+                "performing_ru": "LTE DE",
+                "row_type": "MOVEMENT",
+                "report_scope": "IN_REPORT",
+                "period_start_utc": "2026-06-11T08:00:00Z",
+                "period_end_utc": "2026-06-11T09:00:00Z",
+            },
+            {
+                "loco_no": "193 001",
+                "holder_name": "LTE Holding",
+                "performing_ru": "LTE DE",
+                "row_type": "GAP",
+                "report_scope": "IN_REPORT",
+                "period_start_utc": "2026-06-11T09:00:00Z",
+                "period_end_utc": "2026-06-11T10:00:00Z",
+            },
+        ]
+    )
+
+    segments = build_loco_timeline_segments(
+        source,
+        date_from=date(2026, 6, 11),
+        date_to=date(2026, 6, 11),
+        context_days=0,
+    )
+    filtered = filter_loco_timeline_segments(segments, only_problem_cases=True)
+    summary = build_loco_timeline_day_summary(segments)
+
+    assert len(filtered) == 1
+    assert filtered.iloc[0]["Status"] == "GAP"
+    assert summary.iloc[0]["Status"] == "GAP"
+    assert int(summary.iloc[0]["Problemsegmente"]) == 1
