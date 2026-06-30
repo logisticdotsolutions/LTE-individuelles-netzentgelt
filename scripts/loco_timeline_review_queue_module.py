@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import pandas as pd
 
-from loco_timeline_calendar_runtime_module import PROBLEM_STATUSES, STATUS_PRIORITY, _join_unique
+from loco_timeline_calendar_runtime_module import STATUS_PRIORITY, _join_unique
 
+PROBLEM_STATUSES = ["Prüfen", "Overlap", "GAP"]
 REVIEW_QUEUE_COLUMNS = [
     "Auswahl",
     "Meldetag",
