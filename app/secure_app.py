@@ -94,6 +94,10 @@ from remove_review_tab_runtime_module import (  # noqa: E402
     restore_remove_review_tab_runtime,
 )
 from remove_vens_runtime_module import install_remove_vens_runtime  # noqa: E402
+from loco_timeline_calendar_runtime_module import (  # noqa: E402
+    install_loco_timeline_calendar_runtime,
+    restore_loco_timeline_calendar_runtime,
+)
 from waterfall_overview_runtime_module import (  # noqa: E402
     install_waterfall_overview_runtime,
     restore_waterfall_overview_runtime,
@@ -151,6 +155,7 @@ PHASE13F_SUGGESTION_CACHE_MARKER = "NETZENTGELT_SUGGESTION_CACHE_PHASE13F_V1_202
 PHASE13G_PACKAGED_SUBPROCESS_MARKER = "NETZENTGELT_PACKAGED_SUBPROCESS_ENTRYPOINT_PHASE13G_V1_20260623"
 PHASE14C_WATERFALL_OVERVIEW_MARKER = "NETZENTGELT_WATERFALL_OVERVIEW_ENTRYPOINT_PHASE14C_V1_20260629"
 PHASE14D_HOLDER_GROUPED_EXPORT_MARKER = "NETZENTGELT_HOLDER_GROUPED_EXPORT_ENTRYPOINT_PHASE14D_V1_20260630"
+PHASE14E_LOCO_TIMELINE_CALENDAR_MARKER = "NETZENTGELT_LOCO_TIMELINE_CALENDAR_ENTRYPOINT_PHASE14E_V1_20260630"
 
 
 st.set_page_config(
@@ -190,6 +195,7 @@ _packaged_subprocess_runtime = install_packaged_subprocess_runtime()
 _n01_runtime = install_n01_hardened_runtime()
 _ae01_runtime = install_ae01_hardened_runtime()
 _zuordnungen_hardened_runtime = install_zuordnungen_hardened_runtime()
+_loco_timeline_calendar_runtime = install_loco_timeline_calendar_runtime()
 _waterfall_overview_runtime = install_waterfall_overview_runtime()
 _original_tabs = install_zuordnungen_export_tab_extension()
 _original_review_tabs = install_remove_review_tab_runtime()
@@ -204,6 +210,7 @@ finally:
     restore_remove_review_tab_runtime(_original_review_tabs)
     restore_zuordnungen_export_tab_extension(_original_tabs)
     restore_waterfall_overview_runtime(_waterfall_overview_runtime)
+    restore_loco_timeline_calendar_runtime(_loco_timeline_calendar_runtime)
     restore_zuordnungen_hardened_runtime(_zuordnungen_hardened_runtime)
     restore_ae01_hardened_runtime(_ae01_runtime)
     restore_n01_hardened_runtime(_n01_runtime)
