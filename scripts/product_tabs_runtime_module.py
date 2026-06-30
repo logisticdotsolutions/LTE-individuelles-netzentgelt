@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import Sequence
 
-from loco_timeline_calendar_runtime_module import render_loco_timeline_calendar
-from waterfall_overview_runtime_module import render_waterfall_overview
+import loco_timeline_calendar_runtime_module as timeline
+import waterfall_overview_runtime_module as waterfall
 
 LOCO_TAB_LABEL = "4. Lok prüfen"
 WATERFALL_TAB_LABEL = "5. Wasserfall"
@@ -51,10 +51,10 @@ def install_product_tabs_runtime():
         rendered_tabs = list(original_tabs(visible_labels, *args, **kwargs))
         if 0 <= waterfall_index < len(rendered_tabs):
             with rendered_tabs[waterfall_index]:
-                render_waterfall_overview()
+                waterfall.render_waterfall_overview()
         if 0 <= timeline_index < len(rendered_tabs):
             with rendered_tabs[timeline_index]:
-                render_loco_timeline_calendar()
+                timeline.render_loco_timeline_calendar()
 
         inserted_indices = {waterfall_index, timeline_index}
         return [tab for index, tab in enumerate(rendered_tabs) if index not in inserted_indices]
