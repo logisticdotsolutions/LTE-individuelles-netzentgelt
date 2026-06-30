@@ -37,6 +37,10 @@ LTE_HOLDING_MARKET_PARTNER_IDS = (
     "1900100300393",
     "1900100400391",
 )
+LTE_HOLDING_HOLDER_NAMES = (
+    LTE_HOLDING_MARKET_PARTNER_NAME,
+    LTE_HOLDING_RAILCUBE_NAME,
+)
 
 
 @dataclass(frozen=True)
@@ -47,6 +51,25 @@ class ZuordnungenExportResult:
     file_name: str
     row_count: int
     missing_required_field_count: int
+
+
+def _sql_literal_list(values: Iterable[str]) -> str:
+    cleaned_values = [str(value).strip() for value in values if str(value).strip()]
+    if not cleaned_values:
+        return "''"
+    return ", ".join("'" + value.replace("'", "''") + "'" for value in cleaned_values)
+
+
+def _holding_holder_filter_sql(alias: str = "s") -> str:
+    """SQL-Filter für Segmente, deren Halter fachlich LTE Holding ist."""
+    return f"""
+        (
+            trim(coalesce(cast({alias}.holder_market_partner_id as varchar), ''))
+                in ({_sql_literal_list(LTE_HOLDING_MARKET_PARTNER_IDS)})
+            or lower(trim(coalesce(cast({alias}.holder_name as varchar), '')))
+                in ({_sql_literal_list(name.lower() for name in LTE_HOLDING_HOLDER_NAMES)})
+        )
+    """
 
 
 def _load_zuordnungen_workbook(template_path: Path):
@@ -95,7 +118,7 @@ def _assert_holding_export_gate_ready(
     date_from: date,
     date_to: date,
 ) -> None:
-    """Holding-Gesamtexport bei relevanten blockierten Lok-Tagen verhindern."""
+    """Holding-Export nur bei blockierten LTE-Holding-Haltersegmenten verhindern."""
     required_tables = [
         "core_usage_assignment_segments",
         "core_usage_assignment_segment_movements",
@@ -117,7 +140,7 @@ def _assert_holding_export_gate_ready(
     window_start, window_end_exclusive = _to_day_bounds(date_from, date_to)
 
     local_blockers = con.execute(
-        """
+        f"""
         select
             count(*) as blocker_count,
             string_agg(
@@ -133,6 +156,7 @@ def _assert_holding_export_gate_ready(
                 from core_usage_assignment_segments s
                 where s.loco_no = g.loco_no
                   and s.performing_ru is not distinct from g.performing_ru
+                  and {_holding_holder_filter_sql('s')}
                   and exists (
                         select 1
                         from core_usage_assignment_segment_movements m
@@ -169,7 +193,7 @@ def _assert_holding_export_gate_ready(
 
         if local_count > 0:
             details.append(
-                f"Blockierte DE-relevante Lok-Tage: {local_count}. "
+                f"Blockierte LTE-Holding-Halter-Lok-Tage: {local_count}. "
                 f"Beispiele: {local_blockers[1] or '-'}"
             )
 
@@ -190,12 +214,12 @@ def _fetch_holding_assignment_segments(
     date_from: date,
     date_to: date,
 ) -> list[dict[str, object]]:
-    """Alle exportfähigen DE-relevanten Z01-Segmente unabhängig von PerformingRU liefern."""
+    """Exportfähige Z01-Segmente nur für Halter = LTE Holding liefern."""
     window_start, window_end_exclusive = _to_day_bounds(date_from, date_to)
     _assert_holding_export_gate_ready(con, date_from, date_to)
 
     rows = con.execute(
-        """
+        f"""
         select
             cast(s.loco_no as varchar) as locomotive_no,
             s.segment_start_utc,
@@ -206,6 +230,7 @@ def _fetch_holding_assignment_segments(
             coalesce(nullif(s.holder_market_partner_id, ''), s.holder_name) as holder_market_partner_id
         from core_usage_assignment_segments s
         where coalesce(s.export_blocking_movement_rows, 0) = 0
+          and {_holding_holder_filter_sql('s')}
           and exists (
                 select 1
                 from core_usage_assignment_segment_movements m
@@ -316,7 +341,7 @@ def build_zuordnungen_holding_xlsx(
     date_to: date,
     template_path: Path = ZUORDNUNGEN_TEMPLATE_PATH,
 ) -> ZuordnungenExportResult:
-    """Eine Z01-Datei für einen der beiden LTE-Holding-Mandanten erzeugen."""
+    """Eine Z01-Datei für LTE-Holding-Haltersegmente erzeugen."""
     db_path = Path(db_path)
     holding_market_partner_id = str(holding_market_partner_id).strip()
 
