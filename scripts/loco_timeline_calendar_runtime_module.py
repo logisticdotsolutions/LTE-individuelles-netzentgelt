@@ -53,6 +53,21 @@ DE_EVENT_LABELS = {
     "AUSFAHRT",
     "EINFAHRT + AUSFAHRT",
 }
+DE_ROUTE_KEYWORDS = (
+    "inland",
+    "einfahrt",
+    "ausfahrt",
+    "passiert",
+    "komplex",
+    "in de",
+)
+NON_DE_KEYWORDS = (
+    "außerhalb de",
+    "ausserhalb de",
+    "ausland",
+    "kein bezug",
+    "no de",
+)
 STATUS_PRIORITY = {
     "Prüfen": 50,
     "Overlap": 40,
@@ -157,19 +172,30 @@ def _normalize_day_range(date_from: date, date_to: date) -> tuple[date, date]:
     return (date_from, date_to) if date_from <= date_to else (date_to, date_from)
 
 
+def _contains_any(value: str, keywords: Iterable[str]) -> bool:
+    normalized = str(value or "").strip().casefold()
+    return any(keyword in normalized for keyword in keywords)
+
+
 def _build_de_relevance_mask(source_df: pd.DataFrame) -> pd.Series:
     report_scope_col = _column(source_df, ["report_scope"])
     event_label_col = _column(source_df, EVENT_LABEL_COLUMNS)
     route_type_col = _column(source_df, ROUTE_TYPE_COLUMNS)
 
     masks: list[pd.Series] = []
+    explicit_non_de = pd.Series(False, index=source_df.index, dtype=bool)
     if report_scope_col:
         masks.append(_text_series(source_df, report_scope_col).str.upper().eq("IN_REPORT"))
     if event_label_col:
-        masks.append(_text_series(source_df, event_label_col).str.upper().isin(DE_EVENT_LABELS))
+        event_values = _text_series(source_df, event_label_col)
+        masks.append(event_values.str.upper().isin(DE_EVENT_LABELS))
+        explicit_non_de = explicit_non_de | event_values.apply(lambda value: _contains_any(value, NON_DE_KEYWORDS))
     if route_type_col:
-        route_values = _text_series(source_df, route_type_col).str.casefold()
-        masks.append(route_values.ne("") & ~route_values.eq("kein bezug"))
+        route_values = _text_series(source_df, route_type_col)
+        route_positive = route_values.apply(lambda value: _contains_any(value, DE_ROUTE_KEYWORDS))
+        route_non_de = route_values.apply(lambda value: _contains_any(value, NON_DE_KEYWORDS))
+        masks.append(route_positive & ~route_non_de)
+        explicit_non_de = explicit_non_de | route_non_de
 
     if not masks:
         return pd.Series(True, index=source_df.index, dtype=bool)
@@ -177,7 +203,7 @@ def _build_de_relevance_mask(source_df: pd.DataFrame) -> pd.Series:
     result = masks[0]
     for mask in masks[1:]:
         result = result | mask
-    return result
+    return (result & ~explicit_non_de).fillna(False).astype(bool)
 
 
 def _has_content(value: str) -> bool:
@@ -294,6 +320,13 @@ def build_loco_timeline_segments(
         return EMPTY_SEGMENTS.copy()
 
     de_relevance = _build_de_relevance_mask(work)
+    work = work.loc[de_relevance].copy()
+    start_ts = start_ts.loc[work.index]
+    end_ts = end_ts.loc[work.index]
+    de_relevance = de_relevance.loc[work.index]
+    if work.empty:
+        return EMPTY_SEGMENTS.copy()
+
     loco_col = _column(work, LOCO_COLUMNS)
     holder_col = _column(work, HOLDER_COLUMNS)
     performing_col = _column(work, PERFORMING_RU_COLUMNS)
@@ -313,8 +346,10 @@ def build_loco_timeline_segments(
         loco = _text_value(row, loco_col)
         if not loco or loco == "00000000000-0":
             continue
-        row_start = pd.Timestamp(start_ts.loc[row_index])
-        row_end = pd.Timestamp(end_ts.loc[row_index])
+        row_start = max(pd.Timestamp(start_ts.loc[row_index]), context_start)
+        row_end = min(pd.Timestamp(end_ts.loc[row_index]), context_end)
+        if row_end <= row_start:
+            continue
         holder = _text_value(row, holder_col, "(Halter fehlt)") or "(Halter fehlt)"
         performing_ru = _text_value(row, performing_col, "(PerformingRU fehlt)") or "(PerformingRU fehlt)"
         route_type = _text_value(row, route_col)
