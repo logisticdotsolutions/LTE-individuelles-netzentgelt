@@ -119,7 +119,45 @@ def _rebuild_exact_overlap_diff_ru(con, run_id: str) -> None:
     )
 
 
+def _apply_broken_route_chain_policy(con) -> None:
+    try:
+        from broken_route_chain_policy_module import (
+            disable_broken_route_chain_rules,
+            neutralize_broken_route_chain_quality_gate,
+        )
+
+        disable_broken_route_chain_rules(con)
+        neutralize_broken_route_chain_quality_gate(con)
+    except Exception:
+        pass
+
+
+def _patch_error_rules(module) -> None:
+    try:
+        from broken_route_chain_policy_module import patch_error_rules_module
+
+        patch_error_rules_module(module)
+    except Exception:
+        pass
+
+
+def _patch_quality_gate(module) -> None:
+    try:
+        from broken_route_chain_policy_module import patch_quality_gate_module
+
+        patch_quality_gate_module(module)
+    except Exception:
+        pass
+
+
 def _patch_phase6d(module) -> None:
+    try:
+        from broken_route_chain_policy_module import patch_phase6d_gap_only_rule
+
+        patch_phase6d_gap_only_rule(module)
+    except Exception:
+        pass
+
     if getattr(module, "_PHASE11N_OVERLAP_POLICY_PATCHED", False):
         return
     original_finalize = module.finalize_quality_gate_phase6d
@@ -135,6 +173,7 @@ def _patch_phase6d(module) -> None:
         apply_feedback_rule_adjustments_phase11i(con, run_id)
         apply_confirmed_gap_resolution(con, run_id)
         apply_overlap_policy_diff_evu_only(con, run_id)
+        _apply_broken_route_chain_policy(con)
 
     module.finalize_quality_gate_phase6d = patched_finalize_quality_gate_phase6d
     module._PHASE11N_OVERLAP_POLICY_PATCHED = True
@@ -142,20 +181,12 @@ def _patch_phase6d(module) -> None:
 
 def _import_hook(name, globals=None, locals=None, fromlist=(), level=0):
     module = _ORIGINAL_IMPORT(name, globals, locals, fromlist, level)
-    target = None
-    if name == "rule_engine_hardening_phase6d":
-        target = module
-    elif fromlist:
-        try:
-            imported = _ORIGINAL_IMPORT("rule_engine_hardening_phase6d", globals, locals, [], 0)
-            target = imported
-        except Exception:
-            target = None
-    if target is not None:
-        try:
-            _patch_phase6d(target)
-        except Exception:
-            pass
+    if name == "error_rules":
+        _patch_error_rules(module)
+    elif name == "quality_gate_module":
+        _patch_quality_gate(module)
+    elif name == "rule_engine_hardening_phase6d":
+        _patch_phase6d(module)
     return module
 
 
