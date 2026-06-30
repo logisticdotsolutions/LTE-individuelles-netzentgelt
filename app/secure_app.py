@@ -59,7 +59,9 @@ from overlap_tolerance_runtime_module import install_overlap_tolerance_runtime  
 from packaged_subprocess_runtime_bridge import install_packaged_subprocess_runtime, restore_packaged_subprocess_runtime  # noqa: E402
 from remove_review_tab_runtime_module import install_remove_review_tab_runtime, restore_remove_review_tab_runtime  # noqa: E402
 from remove_vens_runtime_module import install_remove_vens_runtime  # noqa: E402
+from loco_timeline_context_scope_runtime_module import install_loco_timeline_context_scope_runtime, restore_loco_timeline_context_scope_runtime  # noqa: E402
 from loco_timeline_multiday_axis_runtime_module import install_loco_timeline_multiday_axis_runtime, restore_loco_timeline_multiday_axis_runtime  # noqa: E402
+from loco_timeline_visual_band_runtime_module import install_loco_timeline_visual_band_runtime, restore_loco_timeline_visual_band_runtime  # noqa: E402
 from loco_timeline_calendar_runtime_module import install_loco_timeline_calendar_runtime, restore_loco_timeline_calendar_runtime  # noqa: E402
 from waterfall_overview_runtime_module import install_waterfall_overview_runtime, restore_waterfall_overview_runtime  # noqa: E402
 from local_auth_ui_module import render_admin_area, render_authenticated_sidebar, require_local_login  # noqa: E402
@@ -95,6 +97,8 @@ PHASE14D_HOLDER_GROUPED_EXPORT_MARKER = "NETZENTGELT_HOLDER_GROUPED_EXPORT_ENTRY
 PHASE14E_LOCO_TIMELINE_CALENDAR_MARKER = "NETZENTGELT_LOCO_TIMELINE_CALENDAR_ENTRYPOINT_PHASE14E_V1_20260630"
 PHASE14G_LOCO_TIMELINE_DE_WINDOW_MARKER = "NETZENTGELT_LOCO_TIMELINE_DE_WINDOW_PHASE14G_V1_20260630"
 PHASE14H_LOCO_TIMELINE_MULTIDAY_AXIS_MARKER = "NETZENTGELT_LOCO_TIMELINE_MULTIDAY_AXIS_PHASE14H_V1_20260630"
+PHASE14I_LOCO_TIMELINE_CONTEXT_SCOPE_MARKER = "NETZENTGELT_LOCO_TIMELINE_CONTEXT_SCOPE_PHASE14I_V1_20260630"
+PHASE14J_LOCO_TIMELINE_VISUAL_BANDS_MARKER = "NETZENTGELT_LOCO_TIMELINE_VISUAL_BANDS_PHASE14J_V1_20260630"
 
 install_compact_copy_runtime()
 install_compact_login_views()
@@ -136,7 +140,9 @@ _packaged_subprocess_runtime = install_packaged_subprocess_runtime()
 _n01_runtime = install_n01_hardened_runtime()
 _ae01_runtime = install_ae01_hardened_runtime()
 _zuordnungen_hardened_runtime = install_zuordnungen_hardened_runtime()
+_loco_timeline_context_scope_runtime = install_loco_timeline_context_scope_runtime()
 _loco_timeline_multiday_axis_runtime = install_loco_timeline_multiday_axis_runtime()
+_loco_timeline_visual_band_runtime = install_loco_timeline_visual_band_runtime()
 _loco_timeline_calendar_runtime = install_loco_timeline_calendar_runtime()
 _waterfall_overview_runtime = install_waterfall_overview_runtime()
 _original_tabs = install_zuordnungen_export_tab_extension()
@@ -153,7 +159,9 @@ finally:
     restore_zuordnungen_export_tab_extension(_original_tabs)
     restore_waterfall_overview_runtime(_waterfall_overview_runtime)
     restore_loco_timeline_calendar_runtime(_loco_timeline_calendar_runtime)
+    restore_loco_timeline_visual_band_runtime(_loco_timeline_visual_band_runtime)
     restore_loco_timeline_multiday_axis_runtime(_loco_timeline_multiday_axis_runtime)
+    restore_loco_timeline_context_scope_runtime(_loco_timeline_context_scope_runtime)
     restore_zuordnungen_hardened_runtime(_zuordnungen_hardened_runtime)
     restore_ae01_hardened_runtime(_ae01_runtime)
     restore_n01_hardened_runtime(_n01_runtime)
