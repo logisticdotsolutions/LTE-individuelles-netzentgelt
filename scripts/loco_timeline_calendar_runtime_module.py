@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import date, timedelta
 from html import escape
+from io import BytesIO
 from pathlib import Path
 from typing import Iterable, Sequence
 
@@ -89,7 +90,6 @@ SEGMENT_COLUMNS = [
     "Tooltip",
     "Im Filterzeitraum",
 ]
-EMPTY_SEGMENTS = pd.DataFrame(columns=SEGMENT_COLUMNS)
 SUMMARY_COLUMNS = [
     "Meldetag",
     "Loknummer",
@@ -100,6 +100,7 @@ SUMMARY_COLUMNS = [
     "Segmente",
     "Problemsegmente",
 ]
+EMPTY_SEGMENTS = pd.DataFrame(columns=SEGMENT_COLUMNS)
 EMPTY_SUMMARY = pd.DataFrame(columns=SUMMARY_COLUMNS)
 
 
@@ -446,6 +447,35 @@ def filter_loco_timeline_segments(
     return filtered.reset_index(drop=True)
 
 
+def build_loco_timeline_xlsx(segments_df: pd.DataFrame, summary_df: pd.DataFrame) -> bytes:
+    """Build a reviewable XLSX export for the currently filtered locomotive timeline."""
+    legend = pd.DataFrame(
+        [
+            {"Status": "Prüfen", "Priorität": STATUS_PRIORITY["Prüfen"], "Bedeutung": "Regelmeldung oder fachlicher Prüffall vorhanden"},
+            {"Status": "Overlap", "Priorität": STATUS_PRIORITY["Overlap"], "Bedeutung": "Überschneidung erkannt"},
+            {"Status": "GAP", "Priorität": STATUS_PRIORITY["GAP"], "Bedeutung": "Zeitliche Lücke erkannt"},
+            {"Status": "Zugewiesen", "Priorität": STATUS_PRIORITY["Zugewiesen"], "Bedeutung": "DE-relevanter Zeitraum mit Halter/Nutzer-Zuordnung"},
+            {"Status": "In DE", "Priorität": STATUS_PRIORITY["In DE"], "Bedeutung": "DE-relevanter Zeitraum ohne explizite Zuordnungsanzeige"},
+            {"Status": "Außerhalb DE", "Priorität": STATUS_PRIORITY["Außerhalb DE"], "Bedeutung": "Kontext oder nicht DE-relevanter Zeitraum"},
+        ]
+    )
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        summary_df.to_excel(writer, sheet_name="Tagesstatus", index=False)
+        segments_df.to_excel(writer, sheet_name="Segmente", index=False)
+        legend.to_excel(writer, sheet_name="Legende", index=False)
+
+        for sheet_name in ["Tagesstatus", "Segmente", "Legende"]:
+            worksheet = writer.book[sheet_name]
+            worksheet.freeze_panes = "A2"
+            worksheet.auto_filter.ref = worksheet.dimensions
+            for column_cells in worksheet.columns:
+                header = str(column_cells[0].value or "")
+                max_length = max([len(str(cell.value or "")) for cell in column_cells[:150]] + [len(header)])
+                worksheet.column_dimensions[column_cells[0].column_letter].width = min(max(max_length + 2, 10), 48)
+    return output.getvalue()
+
+
 def _options(source_df: pd.DataFrame, column: str) -> list[str]:
     if source_df.empty or column not in source_df.columns:
         return []
@@ -642,15 +672,27 @@ def render_loco_timeline_calendar() -> None:
         ]
         st.dataframe(filtered[visible_columns], use_container_width=True, hide_index=True, height=520)
 
-    csv = filtered.to_csv(index=False, sep=";").encode("utf-8-sig")
-    st.download_button(
-        "Lok-Zeitachse herunterladen",
-        data=csv,
-        file_name=f"lok_zeitachse_{date_from.isoformat()}_bis_{date_to.isoformat()}_plus_kontext.csv",
-        mime="text/csv",
-        key="download_loco_timeline_calendar",
-        use_container_width=True,
-    )
+    download_1, download_2 = st.columns(2)
+    with download_1:
+        csv = filtered.to_csv(index=False, sep=";").encode("utf-8-sig")
+        st.download_button(
+            "Lok-Zeitachse als CSV herunterladen",
+            data=csv,
+            file_name=f"lok_zeitachse_{date_from.isoformat()}_bis_{date_to.isoformat()}_plus_kontext.csv",
+            mime="text/csv",
+            key="download_loco_timeline_calendar_csv",
+            use_container_width=True,
+        )
+    with download_2:
+        xlsx = build_loco_timeline_xlsx(filtered, filtered_summary)
+        st.download_button(
+            "Lok-Zeitachse als XLSX herunterladen",
+            data=xlsx,
+            file_name=f"lok_zeitachse_{date_from.isoformat()}_bis_{date_to.isoformat()}_plus_kontext.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            key="download_loco_timeline_calendar_xlsx",
+            use_container_width=True,
+        )
 
 
 def _visible_tab_labels(labels: Sequence[object]) -> tuple[list[object], int | None]:
@@ -665,8 +707,9 @@ def _visible_tab_labels(labels: Sequence[object]) -> tuple[list[object], int | N
         timeline_index = values.index(WATERFALL_TAB_LABEL) + 1
         visible_labels.insert(timeline_index, TIMELINE_TAB_LABEL)
         for export_label in EXPORT_TAB_LABELS:
-            if export_label in [str(label) for label in visible_labels]:
-                visible_labels[[str(label) for label in visible_labels].index(export_label)] = EXPORT_TAB_RENUMBERED_LABEL
+            current_values = [str(label) for label in visible_labels]
+            if export_label in current_values:
+                visible_labels[current_values.index(export_label)] = EXPORT_TAB_RENUMBERED_LABEL
                 break
         return visible_labels, timeline_index
 
