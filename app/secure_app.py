@@ -73,7 +73,6 @@ from overlap_tolerance_runtime_module import install_overlap_tolerance_runtime  
 from packaged_subprocess_runtime_bridge import install_packaged_subprocess_runtime, restore_packaged_subprocess_runtime  # noqa: E402
 from remove_review_tab_runtime_module import install_remove_review_tab_runtime, restore_remove_review_tab_runtime  # noqa: E402
 from remove_vens_runtime_module import install_remove_vens_runtime  # noqa: E402
-from loco_timeline_de_scope_runtime_module import install_loco_timeline_de_scope_runtime, restore_loco_timeline_de_scope_runtime  # noqa: E402
 from loco_timeline_review_queue_runtime_module import install_loco_timeline_review_queue_runtime, restore_loco_timeline_review_queue_runtime  # noqa: E402
 from loco_timeline_calendar_runtime_module import install_loco_timeline_calendar_runtime, restore_loco_timeline_calendar_runtime  # noqa: E402
 from waterfall_overview_runtime_module import install_waterfall_overview_runtime, restore_waterfall_overview_runtime  # noqa: E402
@@ -121,7 +120,7 @@ PHASE14C_WATERFALL_OVERVIEW_MARKER = "NETZENTGELT_WATERFALL_OVERVIEW_ENTRYPOINT_
 PHASE14D_HOLDER_GROUPED_EXPORT_MARKER = "NETZENTGELT_HOLDER_GROUPED_EXPORT_ENTRYPOINT_PHASE14D_V1_20260630"
 PHASE14E_LOCO_TIMELINE_CALENDAR_MARKER = "NETZENTGELT_LOCO_TIMELINE_CALENDAR_ENTRYPOINT_PHASE14E_V1_20260630"
 PHASE14F_LOCO_TIMELINE_REVIEW_QUEUE_MARKER = "NETZENTGELT_LOCO_TIMELINE_REVIEW_QUEUE_ENTRYPOINT_PHASE14F_V1_20260630"
-PHASE14G_LOCO_TIMELINE_DE_SCOPE_MARKER = "NETZENTGELT_LOCO_TIMELINE_DE_SCOPE_PHASE14G_V1_20260630"
+PHASE14G_LOCO_TIMELINE_DE_WINDOW_MARKER = "NETZENTGELT_LOCO_TIMELINE_DE_WINDOW_PHASE14G_V1_20260630"
 
 st.set_page_config(page_title=DEFAULT_BROWSER_TITLE, page_icon="🚆", layout="wide")
 enforce_browser_title(DEFAULT_BROWSER_TITLE)
@@ -154,7 +153,6 @@ _packaged_subprocess_runtime = install_packaged_subprocess_runtime()
 _n01_runtime = install_n01_hardened_runtime()
 _ae01_runtime = install_ae01_hardened_runtime()
 _zuordnungen_hardened_runtime = install_zuordnungen_hardened_runtime()
-_loco_timeline_de_scope_runtime = install_loco_timeline_de_scope_runtime()
 _loco_timeline_review_queue_runtime = install_loco_timeline_review_queue_runtime()
 _loco_timeline_calendar_runtime = install_loco_timeline_calendar_runtime()
 _waterfall_overview_runtime = install_waterfall_overview_runtime()
@@ -173,7 +171,6 @@ finally:
     restore_waterfall_overview_runtime(_waterfall_overview_runtime)
     restore_loco_timeline_calendar_runtime(_loco_timeline_calendar_runtime)
     restore_loco_timeline_review_queue_runtime(_loco_timeline_review_queue_runtime)
-    restore_loco_timeline_de_scope_runtime(_loco_timeline_de_scope_runtime)
     restore_zuordnungen_hardened_runtime(_zuordnungen_hardened_runtime)
     restore_ae01_hardened_runtime(_ae01_runtime)
     restore_n01_hardened_runtime(_n01_runtime)
