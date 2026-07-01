@@ -23,6 +23,8 @@ def _segment(
     event_type: str = "",
     report_scope: str = "",
     route_type: str = "",
+    de_event_label: str = "",
+    cal_route_type_home: str = "",
     row_type: str = "MOVEMENT",
     holder: str = "ELL Austria GmbH",
     performing_ru: str = "LTE NL - LTE Netherlands B.V.",
@@ -46,6 +48,8 @@ def _segment(
         "EndMinute": end,
         "Route Type": route_type,
         "Event Type": event_type,
+        "de_event_label": de_event_label,
+        "cal_route_type_home": cal_route_type_home,
         "Row Type": row_type,
         "Report-Scope": report_scope,
         "Tooltip": f"{day} {status}",
@@ -138,7 +142,7 @@ def test_visual_bands_use_event_colors_without_changing_hard_statuses():
         "Ausfahrt",
         "Not in the report",
         "GAP",
-        "Keine LTE Zuordnung",
+        "Ausfahrt",
     ]
     assert [band["status"] for band in bands] == [
         "Zugewiesen",
@@ -151,11 +155,96 @@ def test_visual_bands_use_event_colors_without_changing_hard_statuses():
     assert bands[1]["css_class"] == "status-exit"
     assert bands[2]["css_class"] == "status-not-in-report"
     assert bands[3]["css_class"] == "status-gap"
-    assert bands[4]["css_class"] == "status-no-lte"
+    assert bands[4]["css_class"] == "status-exit"
     assert bands[0]["css_class"] != "status-outside"
     assert bands[1]["css_class"] != "status-outside"
     assert bands[2]["css_class"] not in {"status-assigned", "status-entry", "status-exit"}
     assert bands[0]["end"] == bands[1]["start"] == 2 * 60 + 30
+
+
+def _single_visual_band(**segment_kwargs) -> dict[str, object]:
+    segments = pd.DataFrame(
+        [
+            _segment(
+                day="2026-06-29",
+                loco="91515370037-1",
+                start=60,
+                end=90,
+                **segment_kwargs,
+            )
+        ]
+    )
+    bands = build_loco_visual_bands(segments, visible_from=date(2026, 6, 29))
+
+    assert len(bands) == 1
+    return bands[0]
+
+
+def test_event_exit_wins_over_route_no_reference():
+    band = _single_visual_band(
+        status="Außerhalb DE",
+        route_type="Kein Bezug",
+        event_type="Ausfahrt",
+    )
+
+    assert band["visual_status"] == "Ausfahrt"
+    assert band["css_class"] == "status-exit"
+
+
+def test_event_in_de_wins_over_route_no_reference():
+    band = _single_visual_band(
+        status="Außerhalb DE",
+        route_type="Kein Bezug",
+        event_type="In DE",
+    )
+
+    assert band["visual_status"] == "In DE"
+    assert band["css_class"] == "status-in-de"
+
+
+def test_de_event_label_exit_wins_over_cal_route_no_reference():
+    band = _single_visual_band(
+        status="Außerhalb DE",
+        cal_route_type_home="Kein Bezug",
+        de_event_label="Ausfahrt",
+    )
+
+    assert band["visual_status"] == "Ausfahrt"
+    assert band["css_class"] == "status-exit"
+
+
+def test_hard_not_in_report_row_stays_dark():
+    band = _single_visual_band(
+        status="Außerhalb DE",
+        event_type="Not in the report",
+        row_type="NOT_IN_REPORT",
+    )
+
+    assert band["visual_status"] == "Not in the report"
+    assert band["css_class"] == "status-not-in-report"
+
+
+def test_gap_stays_gap_over_event_and_route_fallback():
+    band = _single_visual_band(
+        status="GAP",
+        route_type="Kein Bezug",
+        event_type="Ausfahrt",
+    )
+
+    assert band["visual_status"] == "GAP"
+    assert band["css_class"] == "status-gap"
+
+
+def test_no_lte_assignment_stays_gray_without_event_type():
+    no_lte_marker = "Keine LTE Zuordnung"
+    band = _single_visual_band(
+        status="Zugewiesen",
+        holder=no_lte_marker,
+        performing_ru=no_lte_marker,
+    )
+
+    assert band["visual_status"] == "Keine LTE Zuordnung"
+    assert band["css_class"] == "status-no-lte"
 
 
 def test_context_scoped_segments_keep_outside_de_for_de_relevant_loco_only():

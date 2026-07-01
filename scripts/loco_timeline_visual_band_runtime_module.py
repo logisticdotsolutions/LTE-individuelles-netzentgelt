@@ -58,52 +58,68 @@ def _row_text(row: pd.Series, *columns: str) -> str:
     return ""
 
 
+def _row_values(row: pd.Series, *columns: str) -> list[str]:
+    return [_clean_text(row.get(column, "")) for column in columns if column in row.index]
+
+
 def _visual_status_from_event(row: pd.Series) -> str | None:
     event_label = _row_text(row, "Event Type", "de_event_label")
     normalized = event_label.casefold().replace("_", " ").replace("ß", "ss")
     return EVENT_VISUAL_STATUS_BY_LABEL.get(normalized)
 
 
-def _marker_values(row: pd.Series) -> list[str]:
-    columns = [
-        "Status",
-        "Report-Scope",
+def _is_hard_not_in_report_row(row: pd.Series) -> bool:
+    hard_values = _row_values(
+        row,
         "report_scope",
+        "Report-Scope",
+        "row_type",
+        "Row Type",
+        "Status",
+    )
+    return is_outside_report_marker(*hard_values)
+
+
+def _has_route_fallback_without_event(row: pd.Series) -> bool:
+    route_values = _row_values(row, "Route Type", "cal_route_type_home")
+    normalized_values = {value.casefold().replace("_", " ") for value in route_values}
+    return bool(normalized_values & {"kein bezug", "kein lte bezug"})
+
+
+def _has_no_lte_assignment_marker(row: pd.Series) -> bool:
+    marker_values = _row_values(
+        row,
+        "Status",
         "Event Type",
         "de_event_label",
-        "Route Type",
-        "cal_route_type_home",
-        "Row Type",
-        "row_type",
         "Halter",
         "holder_name",
         "Nutzer / PerformingRU",
         "performing_ru",
         "Regeln",
-        "Meldung",
-        "dq_message",
-        "dq_messages",
-        "Begründung",
-        "decision_reason",
-        "Tooltip",
-    ]
-    return [_clean_text(row.get(column, "")) for column in columns if column in row.index]
+    )
+    return is_no_lte_assignment_marker(*marker_values)
+
+
+def _is_no_lte_without_positive_event(row: pd.Series) -> bool:
+    return _has_no_lte_assignment_marker(row) or _has_route_fallback_without_event(row)
 
 
 def _derive_visual_status(row: pd.Series) -> str:
     status = _row_text(row, "Status") or "Außerhalb DE"
-    marker_values = _marker_values(row)
-    if is_outside_report_marker(*marker_values):
+    event_status = _visual_status_from_event(row)
+
+    if _is_hard_not_in_report_row(row):
         return NOT_IN_REPORT_VISUAL_STATUS
-    if is_no_lte_assignment_marker(*marker_values):
-        return NO_LTE_VISUAL_STATUS
 
     if status in PROBLEM_STATUSES:
         return status
 
-    event_status = _visual_status_from_event(row)
     if event_status:
         return event_status
+
+    if _is_no_lte_without_positive_event(row):
+        return NO_LTE_VISUAL_STATUS
 
     if status in ASSIGNED_STATUSES:
         return "Zugewiesen" if status == "Zugewiesen" else "In DE"
