@@ -183,33 +183,53 @@ def _contains_any(value: str, keywords: Iterable[str]) -> bool:
     return any(keyword in normalized for keyword in keywords)
 
 
+def _is_not_in_report_marker(value: str) -> bool:
+    normalized = str(value or "").strip().casefold().replace("_", " ")
+    return normalized in {"not in report", "not in the report", "outside report", "out of scope"}
+
+
 def _build_de_relevance_mask(source_df: pd.DataFrame) -> pd.Series:
     report_scope_col = _column(source_df, ["report_scope"])
     event_label_col = _column(source_df, EVENT_LABEL_COLUMNS)
     route_type_col = _column(source_df, ROUTE_TYPE_COLUMNS)
 
-    masks: list[pd.Series] = []
-    explicit_non_de = pd.Series(False, index=source_df.index, dtype=bool)
+    masks_available = False
+    explicit_in_report = pd.Series(False, index=source_df.index, dtype=bool)
+    explicit_not_in_report = pd.Series(False, index=source_df.index, dtype=bool)
+    event_positive = pd.Series(False, index=source_df.index, dtype=bool)
+    event_non_de = pd.Series(False, index=source_df.index, dtype=bool)
+    route_positive = pd.Series(False, index=source_df.index, dtype=bool)
+    route_non_de = pd.Series(False, index=source_df.index, dtype=bool)
+
     if report_scope_col:
-        masks.append(_text_series(source_df, report_scope_col).str.upper().eq("IN_REPORT"))
+        masks_available = True
+        report_values = _text_series(source_df, report_scope_col)
+        report_upper = report_values.str.upper()
+        explicit_in_report = report_upper.eq("IN_REPORT")
+        explicit_not_in_report = report_upper.eq("NOT_IN_REPORT") | report_values.apply(_is_not_in_report_marker)
     if event_label_col:
+        masks_available = True
         event_values = _text_series(source_df, event_label_col)
-        masks.append(event_values.str.upper().isin(DE_EVENT_LABELS))
-        explicit_non_de = explicit_non_de | event_values.apply(lambda value: _contains_any(value, NON_DE_KEYWORDS))
+        event_positive = event_values.str.upper().isin(DE_EVENT_LABELS)
+        event_non_de = event_values.apply(
+            lambda value: _contains_any(value, NON_DE_KEYWORDS) or _is_not_in_report_marker(value)
+        )
     if route_type_col:
+        masks_available = True
         route_values = _text_series(source_df, route_type_col)
         route_positive = route_values.apply(lambda value: _contains_any(value, DE_ROUTE_KEYWORDS))
-        route_non_de = route_values.apply(lambda value: _contains_any(value, NON_DE_KEYWORDS))
-        masks.append(route_positive & ~route_non_de)
-        explicit_non_de = explicit_non_de | route_non_de
+        route_non_de = route_values.apply(
+            lambda value: _contains_any(value, NON_DE_KEYWORDS) or _is_not_in_report_marker(value)
+        )
 
-    if not masks:
+    if not masks_available:
         return pd.Series(True, index=source_df.index, dtype=bool)
 
-    result = masks[0]
-    for mask in masks[1:]:
-        result = result | mask
-    return (result & ~explicit_non_de).fillna(False).astype(bool)
+    hard_positive = event_positive | (explicit_in_report & ~event_non_de)
+    negative_fallback = explicit_not_in_report | event_non_de | route_non_de
+    result = hard_positive | (route_positive & ~negative_fallback)
+    result = result & ~explicit_not_in_report
+    return result.fillna(False).astype(bool)
 
 
 def _has_content(value: str) -> bool:
