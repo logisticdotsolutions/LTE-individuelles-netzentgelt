@@ -10,7 +10,11 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from loco_timeline_context_scope_runtime_module import _build_context_scoped_segments  # noqa: E402
-from loco_timeline_visual_band_runtime_module import build_loco_visual_bands  # noqa: E402
+from loco_timeline_visual_band_runtime_module import (  # noqa: E402
+    _fill_visual_band_gaps,
+    build_loco_multiday_axis_html_with_visual_bands,
+    build_loco_visual_bands,
+)
 
 
 def _segment(
@@ -180,6 +184,34 @@ def _single_visual_band(**segment_kwargs) -> dict[str, object]:
     return bands[0]
 
 
+def _filled_visual_bands(
+    segments: pd.DataFrame,
+    *,
+    visible_from: date,
+    date_from: date,
+    date_to: date,
+    visible_end_minute: int = 24 * 60,
+) -> list[dict[str, object]]:
+    return _fill_visual_band_gaps(
+        build_loco_visual_bands(segments, visible_from=visible_from),
+        visible_start_minute=0,
+        visible_end_minute=visible_end_minute,
+        visible_from=visible_from,
+        date_from=date_from,
+        date_to=date_to,
+    )
+
+
+def _assert_gapless(bands: list[dict[str, object]], start_minute: int, end_minute: int) -> None:
+    assert bands
+    assert bands[0]["start"] == start_minute
+    assert bands[-1]["end"] == end_minute
+    for previous, current in zip(bands, bands[1:]):
+        assert previous["end"] == current["start"]
+        assert previous["end"] >= previous["start"]
+    assert bands[-1]["end"] >= bands[-1]["start"]
+
+
 def test_event_exit_wins_over_route_no_reference():
     band = _single_visual_band(
         status="Außerhalb DE",
@@ -245,6 +277,160 @@ def test_no_lte_assignment_stays_gray_without_event_type():
 
     assert band["visual_status"] == "Keine LTE Zuordnung"
     assert band["css_class"] == "status-no-lte"
+
+
+def test_filled_visual_bands_cover_full_day_around_single_in_de_event():
+    segments = pd.DataFrame(
+        [
+            _segment(
+                day="2026-06-29",
+                loco="91515370037-1",
+                status="Zugewiesen",
+                start=1 * 60 + 31,
+                end=2 * 60 + 30,
+                event_type="In DE",
+                report_scope="IN_REPORT",
+                route_type="Kein Bezug",
+            )
+        ]
+    )
+
+    bands = _filled_visual_bands(
+        segments,
+        visible_from=date(2026, 6, 29),
+        date_from=date(2026, 6, 29),
+        date_to=date(2026, 6, 29),
+    )
+
+    _assert_gapless(bands, 0, 24 * 60)
+    assert [band["visual_status"] for band in bands] == [
+        "Keine LTE Zuordnung",
+        "In DE",
+        "Keine LTE Zuordnung",
+    ]
+    assert bands[0]["end"] == bands[1]["start"] == 1 * 60 + 31
+    assert bands[1]["end"] == bands[2]["start"] == 2 * 60 + 30
+    assert bands[1]["css_class"] == "status-in-de"
+
+
+def test_filled_visual_bands_preserve_adjacent_in_de_and_exit_without_gap_status():
+    segments = pd.DataFrame(
+        [
+            _segment(
+                day="2026-06-29",
+                loco="91515370037-1",
+                status="Zugewiesen",
+                start=1 * 60 + 31,
+                end=2 * 60 + 30,
+                event_type="In DE",
+                report_scope="IN_REPORT",
+                route_type="Kein Bezug",
+            ),
+            _segment(
+                day="2026-06-29",
+                loco="91515370037-1",
+                status="Zugewiesen",
+                start=2 * 60 + 30,
+                end=2 * 60 + 50,
+                event_type="Ausfahrt",
+                report_scope="IN_REPORT",
+                route_type="Kein Bezug",
+            ),
+        ]
+    )
+
+    bands = _filled_visual_bands(
+        segments,
+        visible_from=date(2026, 6, 29),
+        date_from=date(2026, 6, 29),
+        date_to=date(2026, 6, 29),
+    )
+
+    _assert_gapless(bands, 0, 24 * 60)
+    assert [band["visual_status"] for band in bands] == [
+        "Keine LTE Zuordnung",
+        "In DE",
+        "Ausfahrt",
+        "Keine LTE Zuordnung",
+    ]
+    assert bands[2]["css_class"] == "status-exit"
+    assert "GAP" not in [band["visual_status"] for band in bands]
+
+
+def test_filled_visual_bands_do_not_convert_true_gap_segments():
+    segments = pd.DataFrame(
+        [
+            _segment(
+                day="2026-06-29",
+                loco="91515370037-1",
+                status="GAP",
+                start=0,
+                end=6 * 60,
+                event_type="In DE",
+                report_scope="IN_REPORT",
+                route_type="Kein Bezug",
+                row_type="GAP",
+            )
+        ]
+    )
+
+    bands = _filled_visual_bands(
+        segments,
+        visible_from=date(2026, 6, 29),
+        date_from=date(2026, 6, 29),
+        date_to=date(2026, 6, 29),
+    )
+
+    _assert_gapless(bands, 0, 24 * 60)
+    assert bands[0]["visual_status"] == "GAP"
+    assert bands[0]["css_class"] == "status-gap"
+    assert bands[0]["end"] == 6 * 60
+    assert bands[1]["visual_status"] == "Keine LTE Zuordnung"
+
+
+def test_filled_visual_bands_cover_multiday_context_with_muted_context_fill():
+    segments = pd.DataFrame(
+        [
+            _segment(
+                day="2026-06-29",
+                loco="91515370037-1",
+                status="Zugewiesen",
+                start=1 * 60 + 31,
+                end=2 * 60 + 30,
+                event_type="In DE",
+                report_scope="IN_REPORT",
+                route_type="Kein Bezug",
+            )
+        ]
+    )
+
+    bands = _filled_visual_bands(
+        segments,
+        visible_from=date(2026, 6, 28),
+        date_from=date(2026, 6, 29),
+        date_to=date(2026, 6, 29),
+        visible_end_minute=3 * 24 * 60,
+    )
+    html = build_loco_multiday_axis_html_with_visual_bands(
+        segments,
+        date_from=date(2026, 6, 29),
+        date_to=date(2026, 6, 29),
+        context_days=1,
+    )
+
+    _assert_gapless(bands, 0, 3 * 24 * 60)
+    assert bands[0]["start"] == 0
+    assert bands[0]["end"] == 24 * 60
+    assert bands[0]["visual_status"] == "Not in the report"
+    assert bands[0]["in_filter"] is False
+    assert any(
+        band["visual_status"] == "Keine LTE Zuordnung" and band["in_filter"] is True
+        for band in bands
+    )
+    assert bands[-1]["visual_status"] == "Not in the report"
+    assert bands[-1]["in_filter"] is False
+    assert 'data-visual-status="Not in the report"' in html
+    assert "context-muted" in html
 
 
 def test_context_scoped_segments_keep_outside_de_for_de_relevant_loco_only():

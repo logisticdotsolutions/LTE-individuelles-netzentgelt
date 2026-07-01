@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import date, datetime, time, timedelta
 from html import escape
 from typing import Callable
 
@@ -17,6 +17,7 @@ ASSIGNED_STATUSES = {"Zugewiesen", "In DE"}
 NORMAL_MOVEMENT_STATUSES = {"Zugewiesen", "In DE", "Außerhalb DE"}
 NOT_IN_REPORT_VISUAL_STATUS = "Not in the report"
 NO_LTE_VISUAL_STATUS = "Keine LTE Zuordnung"
+MINUTES_PER_DAY = 24 * 60
 EVENT_VISUAL_STATUS_BY_LABEL = {
     "in de": "In DE",
     "einfahrt": "Einfahrt",
@@ -37,7 +38,7 @@ def _visible_window(date_from: date, date_to: date, context_days: int) -> tuple[
 
 def _segment_abs_minutes(row: pd.Series, visible_from: date) -> tuple[int, int]:
     day = pd.Timestamp(str(row["Meldetag"])).date()
-    day_offset = (day - visible_from).days * 24 * 60
+    day_offset = (day - visible_from).days * MINUTES_PER_DAY
     start_minute = day_offset + int(row["StartMinute"])
     end_minute = day_offset + int(row["EndMinute"])
     return start_minute, max(start_minute + 1, end_minute)
@@ -147,6 +148,140 @@ def _band_from_row(
         "in_filter": bool(row.get("Im Filterzeitraum", True)),
         "tooltip": str(row.get("Tooltip", "")),
     }
+
+
+def _minute_label(visible_from: date, minute: int) -> str:
+    timestamp = datetime.combine(visible_from, time.min) + timedelta(minutes=int(minute))
+    return timestamp.strftime("%d.%m.%Y %H:%M")
+
+
+def _active_window_minutes(visible_from: date, date_from: date, date_to: date) -> tuple[int, int]:
+    date_from, date_to = timeline._normalize_day_range(date_from, date_to)
+    active_start = (date_from - visible_from).days * MINUTES_PER_DAY
+    active_end = (date_to + timedelta(days=1) - visible_from).days * MINUTES_PER_DAY
+    return active_start, active_end
+
+
+def _fill_tooltip(visible_from: date, start_minute: int, end_minute: int, visual_status: str) -> str:
+    return (
+        "Automatisch gefüllter Zeitraum: "
+        f"{_minute_label(visible_from, start_minute)} bis {_minute_label(visible_from, end_minute)}. "
+        f"Visualstatus: {visual_status}."
+    )
+
+
+def _fill_band(
+    *,
+    visible_from: date,
+    start_minute: int,
+    end_minute: int,
+    visual_status: str,
+    in_filter: bool,
+) -> dict[str, object]:
+    return {
+        "start": int(start_minute),
+        "end": int(end_minute),
+        "status": visual_status,
+        "visual_status": visual_status,
+        "css_class": _visual_css_class(visual_status),
+        "in_filter": bool(in_filter),
+        "tooltip": _fill_tooltip(visible_from, start_minute, end_minute, visual_status),
+        "auto_fill": True,
+    }
+
+
+def _iter_fill_ranges(
+    start_minute: int,
+    end_minute: int,
+    *,
+    visible_from: date,
+    date_from: date,
+    date_to: date,
+) -> list[dict[str, object]]:
+    active_start, active_end = _active_window_minutes(visible_from, date_from, date_to)
+    boundaries = {int(start_minute), int(end_minute)}
+    if start_minute < active_start < end_minute:
+        boundaries.add(active_start)
+    if start_minute < active_end < end_minute:
+        boundaries.add(active_end)
+
+    ranges: list[dict[str, object]] = []
+    ordered = sorted(boundaries)
+    for range_start, range_end in zip(ordered, ordered[1:]):
+        if range_end <= range_start:
+            continue
+        in_filter = range_start < active_end and range_end > active_start
+        visual_status = NO_LTE_VISUAL_STATUS if in_filter else NOT_IN_REPORT_VISUAL_STATUS
+        ranges.append(
+            _fill_band(
+                visible_from=visible_from,
+                start_minute=range_start,
+                end_minute=range_end,
+                visual_status=visual_status,
+                in_filter=in_filter,
+            )
+        )
+    return ranges
+
+
+def _fill_visual_band_gaps(
+    bands: list[dict[str, object]],
+    *,
+    visible_start_minute: int,
+    visible_end_minute: int,
+    visible_from: date,
+    date_from: date,
+    date_to: date,
+) -> list[dict[str, object]]:
+    """Fill the visible axis with derived visual bands without changing source bands."""
+    window_start = int(visible_start_minute)
+    window_end = max(window_start, int(visible_end_minute))
+    if window_end <= window_start:
+        return []
+
+    clipped_bands: list[tuple[int, int, dict[str, object]]] = []
+    for band in bands:
+        start_minute = max(window_start, int(band["start"]))
+        end_minute = min(window_end, int(band["end"]))
+        if end_minute > start_minute:
+            clipped_bands.append((start_minute, end_minute, band))
+
+    filled: list[dict[str, object]] = []
+    cursor = window_start
+    for start_minute, end_minute, band in sorted(clipped_bands, key=lambda item: (item[0], item[1])):
+        if start_minute > cursor:
+            filled.extend(
+                _iter_fill_ranges(
+                    cursor,
+                    start_minute,
+                    visible_from=visible_from,
+                    date_from=date_from,
+                    date_to=date_to,
+                )
+            )
+
+        render_start = max(start_minute, cursor)
+        if end_minute <= render_start:
+            continue
+
+        render_band = dict(band)
+        render_band["start"] = render_start
+        render_band["end"] = end_minute
+        filled.append(render_band)
+        cursor = max(cursor, end_minute)
+
+    if cursor < window_end:
+        filled.extend(
+            _iter_fill_ranges(
+                cursor,
+                window_end,
+                visible_from=visible_from,
+                date_from=date_from,
+                date_to=date_to,
+            )
+        )
+
+    return filled
 
 
 def build_loco_visual_bands(group: pd.DataFrame, *, visible_from: date) -> list[dict[str, object]]:
@@ -287,6 +422,7 @@ def build_loco_multiday_axis_html_with_visual_bands(
         '<span class="loco-timeline-chip"><b style="color:#d9eaf7">■</b> In DE</span>'
         '<span class="loco-timeline-chip"><b style="color:#b7e1cd">■</b> Einfahrt</span>'
         '<span class="loco-timeline-chip"><b style="color:#d9ead3">■</b> Ausfahrt</span>'
+        '<span class="loco-timeline-chip"><b style="color:#6b7280">■</b> Keine LTE Zuordnung</span>'
         '<span class="loco-timeline-chip"><b style="color:#9aa0a6">■</b> Außerhalb DE</span>'
         '<span class="loco-timeline-chip"><b style="color:#161a20">■</b> Not in the report</span>'
         '<span class="loco-timeline-chip">Satt = Arbeitszeitraum</span>'
@@ -322,7 +458,15 @@ def build_loco_multiday_axis_html_with_visual_bands(
             f'</div>'
         )
         segments_html: list[str] = [f'<div class="loco-track">{grid_lines}']
-        for band in build_loco_visual_bands(group, visible_from=visible_from):
+        visual_bands = _fill_visual_band_gaps(
+            build_loco_visual_bands(group, visible_from=visible_from),
+            visible_start_minute=0,
+            visible_end_minute=total_minutes,
+            visible_from=visible_from,
+            date_from=date_from,
+            date_to=date_to,
+        )
+        for band in visual_bands:
             left = max(0.0, min(100.0, int(band["start"]) / total_minutes * 100.0))
             width = max(0.10, min(100.0 - left, (int(band["end"]) - int(band["start"])) / total_minutes * 100.0))
             visual_status = str(band.get("visual_status", band["status"]))
