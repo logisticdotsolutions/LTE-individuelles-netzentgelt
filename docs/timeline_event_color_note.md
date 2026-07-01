@@ -1,1 +1,0 @@
-Timeline event color note.
