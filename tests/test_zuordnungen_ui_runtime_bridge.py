@@ -24,17 +24,25 @@ class DummyTab:
         return False
 
 
-def test_install_extension_wraps_only_export_tab_and_restores_original_tabs(monkeypatch) -> None:
-    rendered_extensions: list[str] = []
+def test_install_extension_uses_compact_export_grid_without_patching_tabs(monkeypatch) -> None:
+    install_calls: list[Path] = []
+    restore_calls: list[object] = []
+    sentinel = object()
 
     def original_tabs(labels):
         return [DummyTab(str(label)) for label in labels]
 
     monkeypatch.setattr(module.st, "tabs", original_tabs)
+    monkeypatch.setattr(module, "_COMPACT_EXPORT_GRID_RUN_PATH", None)
     monkeypatch.setattr(
         module,
-        "render_zuordnungen_export_extension",
-        lambda: rendered_extensions.append("rendered"),
+        "install_compact_export_grid_runtime",
+        lambda path: install_calls.append(path) or sentinel,
+    )
+    monkeypatch.setattr(
+        module,
+        "restore_compact_export_grid_runtime",
+        lambda original_run_path: restore_calls.append(original_run_path),
     )
 
     restored_tabs = module.install_zuordnungen_export_tab_extension()
@@ -44,22 +52,16 @@ def test_install_extension_wraps_only_export_tab_and_restores_original_tabs(monk
         "6. Weitere Prüfungen",
     ])
 
-    assert restored_tabs is original_tabs
+    assert restored_tabs is None
+    assert module.st.tabs is original_tabs
+    assert install_calls == [module.ROOT / "app" / "app.py"]
     assert tabs[0].label == "1. Tagesprüfung"
+    assert tabs[1].label == module.EXPORT_TAB_LABEL
     assert tabs[2].label == "6. Weitere Prüfungen"
-    assert isinstance(tabs[1], module._InjectedExportTab)
-
-    with tabs[0]:
-        pass
-
-    assert rendered_extensions == []
-
-    with tabs[1]:
-        pass
-
-    assert rendered_extensions == ["rendered"]
 
     module.restore_zuordnungen_export_tab_extension(restored_tabs)
+    assert restore_calls == [sentinel]
+    assert module._COMPACT_EXPORT_GRID_RUN_PATH is None
     assert module.st.tabs is original_tabs
 
 
@@ -68,47 +70,49 @@ def test_install_extension_leaves_unrelated_tab_sets_unchanged(monkeypatch) -> N
         return [DummyTab(str(label)) for label in labels]
 
     monkeypatch.setattr(module.st, "tabs", original_tabs)
+    monkeypatch.setattr(module, "_COMPACT_EXPORT_GRID_RUN_PATH", None)
+    monkeypatch.setattr(module, "install_compact_export_grid_runtime", lambda _path: object())
+    monkeypatch.setattr(module, "restore_compact_export_grid_runtime", lambda _original_run_path: None)
 
     restored_tabs = module.install_zuordnungen_export_tab_extension()
     tabs = module.st.tabs(["A", "B"])
 
-    assert restored_tabs is original_tabs
+    assert restored_tabs is None
+    assert module.st.tabs is original_tabs
     assert all(isinstance(tab, DummyTab) for tab in tabs)
 
     module.restore_zuordnungen_export_tab_extension(restored_tabs)
     assert module.st.tabs is original_tabs
 
 
-def test_patched_tabs_does_not_double_wrap_export_tab_when_already_injected(monkeypatch) -> None:
-    """patched_tabs darf _InjectedExportTab nicht nochmals einwickeln wenn es bereits einer ist."""
-    render_calls: list[str] = []
+def test_install_extension_is_idempotent_for_compact_export_grid(monkeypatch) -> None:
+    install_calls: list[Path] = []
+    restore_calls: list[object] = []
+    sentinel = object()
 
-    def original_tabs(labels):
-        return [DummyTab(str(label)) for label in labels]
+    monkeypatch.setattr(module, "_COMPACT_EXPORT_GRID_RUN_PATH", None)
+    monkeypatch.setattr(
+        module,
+        "install_compact_export_grid_runtime",
+        lambda path: install_calls.append(path) or sentinel,
+    )
+    monkeypatch.setattr(
+        module,
+        "restore_compact_export_grid_runtime",
+        lambda original_run_path: restore_calls.append(original_run_path),
+    )
 
-    monkeypatch.setattr(module.st, "tabs", original_tabs)
-    monkeypatch.setattr(module, "render_zuordnungen_export_extension", lambda: render_calls.append("x"))
+    first = module.install_zuordnungen_export_tab_extension()
+    second = module.install_zuordnungen_export_tab_extension()
 
-    restored1 = module.install_zuordnungen_export_tab_extension()
-    # Zweiter install: der Sentinel verhindert erneutes Patchen von st.tabs,
-    # aber falls die Kette doch zwei patched_tabs enthielte (z. B. durch
-    # andere Patcher), darf der Export-Tab nur einmal gewrapped werden.
-    # Simuliere den Worst-Case manuell: rufe patched_tabs direkt auf einem
-    # bereits-gewickelten Tab auf.
-    patched = module.st.tabs  # = patched_tabs
-    first_tabs = patched([module.EXPORT_TAB_LABEL])
-    assert isinstance(first_tabs[0], module._InjectedExportTab)
+    assert first is None
+    assert second is None
+    assert install_calls == [module.ROOT / "app" / "app.py"]
 
-    # Wenn patched_tabs nochmals über bereits gewickelte Tabs läuft
-    second_tabs = patched([module.EXPORT_TAB_LABEL])
-    assert isinstance(second_tabs[0], module._InjectedExportTab)
+    module.restore_zuordnungen_export_tab_extension(first)
 
-    # Regardless of nesting, render_extension darf nur EINMAL aufgerufen werden
-    with second_tabs[0]:
-        pass
-    assert render_calls == ["x"], f"render_extension wurde {len(render_calls)}× aufgerufen statt 1×"
-
-    module.restore_zuordnungen_export_tab_extension(restored1)
+    assert restore_calls == [sentinel]
+    assert module._COMPACT_EXPORT_GRID_RUN_PATH is None
 
 
 def test_render_extension_calls_preview_and_both_holding_downloads(monkeypatch, tmp_path: Path) -> None:
