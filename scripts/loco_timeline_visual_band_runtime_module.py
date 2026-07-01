@@ -14,6 +14,8 @@ PROBLEM_STATUSES = {"Prüfen", "Overlap", "GAP"}
 ASSIGNED_STATUSES = {"Zugewiesen", "In DE"}
 
 
+# NETZENTGELT_TIMELINE_EVENT_COLOR_PATCH_MARKER_V1_20260701
+
 def _visible_window(date_from: date, date_to: date, context_days: int) -> tuple[date, date]:
     date_from, date_to = timeline._normalize_day_range(date_from, date_to)
     context_days = max(int(context_days), 0)
