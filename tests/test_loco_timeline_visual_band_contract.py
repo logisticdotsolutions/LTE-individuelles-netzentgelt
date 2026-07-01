@@ -20,6 +20,12 @@ def _segment(
     start: int,
     end: int,
     loco: str = "91806193933-9",
+    event_type: str = "",
+    report_scope: str = "",
+    route_type: str = "",
+    row_type: str = "MOVEMENT",
+    holder: str = "ELL Austria GmbH",
+    performing_ru: str = "LTE NL - LTE Netherlands B.V.",
 ) -> dict[str, object]:
     priority = {
         "Prüfen": 50,
@@ -32,12 +38,16 @@ def _segment(
     return {
         "Meldetag": day,
         "Loknummer": loco,
-        "Halter": "ELL Austria GmbH",
-        "Nutzer / PerformingRU": "LTE NL - LTE Netherlands B.V.",
+        "Halter": holder,
+        "Nutzer / PerformingRU": performing_ru,
         "Status": status,
         "StatusPriorität": priority,
         "StartMinute": start,
         "EndMinute": end,
+        "Route Type": route_type,
+        "Event Type": event_type,
+        "Row Type": row_type,
+        "Report-Scope": report_scope,
         "Tooltip": f"{day} {status}",
         "Im Filterzeitraum": True,
     }
@@ -59,6 +69,93 @@ def test_visual_bands_merge_lueckenlose_movement_fragments_until_explicit_gap():
     assert bands[0]["start"] == 1 * 24 * 60 + 9 * 60 + 52
     assert bands[0]["end"] == 3 * 24 * 60 + 22 * 60 + 10
     assert bands[1]["start"] == 4 * 24 * 60 + 8 * 60
+
+
+def test_visual_bands_use_event_colors_without_changing_hard_statuses():
+    no_lte_marker = "Keine LTE Zuordnung"
+    segments = pd.DataFrame(
+        [
+            _segment(
+                day="2026-06-28",
+                loco="91515370037-1",
+                status="Zugewiesen",
+                start=1 * 60 + 31,
+                end=2 * 60 + 30,
+                event_type="In DE",
+                report_scope="IN_REPORT",
+                route_type="Inland",
+            ),
+            _segment(
+                day="2026-06-28",
+                loco="91515370037-1",
+                status="Zugewiesen",
+                start=2 * 60 + 30,
+                end=2 * 60 + 57,
+                event_type="Ausfahrt",
+                report_scope="IN_REPORT",
+                route_type="Kein Bezug",
+            ),
+            _segment(
+                day="2026-06-28",
+                loco="91515370037-1",
+                status="Außerhalb DE",
+                start=2 * 60 + 57,
+                end=3 * 60 + 15,
+                event_type="Not in the Report",
+                report_scope="NOT_IN_REPORT",
+                route_type="Kein Bezug",
+            ),
+            _segment(
+                day="2026-06-28",
+                loco="91515370037-1",
+                status="GAP",
+                start=3 * 60 + 20,
+                end=3 * 60 + 40,
+                event_type="In DE",
+                report_scope="IN_REPORT",
+                route_type="Inland",
+                row_type="GAP",
+            ),
+            _segment(
+                day="2026-06-28",
+                loco="91515370037-1",
+                status="Zugewiesen",
+                start=3 * 60 + 45,
+                end=4 * 60,
+                event_type="Ausfahrt",
+                report_scope="IN_REPORT",
+                route_type="Inland",
+                holder=no_lte_marker,
+                performing_ru=no_lte_marker,
+            ),
+        ]
+    )
+
+    bands = build_loco_visual_bands(segments, visible_from=date(2026, 6, 28))
+
+    assert [band["visual_status"] for band in bands] == [
+        "In DE",
+        "Ausfahrt",
+        "Not in the report",
+        "GAP",
+        "Keine LTE Zuordnung",
+    ]
+    assert [band["status"] for band in bands] == [
+        "Zugewiesen",
+        "Zugewiesen",
+        "Außerhalb DE",
+        "GAP",
+        "Zugewiesen",
+    ]
+    assert bands[0]["css_class"] == "status-in-de"
+    assert bands[1]["css_class"] == "status-exit"
+    assert bands[2]["css_class"] == "status-not-in-report"
+    assert bands[3]["css_class"] == "status-gap"
+    assert bands[4]["css_class"] == "status-no-lte"
+    assert bands[0]["css_class"] != "status-outside"
+    assert bands[1]["css_class"] != "status-outside"
+    assert bands[2]["css_class"] not in {"status-assigned", "status-entry", "status-exit"}
+    assert bands[0]["end"] == bands[1]["start"] == 2 * 60 + 30
 
 
 def test_context_scoped_segments_keep_outside_de_for_de_relevant_loco_only():

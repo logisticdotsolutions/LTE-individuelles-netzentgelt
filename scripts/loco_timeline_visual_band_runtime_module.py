@@ -6,12 +6,25 @@ from typing import Callable
 
 import pandas as pd
 
+from broken_route_chain_policy_module import is_no_lte_assignment_marker
 import loco_timeline_calendar_runtime_module as timeline
 import loco_timeline_detail_dropdown_runtime_module as detail_dropdown
 import loco_timeline_multiday_axis_runtime_module as multiday_axis
+from no_lte_assignment_policy_runtime_module import is_outside_report_marker
 
 PROBLEM_STATUSES = {"Prüfen", "Overlap", "GAP"}
 ASSIGNED_STATUSES = {"Zugewiesen", "In DE"}
+NORMAL_MOVEMENT_STATUSES = {"Zugewiesen", "In DE", "Außerhalb DE"}
+NOT_IN_REPORT_VISUAL_STATUS = "Not in the report"
+NO_LTE_VISUAL_STATUS = "Keine LTE Zuordnung"
+EVENT_VISUAL_STATUS_BY_LABEL = {
+    "in de": "In DE",
+    "einfahrt": "Einfahrt",
+    "ausfahrt": "Ausfahrt",
+    "einfahrt + ausfahrt": "Einfahrt + Ausfahrt",
+    "ausserhalb de": "Außerhalb DE",
+    "außerhalb de": "Außerhalb DE",
+}
 
 
 # NETZENTGELT_TIMELINE_EVENT_COLOR_PATCH_MARKER_V1_20260701
@@ -28,6 +41,96 @@ def _segment_abs_minutes(row: pd.Series, visible_from: date) -> tuple[int, int]:
     start_minute = day_offset + int(row["StartMinute"])
     end_minute = day_offset + int(row["EndMinute"])
     return start_minute, max(start_minute + 1, end_minute)
+
+
+def _clean_text(value: object) -> str:
+    if pd.isna(value):
+        return ""
+    return str(value or "").strip()
+
+
+def _row_text(row: pd.Series, *columns: str) -> str:
+    for column in columns:
+        if column in row.index:
+            value = _clean_text(row.get(column, ""))
+            if value:
+                return value
+    return ""
+
+
+def _visual_status_from_event(row: pd.Series) -> str | None:
+    event_label = _row_text(row, "Event Type", "de_event_label")
+    normalized = event_label.casefold().replace("_", " ").replace("ß", "ss")
+    return EVENT_VISUAL_STATUS_BY_LABEL.get(normalized)
+
+
+def _marker_values(row: pd.Series) -> list[str]:
+    columns = [
+        "Status",
+        "Report-Scope",
+        "report_scope",
+        "Event Type",
+        "de_event_label",
+        "Route Type",
+        "cal_route_type_home",
+        "Row Type",
+        "row_type",
+        "Halter",
+        "holder_name",
+        "Nutzer / PerformingRU",
+        "performing_ru",
+        "Regeln",
+        "Meldung",
+        "dq_message",
+        "dq_messages",
+        "Begründung",
+        "decision_reason",
+        "Tooltip",
+    ]
+    return [_clean_text(row.get(column, "")) for column in columns if column in row.index]
+
+
+def _derive_visual_status(row: pd.Series) -> str:
+    status = _row_text(row, "Status") or "Außerhalb DE"
+    marker_values = _marker_values(row)
+    if is_outside_report_marker(*marker_values):
+        return NOT_IN_REPORT_VISUAL_STATUS
+    if is_no_lte_assignment_marker(*marker_values):
+        return NO_LTE_VISUAL_STATUS
+
+    if status in PROBLEM_STATUSES:
+        return status
+
+    event_status = _visual_status_from_event(row)
+    if event_status:
+        return event_status
+
+    if status in ASSIGNED_STATUSES:
+        return "Zugewiesen" if status == "Zugewiesen" else "In DE"
+    return status or "Außerhalb DE"
+
+
+def _visual_css_class(visual_status: str) -> str:
+    return timeline.STATUS_CSS_CLASS.get(str(visual_status), "status-outside")
+
+
+def _band_from_row(
+    row: pd.Series,
+    *,
+    start_abs: int,
+    end_abs: int,
+    status: str,
+    visual_status: str,
+) -> dict[str, object]:
+    return {
+        "start": start_abs,
+        "end": end_abs,
+        "status": status,
+        "visual_status": visual_status,
+        "css_class": _visual_css_class(visual_status),
+        "in_filter": bool(row.get("Im Filterzeitraum", True)),
+        "tooltip": str(row.get("Tooltip", "")),
+    }
 
 
 def build_loco_visual_bands(group: pd.DataFrame, *, visible_from: date) -> list[dict[str, object]]:
@@ -67,50 +170,62 @@ def build_loco_visual_bands(group: pd.DataFrame, *, visible_from: date) -> list[
         status = str(row.get("Status", ""))
         start_abs = int(row["_abs_start"])
         end_abs = int(row["_abs_end"])
-        title = str(row.get("Tooltip", ""))
-        in_filter = bool(row.get("Im Filterzeitraum", True))
+        visual_status = _derive_visual_status(row)
 
         if status in PROBLEM_STATUSES:
             close_assignment(start_abs)
             visual_bands.append(
-                {
-                    "start": start_abs,
-                    "end": end_abs,
-                    "status": status,
-                    "in_filter": in_filter,
-                    "tooltip": title,
-                }
+                _band_from_row(
+                    row,
+                    start_abs=start_abs,
+                    end_abs=end_abs,
+                    status=status,
+                    visual_status=visual_status,
+                )
             )
             continue
 
-        if status in ASSIGNED_STATUSES:
-            assignment_status = "Zugewiesen" if status == "Zugewiesen" else "In DE"
+        if status in NORMAL_MOVEMENT_STATUSES or visual_status in timeline.STATUS_CSS_CLASS:
+            assignment_status = "Zugewiesen" if status == "Zugewiesen" else status or "Außerhalb DE"
             if current_assignment is None:
-                current_assignment = {
-                    "start": start_abs,
-                    "end": end_abs,
-                    "status": assignment_status,
-                    "in_filter": in_filter,
-                    "tooltip": title,
-                }
+                current_assignment = _band_from_row(
+                    row,
+                    start_abs=start_abs,
+                    end_abs=end_abs,
+                    status=assignment_status,
+                    visual_status=visual_status,
+                )
             else:
+                if str(current_assignment.get("visual_status", "")) != visual_status:
+                    close_assignment(start_abs)
+                    current_assignment = _band_from_row(
+                        row,
+                        start_abs=start_abs,
+                        end_abs=end_abs,
+                        status=assignment_status,
+                        visual_status=visual_status,
+                    )
+                    continue
                 current_assignment["end"] = max(int(current_assignment["end"]), end_abs)
                 if assignment_status == "Zugewiesen":
                     current_assignment["status"] = "Zugewiesen"
-                current_assignment["in_filter"] = bool(current_assignment["in_filter"]) or in_filter
+                current_assignment["in_filter"] = bool(current_assignment["in_filter"]) or bool(
+                    row.get("Im Filterzeitraum", True)
+                )
+                title = str(row.get("Tooltip", ""))
                 if title and title not in str(current_assignment["tooltip"]):
                     current_assignment["tooltip"] = f"{current_assignment['tooltip']} | {title}".strip(" |")
             continue
 
         close_assignment()
         visual_bands.append(
-            {
-                "start": start_abs,
-                "end": end_abs,
-                "status": status or "Außerhalb DE",
-                "in_filter": in_filter,
-                "tooltip": title,
-            }
+            _band_from_row(
+                row,
+                start_abs=start_abs,
+                end_abs=end_abs,
+                status=status or "Außerhalb DE",
+                visual_status=visual_status,
+            )
         )
 
     close_assignment()
@@ -153,8 +268,11 @@ def build_loco_multiday_axis_html_with_visual_bands(
         '<span class="loco-timeline-chip"><b style="color:#ffbf00">■</b> Overlap</span>'
         '<span class="loco-timeline-chip"><b style="color:#ff7f0e">■</b> GAP</span>'
         '<span class="loco-timeline-chip"><b style="color:#2ca02c">■</b> Zugewiesen</span>'
-        '<span class="loco-timeline-chip"><b style="color:#1f77b4">■</b> In DE</span>'
+        '<span class="loco-timeline-chip"><b style="color:#d9eaf7">■</b> In DE</span>'
+        '<span class="loco-timeline-chip"><b style="color:#b7e1cd">■</b> Einfahrt</span>'
+        '<span class="loco-timeline-chip"><b style="color:#d9ead3">■</b> Ausfahrt</span>'
         '<span class="loco-timeline-chip"><b style="color:#9aa0a6">■</b> Außerhalb DE</span>'
+        '<span class="loco-timeline-chip"><b style="color:#161a20">■</b> Not in the report</span>'
         '<span class="loco-timeline-chip">Satt = Arbeitszeitraum</span>'
         '<span class="loco-timeline-chip">Transparent = Kontexttag</span>'
         '</div>'
@@ -162,7 +280,7 @@ def build_loco_multiday_axis_html_with_visual_bands(
     rows_html.append(
         f'<div class="loco-axis-note">Achse: {visible_from:%d.%m.%Y} bis {visible_to:%d.%m.%Y} '
         f'(Arbeitszeitraum {date_from:%d.%m.%Y} bis {date_to:%d.%m.%Y}) · '
-        'Bewegungsfragmente werden zu fachlichen Nutzungsbändern zusammengezogen, sofern keine GAP-/Prüfzeile dazwischenliegt.</div>'
+        'Bewegungsfragmente werden nach Eventfarbe zu Nutzungsbändern zusammengezogen, sofern keine GAP-/Prüfzeile dazwischenliegt.</div>'
     )
     rows_html.append(_axis_labels(visible_from, visible_to))
 
@@ -191,11 +309,15 @@ def build_loco_multiday_axis_html_with_visual_bands(
         for band in build_loco_visual_bands(group, visible_from=visible_from):
             left = max(0.0, min(100.0, int(band["start"]) / total_minutes * 100.0))
             width = max(0.10, min(100.0 - left, (int(band["end"]) - int(band["start"])) / total_minutes * 100.0))
-            css_class = timeline.STATUS_CSS_CLASS.get(str(band["status"]), "status-outside")
+            visual_status = str(band.get("visual_status", band["status"]))
+            css_class = str(band.get("css_class") or timeline.STATUS_CSS_CLASS.get(visual_status, "status-outside"))
             context_class = "" if bool(band.get("in_filter", True)) else " context-muted"
             title = escape(str(band.get("tooltip", "")), quote=True)
+            data_status = escape(str(band.get("status", "")), quote=True)
+            data_visual_status = escape(visual_status, quote=True)
             segments_html.append(
                 f'<div class="loco-segment {css_class}{context_class}" '
+                f'data-status="{data_status}" data-visual-status="{data_visual_status}" '
                 f'style="left:{left:.4f}%; width:{width:.4f}%;" title="{title}"></div>'
             )
         segments_html.append("</div>")

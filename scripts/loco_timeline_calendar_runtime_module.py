@@ -82,7 +82,13 @@ STATUS_CSS_CLASS = {
     "GAP": "status-gap",
     "Zugewiesen": "status-assigned",
     "In DE": "status-in-de",
+    "Einfahrt": "status-entry",
+    "Ausfahrt": "status-exit",
+    "Einfahrt + Ausfahrt": "status-entry-exit",
     "Außerhalb DE": "status-outside",
+    "Not in the report": "status-not-in-report",
+    "NOT_IN_REPORT": "status-not-in-report",
+    "Keine LTE Zuordnung": "status-no-lte",
 }
 SEGMENT_COLUMNS = [
     "Meldetag",
@@ -554,8 +560,13 @@ def _timeline_css() -> str:
     .status-overlap {background:#ffbf00;}
     .status-gap {background:#ff7f0e;}
     .status-assigned {background:#2ca02c;}
-    .status-in-de {background:#1f77b4;}
+    .status-in-de {background:#d9eaf7;}
+    .status-entry {background:#b7e1cd;}
+    .status-exit {background:#d9ead3;}
+    .status-entry-exit {background:#c5e0b4;}
     .status-outside {background:#9aa0a6;}
+    .status-not-in-report {background:#161a20;}
+    .status-no-lte {background:#6b7280;}
     .context-muted {opacity:.46;}
     .hour-labels {display:grid; grid-template-columns: repeat(5, 1fr); font-size:.68rem; color:rgba(49,51,63,.72); margin-left:270px; padding-left:.75rem;}
     </style>
@@ -572,8 +583,11 @@ def timeline_segments_to_html(segments_df: pd.DataFrame, *, max_rows: int = 140)
         '<span class="loco-timeline-chip"><b style="color:#ffbf00">■</b> Overlap</span>'
         '<span class="loco-timeline-chip"><b style="color:#ff7f0e">■</b> GAP</span>'
         '<span class="loco-timeline-chip"><b style="color:#2ca02c">■</b> Zugewiesen</span>'
-        '<span class="loco-timeline-chip"><b style="color:#1f77b4">■</b> In DE</span>'
+        '<span class="loco-timeline-chip"><b style="color:#d9eaf7">■</b> In DE</span>'
+        '<span class="loco-timeline-chip"><b style="color:#b7e1cd">■</b> Einfahrt</span>'
+        '<span class="loco-timeline-chip"><b style="color:#d9ead3">■</b> Ausfahrt</span>'
         '<span class="loco-timeline-chip"><b style="color:#9aa0a6">■</b> Außerhalb DE / Kontext</span>'
+        '<span class="loco-timeline-chip"><b style="color:#161a20">■</b> Not in the report</span>'
         '</div>'
     )
     rows_html.append('<div class="hour-labels"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span style="text-align:right">24:00</span></div>')
