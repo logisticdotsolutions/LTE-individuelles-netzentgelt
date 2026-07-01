@@ -11,6 +11,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from loco_timeline_calendar_runtime_module import (  # noqa: E402
     _build_de_relevance_mask,
+    _coerce_selectbox_state,
     build_loco_timeline_segments,
 )
 
@@ -122,3 +123,26 @@ def test_target_loco_integration_in_report_in_de_route_no_reference():
     assert segments.iloc[0]["Event Type"] == "In DE"
     assert segments.iloc[0]["Route Type"] == "Kein Bezug"
     assert segments.iloc[0]["Status"] != "Außerhalb DE"
+
+
+def test_loco_timeline_selectbox_state_resets_stale_filter_value():
+    session_state = {"loco_timeline_holder": "Alter Halter"}
+
+    index = _coerce_selectbox_state(
+        session_state,
+        "loco_timeline_holder",
+        ["Alle", "Cargounit"],
+    )
+
+    assert index == 0
+    assert session_state["loco_timeline_holder"] == "Alle"
+
+    session_state["loco_timeline_holder"] = "Cargounit"
+    index = _coerce_selectbox_state(
+        session_state,
+        "loco_timeline_holder",
+        ["Alle", "Cargounit"],
+    )
+
+    assert index == 1
+    assert session_state["loco_timeline_holder"] == "Cargounit"

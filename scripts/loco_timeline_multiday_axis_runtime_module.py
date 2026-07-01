@@ -201,15 +201,29 @@ def install_loco_timeline_multiday_axis_runtime() -> Callable | None:
         st.markdown("#### Filter")
         filter_1, filter_2, filter_3, filter_4, filter_5 = st.columns([1.2, 1.2, 1.0, 1.0, 1.0])
         with filter_1:
-            selected_holder = st.selectbox("Halter", ["Alle"] + timeline._options(segments, "Halter"), key="loco_timeline_holder")
+            holder_options = ["Alle"] + timeline._options(segments, "Halter")
+            selected_holder = st.selectbox(
+                "Halter",
+                holder_options,
+                index=timeline._selectbox_index_for_state("loco_timeline_holder", holder_options),
+                key="loco_timeline_holder",
+            )
         with filter_2:
+            performing_ru_options = ["Alle"] + timeline._options(segments, "Nutzer / PerformingRU")
             selected_performing_ru = st.selectbox(
                 "Nutzer / PerformingRU",
-                ["Alle"] + timeline._options(segments, "Nutzer / PerformingRU"),
+                performing_ru_options,
+                index=timeline._selectbox_index_for_state("loco_timeline_performing_ru", performing_ru_options),
                 key="loco_timeline_performing_ru",
             )
         with filter_3:
-            selected_status = st.selectbox("Status", ["Alle"] + timeline._options(segments, "Status"), key="loco_timeline_status")
+            status_options = ["Alle"] + timeline._options(segments, "Status")
+            selected_status = st.selectbox(
+                "Status",
+                status_options,
+                index=timeline._selectbox_index_for_state("loco_timeline_status", status_options),
+                key="loco_timeline_status",
+            )
         with filter_4:
             loco_query = st.text_input("Loknummer enthält", key="loco_timeline_loco_query")
         with filter_5:

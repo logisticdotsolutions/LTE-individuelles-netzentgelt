@@ -543,6 +543,31 @@ def _options(source_df: pd.DataFrame, column: str) -> list[str]:
     return sorted({str(value).strip() for value in source_df[column].dropna().tolist() if str(value).strip()})
 
 
+def _coerce_selectbox_state(
+    session_state: object,
+    key: str,
+    options: Sequence[object],
+    *,
+    default: object = "Alle",
+) -> int:
+    values = list(options)
+    if not values:
+        return 0
+
+    fallback = default if default in values else values[0]
+    current = session_state.get(key, fallback)
+    if current not in values:
+        session_state[key] = fallback
+        current = fallback
+    return values.index(current)
+
+
+def _selectbox_index_for_state(key: str, options: Sequence[object], *, default: object = "Alle") -> int:
+    import streamlit as st
+
+    return _coerce_selectbox_state(st.session_state, key, options, default=default)
+
+
 def _get_selected_day_range() -> tuple[date, date]:
     import streamlit as st
 
@@ -689,15 +714,29 @@ def render_loco_timeline_calendar() -> None:
     st.markdown("#### Filter")
     filter_1, filter_2, filter_3, filter_4, filter_5 = st.columns([1.2, 1.2, 1.0, 1.0, 1.0])
     with filter_1:
-        selected_holder = st.selectbox("Halter", ["Alle"] + _options(segments, "Halter"), key="loco_timeline_holder")
+        holder_options = ["Alle"] + _options(segments, "Halter")
+        selected_holder = st.selectbox(
+            "Halter",
+            holder_options,
+            index=_selectbox_index_for_state("loco_timeline_holder", holder_options),
+            key="loco_timeline_holder",
+        )
     with filter_2:
+        performing_ru_options = ["Alle"] + _options(segments, "Nutzer / PerformingRU")
         selected_performing_ru = st.selectbox(
             "Nutzer / PerformingRU",
-            ["Alle"] + _options(segments, "Nutzer / PerformingRU"),
+            performing_ru_options,
+            index=_selectbox_index_for_state("loco_timeline_performing_ru", performing_ru_options),
             key="loco_timeline_performing_ru",
         )
     with filter_3:
-        selected_status = st.selectbox("Status", ["Alle"] + _options(segments, "Status"), key="loco_timeline_status")
+        status_options = ["Alle"] + _options(segments, "Status")
+        selected_status = st.selectbox(
+            "Status",
+            status_options,
+            index=_selectbox_index_for_state("loco_timeline_status", status_options),
+            key="loco_timeline_status",
+        )
     with filter_4:
         loco_query = st.text_input("Loknummer enthält", key="loco_timeline_loco_query")
     with filter_5:

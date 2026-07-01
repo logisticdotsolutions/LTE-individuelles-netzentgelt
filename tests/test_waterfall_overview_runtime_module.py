@@ -36,3 +36,26 @@ def test_waterfall_overview_is_gap_free_and_de_filtered() -> None:
         loco_query="1234567",
     )
     assert filtered["Loknummer"].tolist() == ["91801234567-8"]
+
+
+def test_waterfall_selectbox_state_resets_stale_filter_value() -> None:
+    session_state = {"waterfall_route_type": "Alter Routentyp"}
+
+    index = module._coerce_selectbox_state(
+        session_state,
+        "waterfall_route_type",
+        ["Alle", "Inland"],
+    )
+
+    assert index == 0
+    assert session_state["waterfall_route_type"] == "Alle"
+
+    session_state["waterfall_route_type"] = "Inland"
+    index = module._coerce_selectbox_state(
+        session_state,
+        "waterfall_route_type",
+        ["Alle", "Inland"],
+    )
+
+    assert index == 1
+    assert session_state["waterfall_route_type"] == "Inland"

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Sequence
 
 import loco_timeline_calendar_runtime_module as timeline
@@ -51,6 +52,16 @@ def _visible_tab_labels(labels: Sequence[object]) -> tuple[list[object], int | N
     return visible_labels, waterfall_index, timeline_index
 
 
+def _render_injected_tab(tab: object, title: str, render_func: Callable[[], None]) -> None:
+    import streamlit as st
+
+    with tab:
+        try:
+            render_func()
+        except Exception as exc:
+            st.error(f"{title} konnte nicht gerendert werden: {exc}")
+
+
 def install_product_tabs_runtime():
     """Add product tabs in one st.tabs patch to avoid nested tab label mutations on rerun."""
     global _PRODUCT_TABS_ORIGINAL, _PRODUCT_TABS_PATCHED
@@ -71,11 +82,17 @@ def install_product_tabs_runtime():
 
         rendered_tabs = list(original_tabs(visible_labels, *args, **kwargs))
         if 0 <= waterfall_index < len(rendered_tabs):
-            with rendered_tabs[waterfall_index]:
-                waterfall.render_waterfall_overview()
+            _render_injected_tab(
+                rendered_tabs[waterfall_index],
+                WATERFALL_TAB_LABEL,
+                waterfall.render_waterfall_overview,
+            )
         if 0 <= timeline_index < len(rendered_tabs):
-            with rendered_tabs[timeline_index]:
-                timeline.render_loco_timeline_calendar()
+            _render_injected_tab(
+                rendered_tabs[timeline_index],
+                TIMELINE_TAB_LABEL,
+                timeline.render_loco_timeline_calendar,
+            )
 
         inserted_indices = {waterfall_index, timeline_index}
         return [tab for index, tab in enumerate(rendered_tabs) if index not in inserted_indices]

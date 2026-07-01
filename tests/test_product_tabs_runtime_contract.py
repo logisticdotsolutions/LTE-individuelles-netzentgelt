@@ -185,3 +185,52 @@ def test_install_product_tabs_runtime_is_idempotent_and_restorable(monkeypatch):
         product_tabs.restore_product_tabs_runtime(reinstalled_original)
 
     assert st.tabs is original_tabs
+
+
+def test_product_tabs_keep_returned_tabs_when_injected_renderer_fails(monkeypatch):
+    import streamlit as st
+
+    rendered_label_sets: list[list[str]] = []
+    rendered_runtime_tabs: list[str] = []
+    errors: list[str] = []
+
+    class FakeTab:
+        def __init__(self, label: str) -> None:
+            self.label = label
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc_value, traceback):
+            return False
+
+    def original_tabs(labels, *args, **kwargs):
+        rendered_label_sets.append([str(label) for label in labels])
+        return [FakeTab(str(label)) for label in labels]
+
+    def broken_waterfall():
+        raise RuntimeError("stale selectbox state")
+
+    monkeypatch.setattr(st, "tabs", original_tabs)
+    monkeypatch.setattr(st, "error", lambda message, *args, **kwargs: errors.append(str(message)))
+    monkeypatch.setattr(product_tabs, "_PRODUCT_TABS_ORIGINAL", None)
+    monkeypatch.setattr(product_tabs, "_PRODUCT_TABS_PATCHED", None)
+    monkeypatch.setattr(product_tabs, "install_no_lte_assignment_policy_runtime", lambda: None)
+    monkeypatch.setattr(product_tabs, "install_timeline_event_color_policy_runtime", lambda: None)
+    monkeypatch.setattr(product_tabs.waterfall, "render_waterfall_overview", broken_waterfall)
+    monkeypatch.setattr(
+        product_tabs.timeline,
+        "render_loco_timeline_calendar",
+        lambda: rendered_runtime_tabs.append("timeline"),
+    )
+
+    original = product_tabs.install_product_tabs_runtime()
+    try:
+        tabs = st.tabs(BASE_LABELS)
+    finally:
+        product_tabs.restore_product_tabs_runtime(original)
+
+    assert [tab.label for tab in tabs] == EXPECTED_RETURN_LABELS
+    assert rendered_label_sets[-1] == EXPECTED_VISIBLE_PRODUCT_LABELS
+    assert rendered_runtime_tabs == ["timeline"]
+    assert errors == ["5. Wasserfall konnte nicht gerendert werden: stale selectbox state"]

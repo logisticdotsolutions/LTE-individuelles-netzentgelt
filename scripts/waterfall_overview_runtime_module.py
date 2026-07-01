@@ -281,6 +281,31 @@ def _options(source_df: pd.DataFrame, column: str) -> list[str]:
     return sorted(values)
 
 
+def _coerce_selectbox_state(
+    session_state: object,
+    key: str,
+    options: Sequence[object],
+    *,
+    default: object = "Alle",
+) -> int:
+    values = list(options)
+    if not values:
+        return 0
+
+    fallback = default if default in values else values[0]
+    current = session_state.get(key, fallback)
+    if current not in values:
+        session_state[key] = fallback
+        current = fallback
+    return values.index(current)
+
+
+def _selectbox_index_for_state(key: str, options: Sequence[object], *, default: object = "Alle") -> int:
+    import streamlit as st
+
+    return _coerce_selectbox_state(st.session_state, key, options, default=default)
+
+
 def _get_selected_day_range() -> tuple[date, date]:
     import streamlit as st
 
@@ -343,17 +368,27 @@ def render_waterfall_overview() -> None:
     st.markdown("#### Filter")
     filter_1, filter_2, filter_3, filter_4 = st.columns(4)
     with filter_1:
-        selected_holder = st.selectbox("Halter", ["Alle"] + _options(overview, "Halter"), key="waterfall_holder")
+        holder_options = ["Alle"] + _options(overview, "Halter")
+        selected_holder = st.selectbox(
+            "Halter",
+            holder_options,
+            index=_selectbox_index_for_state("waterfall_holder", holder_options),
+            key="waterfall_holder",
+        )
     with filter_2:
+        performing_ru_options = ["Alle"] + _options(overview, "PerformingRU")
         selected_performing_ru = st.selectbox(
             "PerformingRU",
-            ["Alle"] + _options(overview, "PerformingRU"),
+            performing_ru_options,
+            index=_selectbox_index_for_state("waterfall_performing_ru", performing_ru_options),
             key="waterfall_performing_ru",
         )
     with filter_3:
+        route_type_options = ["Alle"] + _options(overview, "Route Type")
         selected_route_type = st.selectbox(
             "Route Type",
-            ["Alle"] + _options(overview, "Route Type"),
+            route_type_options,
+            index=_selectbox_index_for_state("waterfall_route_type", route_type_options),
             key="waterfall_route_type",
         )
     with filter_4:
